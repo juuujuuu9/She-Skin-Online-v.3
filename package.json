@@ -8,16 +8,13 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    
     "media:process": "tsx scripts/media-processor.ts",
     "media:watch": "chokidar 'media/originals/**/*' -c 'npm run media:process -- --file {path}'",
     "migrate:wp": "tsx scripts/migrate-wp.ts",
-    
     "upload:images": "tsx scripts/upload-product-images.ts",
     "compress:images": "tsx scripts/compress-images.ts"
   },
@@ -27,6 +24,7 @@
     "@nanostores/react": "^1.0.0",
     "@neondatabase/serverless": "^1.0.2",
     "@tailwindcss/vite": "^4.1.18",
+    "@types/xml2js": "^0.4.14",
     "astro": "^5.16.12",
     "blurhash": "^2.0.5",
     "dotenv": "^17.2.3",
@@ -41,7 +39,8 @@
     "react-dom": "^18.3.1",
     "sharp": "^0.34.5",
     "stripe": "^20.2.0",
-    "tailwindcss": "^4.1.18"
+    "tailwindcss": "^4.1.18",
+    "xml2js": "^0.6.2"
   },
   "devDependencies": {
     "@types/fluent-ffmpeg": "^2.1.27",
