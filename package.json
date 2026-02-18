@@ -1,0 +1,53 @@
+{
+  "name": "nucleus-commerce",
+  "type": "module",
+  "version": "0.1.0",
+  "description": "Headless commerce boilerplate for artists and small brands",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    
+    "media:process": "tsx scripts/media-processor.ts",
+    "media:watch": "chokidar 'media/originals/**/*' -c 'npm run media:process -- --file {path}'",
+    "migrate:wp": "tsx scripts/migrate-wp.ts",
+    
+    "upload:images": "tsx scripts/upload-product-images.ts",
+    "compress:images": "tsx scripts/compress-images.ts"
+  },
+  "dependencies": {
+    "@astrojs/react": "^4.4.2",
+    "@astrojs/vercel": "^9.0.4",
+    "@nanostores/react": "^1.0.0",
+    "@neondatabase/serverless": "^1.0.2",
+    "@tailwindcss/vite": "^4.1.18",
+    "astro": "^5.16.12",
+    "blurhash": "^2.0.5",
+    "dotenv": "^17.2.3",
+    "drizzle-kit": "^0.31.8",
+    "drizzle-orm": "^0.45.1",
+    "fluent-ffmpeg": "^2.1.3",
+    "glob": "^11.0.1",
+    "isomorphic-dompurify": "^2.21.0",
+    "lenis": "^1.3.17",
+    "nanostores": "^1.1.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "sharp": "^0.34.5",
+    "stripe": "^20.2.0",
+    "tailwindcss": "^4.1.18"
+  },
+  "devDependencies": {
+    "@types/fluent-ffmpeg": "^2.1.27",
+    "@types/node": "^22.13.4",
+    "chokidar-cli": "^3.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.7.3"
+  }
+}

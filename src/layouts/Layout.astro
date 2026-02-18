@@ -1,0 +1,46 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  hideHeader?: boolean;
+}
+
+const { title, description = 'Nucleus Commerce — Artist Portfolio & Shop', hideHeader = false } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content={description} />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+  </head>
+  <body class="min-h-screen bg-white">
+    {!hideHeader && (
+      <header class="fixed top-0 left-0 right-0 z-50 p-4 flex items-center justify-between bg-black/50 backdrop-blur-sm">
+        <nav class="flex items-center gap-6">
+          <a href="/" class="text-white hover:text-gray-300 transition-colors font-semibold">
+            Home
+          </a>
+          <a href="/works/physical" class="text-white hover:text-gray-300 transition-colors">
+            Works
+          </a>
+          <a href="/shop" class="text-white hover:text-gray-300 transition-colors">
+            Shop
+          </a>
+        </nav>
+        <div>
+          <a href="/cart" class="text-white hover:text-gray-300 transition-colors">
+            Cart
+          </a>
+        </div>
+      </header>
+    )}
+    <slot />
+  </body>
+</html>

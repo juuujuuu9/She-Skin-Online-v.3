@@ -1,0 +1,199 @@
+---
+/**
+ * OptimizedImage — Responsive, lazy-loaded images with blurhash
+ * 
+ * Uses the media processor manifest for variant selection.
+ * Falls back to src if variants not available.
+ */
+
+import type { HTMLAttributes } from 'astro/types';
+
+interface ImageVariant {
+  url: string;
+  width: number;
+  height: number;
+  size: number;
+}
+
+interface Props extends HTMLAttributes<'img'> {
+  src: string;
+  alt: string;
+  width?: number;
+  height?: number;
+  variants?: {
+    [format: string]: {
+      [size: string]: ImageVariant;
+    };
+  };
+  blurhash?: string;
+  dominantColor?: string;
+  priority?: boolean; // Above the fold, disable lazy loading
+  sizes?: string; // Responsive sizes attribute
+  aspectRatio?: number;
+  objectFit?: 'cover' | 'contain' | 'fill' | 'none';
+  class?: string;
+}
+
+const {
+  src,
+  alt,
+  width,
+  height,
+  variants,
+  blurhash,
+  dominantColor = '#f0f0f0',
+  priority = false,
+  sizes = '100vw',
+  aspectRatio,
+  objectFit = 'cover',
+  class: className = '',
+  ...rest
+} = Astro.props;
+
+// Calculate aspect ratio for container
+const calculatedAspectRatio = aspectRatio || (width && height ? width / height : undefined);
+
+// Generate srcset for each format
+const generateSrcset = (formatVariants: { [size: string]: ImageVariant }) => {
+  return Object.entries(formatVariants)
+    .sort((a, b) => a[1].width - b[1].width)
+    .map(([_, variant]) => `${variant.url} ${variant.width}w`)
+    .join(', ');
+};
+
+// Determine if we have processed variants
+const hasVariants = variants && (variants.webp || variants.avif);
+const webpVariants = variants?.webp;
+const avifVariants = variants?.avif;
+
+// Use smallest variant as LQIP placeholder (blurhash decoded or tiny image)
+const lqipUrl = webpVariants?.sm?.url || src;
+
+// Container style for aspect ratio preservation
+const containerStyle = calculatedAspectRatio
+  ? `aspect-ratio: ${calculatedAspectRatio};`
+  : '';
+---
+
+{hasVariants ? (
+  <picture
+    class={`optimized-image ${className}`}
+    style={containerStyle}
+    data-blurhash={blurhash}
+    data-dominant-color={dominantColor}
+  >
+    {/* AVIF - best compression, modern browsers */}
+    {avifVariants && (
+      <source
+        type="image/avif"
+        srcset={generateSrcset(avifVariants)}
+        sizes={sizes}
+      />
+    )}
+    
+    {/* WebP - good compression, wide support */}
+    {webpVariants && (
+      <source
+        type="image/webp"
+        srcset={generateSrcset(webpVariants)}
+        sizes={sizes}
+      />
+    )}
+    
+    {/* Fallback JPEG/PNG */}
+    <img
+      src={src}
+      alt={alt}
+      width={width}
+      height={height}
+      loading={priority ? 'eager' : 'lazy'}
+      decoding={priority ? 'sync' : 'async'}
+      style={`object-fit: ${objectFit};`}
+      class="w-full h-full"
+      {...rest}
+    />
+  </picture>
+) : (
+  /* Fallback for non-processed images */
+  <img
+    src={src}
+    alt={alt}
+    width={width}
+    height={height}
+    loading={priority ? 'eager' : 'lazy'}
+    decoding={priority ? 'sync' : 'async'}
+    style={`object-fit: ${objectFit}; ${containerStyle}`}
+    class={`w-full h-full ${className}`}
+    {...rest}
+  />
+)}
+
+<style>
+  .optimized-image {
+    display: block;
+    position: relative;
+    overflow: hidden;
+    background-color: var(--placeholder-color, #f0f0f0);
+  }
+  
+  .optimized-image img {
+    transition: opacity 0.3s ease;
+  }
+  
+  /* Skeleton loading state */
+  .optimized-image[data-blurhash]::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: attr(data-dominant-color);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+  
+  /* Hide placeholder when image loads */
+  .optimized-image[data-loaded]::before {
+    display: none;
+  }
+</style>
+
+<script>
+  // Decode blurhash and set as background for skeleton
+  // This runs client-side for progressive enhancement
+  document.querySelectorAll('.optimized-image[data-blurhash]').forEach((el) => {
+    const blurhash = el.getAttribute('data-blurhash');
+    if (!blurhash) return;
+    
+    // Dynamic import of blurhash decoder only when needed
+    import('blurhash').then(({ decode }) => {
+      try {
+        const pixels = decode(blurhash, 32, 32);
+        const canvas = document.createElement('canvas');
+        canvas.width = 32;
+        canvas.height = 32;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        
+        const imageData = ctx.createImageData(32, 32);
+        imageData.data.set(pixels);
+        ctx.putImageData(imageData, 0, 0);
+        
+        el.style.backgroundImage = `url(${canvas.toDataURL()})`;
+        el.style.backgroundSize = 'cover';
+      } catch (e) {
+        // Silently fail, CSS fallback handles it
+      }
+    });
+  });
+  
+  // Mark as loaded when image finishes
+  document.querySelectorAll('.optimized-image img').forEach((img) => {
+    img.addEventListener('load', (e) => {
+      const picture = (e.target as HTMLElement).closest('.optimized-image');
+      picture?.setAttribute('data-loaded', 'true');
+    });
+  });
+</script>
