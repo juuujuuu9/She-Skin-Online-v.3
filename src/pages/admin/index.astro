@@ -1,0 +1,96 @@
+---
+export const prerender = false;
+
+import Layout from '../../layouts/Layout.astro';
+import { requireAdminAuth } from '../../lib/admin-auth.js';
+
+const authCheck = requireAdminAuth(Astro.request);
+if (authCheck) {
+  return authCheck;
+}
+---
+
+<Layout title="Admin | SheSkin">
+  <div class="admin-dashboard">
+    <header class="admin-header">
+      <h1>Admin Dashboard</h1>
+      <p class="subtitle">Manage your site content</p>
+    </header>
+
+    <nav class="admin-nav">
+      <a href="/admin/media" class="admin-card">
+        <div class="card-icon">🖼️</div>
+        <h2>Media Manager</h2>
+        <p>Upload images and audio. Process files and get manifest IDs for your content.</p>
+        <span class="card-link">Open →</span>
+      </a>
+    </nav>
+  </div>
+</Layout>
+
+<style>
+  .admin-dashboard {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  .admin-header {
+    margin-bottom: 2rem;
+  }
+
+  .admin-header h1 {
+    font-size: 2rem;
+    margin: 0 0 0.5rem;
+  }
+
+  .subtitle {
+    color: var(--text-muted, #666);
+    margin: 0;
+  }
+
+  .admin-nav {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .admin-card {
+    display: block;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 12px;
+    text-decoration: none;
+    color: inherit;
+    background: white;
+    transition: all 0.2s ease;
+  }
+
+  .admin-card:hover {
+    border-color: var(--accent, #007bff);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+
+  .card-icon {
+    font-size: 2rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .admin-card h2 {
+    font-size: 1.25rem;
+    margin: 0 0 0.5rem;
+  }
+
+  .admin-card p {
+    color: var(--text-muted, #666);
+    font-size: 0.9375rem;
+    margin: 0 0 1rem;
+    line-height: 1.5;
+  }
+
+  .card-link {
+    color: var(--accent, #007bff);
+    font-weight: 500;
+  }
+</style>

@@ -8,6 +8,7 @@ import type { Track } from '../lib/audioStore';
 
 export function useAudioEngine() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const loadedSrcRef = useRef<string | null>(null);
 
   // Sync audio element with store state
   useEffect(() => {
@@ -44,6 +45,7 @@ export function useAudioEngine() {
       audio.removeEventListener('error', handleError as EventListener);
       audio.pause();
       audioRef.current = null;
+      loadedSrcRef.current = null;
     };
   }, []);
 
@@ -53,23 +55,45 @@ export function useAudioEngine() {
       const audio = audioRef.current;
       if (!audio) return;
 
-      // Handle track changes
-      if (state.currentTrack && audio.src !== state.currentTrack.src) {
-        audio.src = state.currentTrack.src;
+      const trackSrc = state.currentTrack?.src ?? null;
+
+      // Handle track changes - only load when src actually changes
+      // (audio.src returns absolute URL, so compare against our ref)
+      if (trackSrc && loadedSrcRef.current !== trackSrc) {
+        loadedSrcRef.current = trackSrc;
+        audio.src = trackSrc;
         audio.load();
+
+        // Wait for canplay before play() - avoids AbortError from interrupted load
+        const onCanPlay = () => {
+          audio.removeEventListener('canplay', onCanPlay);
+          if ($audio.get().isPlaying) {
+            audio.play().catch((err) => {
+              console.error('Play failed:', err);
+            });
+          }
+        };
+        audio.addEventListener('canplay', onCanPlay);
+
+        return; // Skip play/pause below - we handled it in onCanPlay or will on next tick
       }
 
-      // Handle play/pause
-      if (state.isPlaying) {
-        if (audio.paused) {
-          audio.play().catch((err) => {
-            console.error('Play failed:', err);
-          });
+      // Handle play/pause (when same track, no load needed)
+      if (trackSrc && loadedSrcRef.current === trackSrc) {
+        if (state.isPlaying) {
+          if (audio.paused) {
+            audio.play().catch((err) => {
+              console.error('Play failed:', err);
+            });
+          }
+        } else {
+          if (!audio.paused) {
+            audio.pause();
+          }
         }
-      } else {
-        if (!audio.paused) {
-          audio.pause();
-        }
+      } else if (!trackSrc) {
+        loadedSrcRef.current = null;
+        audio.pause();
       }
 
       // Handle volume
@@ -79,7 +103,7 @@ export function useAudioEngine() {
       }
 
       // Handle seeking (when progress changes significantly)
-      if (Math.abs(audio.currentTime - state.progress) > 1) {
+      if (trackSrc && Math.abs(audio.currentTime - state.progress) > 1) {
         audio.currentTime = state.progress;
       }
     });

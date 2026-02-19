@@ -54,13 +54,21 @@ export function AudioPlayer() {
         <div className="flex items-center h-16 px-4 sm:px-6">
           {/* Track Info */}
           <div className="flex items-center gap-4 min-w-0 flex-1 sm:flex-none sm:w-64">
-            {audio.currentTrack?.coverArt && (
-              <img 
-                src={audio.currentTrack.coverArt} 
-                alt=""
-                className="w-10 h-10 bg-gray-200 object-cover hidden sm:block"
-              />
-            )}
+            <div className="w-10 h-10 flex-shrink-0 bg-gray-200 object-cover overflow-hidden">
+              {audio.currentTrack?.coverArt ? (
+                <img 
+                  src={audio.currentTrack.coverArt} 
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                  </svg>
+                </div>
+              )}
+            </div>
             <div className="min-w-0">
               <p className="text-xs font-medium truncate">
                 {audio.currentTrack?.title || 'Unknown Track'}
@@ -195,7 +203,22 @@ export function AudioPlayer() {
                         : 'text-gray-600 hover:bg-gray-200/50'
                     }`}
                   >
-                    <span className="text-xs text-gray-500 w-6">{index + 1}</span>
+                    <span className="text-xs text-gray-500 w-6 flex-shrink-0">{index + 1}</span>
+                    <div className="w-10 h-10 flex-shrink-0 bg-gray-200 overflow-hidden">
+                      {track.coverArt ? (
+                        <img 
+                          src={track.coverArt} 
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400">
+                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                          </svg>
+                        </div>
+                      )}
+                    </div>
                     <div className="flex-1 min-w-0">
                       <p className={`truncate ${index === audio.currentIndex ? 'font-medium' : ''}`}>
                         {track.title}
@@ -203,7 +226,7 @@ export function AudioPlayer() {
                       <p className="text-xs text-gray-500">{track.artist}</p>
                     </div>
                     {index === audio.currentIndex && audio.isPlaying && (
-                      <span className="text-xs text-green-700">Playing</span>
+                      <span className="text-xs text-green-700 flex-shrink-0">Playing</span>
                     )}
                   </li>
                 ))}

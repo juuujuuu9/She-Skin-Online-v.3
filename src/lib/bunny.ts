@@ -4,6 +4,15 @@
  * For uploading and managing product images
  */
 
+/**
+ * Check if Bunny.net is properly configured
+ */
+export function isBunnyConfigured(): boolean {
+  const apiKey = process.env.BUNNY_API_KEY;
+  const storageZone = process.env.BUNNY_STORAGE_ZONE;
+  return !!(apiKey && storageZone);
+}
+
 import { readFile } from 'fs/promises';
 import { extname } from 'path';
 

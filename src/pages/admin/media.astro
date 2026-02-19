@@ -1,0 +1,941 @@
+---
+export const prerender = false;
+
+import Layout from '../../../layouts/Layout.astro';
+import { requireAdminAuth } from '../../../lib/admin-auth.js';
+import { loadManifest } from '../../../lib/media-process.js';
+
+// Check auth server-side
+const authCheck = requireAdminAuth(Astro.request);
+if (authCheck) {
+  return authCheck;
+}
+
+// Load manifest for display
+const manifest = await loadManifest();
+const images = Object.values(manifest.images);
+const audio = Object.values(manifest.audio);
+const pendingCount = manifest.pending.filter(p => p.status === 'pending').length;
+const processingCount = manifest.pending.filter(p => p.status === 'processing').length;
+const errorCount = manifest.pending.filter(p => p.status === 'error').length;
+
+// Format bytes
+const formatBytes = (bytes: number) => {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+};
+
+// Format duration
+const formatDuration = (seconds: number) => {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
+---
+
+<Layout title="Media Manager | Admin">
+  <div class="admin-media">
+    <header class="admin-header">
+      <h1>Media Manager</h1>
+      <p class="subtitle">Upload images and audio. Process in batches.</p>
+    </header>
+
+    <!-- Status Bar -->
+    <div class="status-bar" id="statusBar">
+      <div class="status-item">
+        <span class="status-count" id="pendingCount">{pendingCount}</span>
+        <span class="status-label">Pending</span>
+      </div>
+      <div class="status-item">
+        <span class="status-count" id="processingCount">{processingCount}</span>
+        <span class="status-label">Processing</span>
+      </div>
+      <div class="status-item">
+        <span class="status-count error" id="errorCount">{errorCount}</span>
+        <span class="status-label">Failed</span>
+      </div>
+      <div class="status-item">
+        <span class="status-count">{images.length + audio.length}</span>
+        <span class="status-label">Processed</span>
+      </div>
+    </div>
+
+    <!-- Upload Zone -->
+    <section class="upload-section">
+      <div 
+        id="dropzone"
+        class="dropzone"
+        role="button"
+        tabindex="0"
+      >
+        <div class="dropzone-content">
+          <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <p class="dropzone-text">
+            <strong>Drop files here</strong> or click to browse
+          </p>
+          <p class="dropzone-hint">
+            Images: JPG, PNG, TIFF, WebP<br/>
+            Audio: WAV, AIFF, FLAC, M4A (20+ min soundscapes OK)<br/>
+            Max: 100MB per file • Processing happens after upload
+          </p>
+        </div>
+        <input 
+          type="file" 
+          id="fileInput" 
+          class="file-input"
+          accept="image/jpeg,image/png,image/tiff,image/webp,audio/wav,audio/aiff,audio/flac,audio/mp4"
+          multiple
+        />
+      </div>
+
+      <!-- Upload Progress -->
+      <div id="uploadProgress" class="progress-area hidden">
+        <div class="progress-item">
+          <span id="uploadText">Uploading...</span>
+          <div class="progress-bar">
+            <div id="uploadFill" class="progress-fill"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Process Pending Button -->
+    <section class="process-section" id="processSection" style={pendingCount === 0 ? 'opacity: 0.5;' : ''}>
+      <button 
+        id="processBtn" 
+        class="process-btn"
+        disabled={pendingCount === 0}
+      >
+        <span class="btn-text">Process {pendingCount} Pending File{pendingCount !== 1 ? 's' : ''}</span>
+        <span class="btn-hint">Click to start compression & optimization</span>
+      </button>
+      
+      <div id="processProgress" class="progress-area hidden">
+        <div class="progress-item">
+          <span id="processText">Processing...</span>
+          <div class="progress-bar">
+            <div id="processFill" class="progress-fill processing"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pending Queue -->
+    <section id="pendingSection" class={pendingCount === 0 && errorCount === 0 ? 'hidden' : ''}>
+      <h2>Queue</h2>
+      <div id="pendingList" class="pending-list">
+        {manifest.pending.map(file => (
+          <div class={`pending-item ${file.status}`} data-id={file.id}>
+            <div class="pending-icon">
+              {file.type === 'image' ? '🖼️' : '🎵'}
+            </div>
+            <div class="pending-info">
+              <div class="pending-filename">{file.filename}</div>
+              <div class="pending-status">
+                {file.status === 'pending' && '⏳ Waiting to process...'}
+                {file.status === 'processing' && '⚙️ Processing...'}
+                {file.status === 'error' && `❌ ${file.error || 'Error'}`}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- Results Area -->
+    <section id="resultsArea" class="results-area hidden">
+      <h2>Just Processed</h2>
+      <div id="resultsList" class="results-list"></div>
+    </section>
+
+    <!-- Existing Media -->
+    <section class="existing-media">
+      <div class="section-header">
+        <h2>Images ({images.length})</h2>
+        <span class="hint">Click ID to copy for content</span>
+      </div>
+      
+      {images.length === 0 ? (
+        <p class="empty">No images yet. Upload some!</p>
+      ) : (
+        <div class="media-grid">
+          {images.map(img => (
+            <div class="media-card">
+              <div class="media-preview">
+                <img 
+                  src={img.variants.sm?.url || img.variants.md?.url} 
+                  alt={img.id}
+                  loading="lazy"
+                />
+              </div>
+              <div class="media-info">
+                <button 
+                  class="copy-id"
+                  data-id={img.id}
+                  title="Copy manifest ID"
+                >
+                  <code>{img.id}</code>
+                  <span class="copy-icon">📋</span>
+                </button>
+                <div class="media-meta">
+                  {img.metadata.width}×{img.metadata.height} • 
+                  {Object.keys(img.variants).length} sizes
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div class="section-header">
+        <h2>Audio ({audio.length})</h2>
+        <span class="hint">Click ID to copy for content</span>
+      </div>
+      
+      {audio.length === 0 ? (
+        <p class="empty">No audio yet. Upload some!</p>
+      ) : (
+        <div class="media-list">
+          {audio.map(track => (
+            <div class="audio-card">
+              <div class="audio-waveform">
+                <svg viewBox="0 0 100 20" class="waveform-svg" preserveAspectRatio="none">
+                  {Array.from({ length: 20 }).map((_, i) => {
+                    const height = Math.random() * 16 + 2;
+                    const y = 10 - height / 2;
+                    return (
+                      <rect 
+                        x={i * 5} 
+                        y={y} 
+                        width="3" 
+                        height={height}
+                        fill="currentColor"
+                        opacity="0.6"
+                      />
+                    );
+                  })}
+                </svg>
+              </div>
+              <div class="audio-info">
+                <button 
+                  class="copy-id"
+                  data-id={track.id}
+                  title="Copy manifest ID"
+                >
+                  <code>{track.id}</code>
+                  <span class="copy-icon">📋</span>
+                </button>
+                <div class="audio-meta">
+                  {formatDuration(track.metadata.duration)} • 
+                  MP3 {formatBytes(track.variants.mp3.size)} • 
+                  OGG {formatBytes(track.variants.ogg.size)}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  </div>
+</Layout>
+
+<style>
+  .admin-media {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  .admin-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .admin-header h1 {
+    font-size: 2rem;
+    margin: 0 0 0.5rem;
+  }
+
+  .subtitle {
+    color: var(--text-muted, #666);
+    margin: 0;
+  }
+
+  /* Status Bar */
+  .status-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: var(--bg-subtle, #f5f5f5);
+    border-radius: 8px;
+  }
+
+  .status-item {
+    text-align: center;
+  }
+
+  .status-count {
+    display: block;
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--text, #333);
+  }
+
+  .status-count.error {
+    color: var(--error, #e53e3e);
+  }
+
+  .status-label {
+    font-size: 0.875rem;
+    color: var(--text-muted, #666);
+  }
+
+  /* Upload Zone */
+  .upload-section {
+    margin-bottom: 1.5rem;
+  }
+
+  .dropzone {
+    border: 2px dashed var(--border-color, #ccc);
+    border-radius: 12px;
+    padding: 3rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: var(--bg-subtle, #fafafa);
+    position: relative;
+  }
+
+  .dropzone:hover,
+  .dropzone:focus {
+    border-color: var(--accent, #007bff);
+    background: var(--bg-hover, #f0f7ff);
+  }
+
+  .dropzone.dragover {
+    border-color: var(--accent, #007bff);
+    background: var(--bg-hover, #f0f7ff);
+    transform: scale(1.01);
+  }
+
+  .dropzone-content {
+    pointer-events: none;
+  }
+
+  .upload-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 1rem;
+    opacity: 0.5;
+  }
+
+  .dropzone-text {
+    font-size: 1.1rem;
+    margin: 0 0 0.5rem;
+  }
+
+  .dropzone-hint {
+    font-size: 0.875rem;
+    color: var(--text-muted, #666);
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .file-input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  /* Process Button */
+  .process-section {
+    margin-bottom: 2rem;
+  }
+
+  .process-btn {
+    width: 100%;
+    padding: 1.5rem;
+    background: var(--accent, #007bff);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+  }
+
+  .process-btn:hover:not(:disabled) {
+    background: var(--accent-hover, #0056b3);
+    transform: translateY(-1px);
+  }
+
+  .process-btn:disabled {
+    background: var(--border-color, #ddd);
+    cursor: not-allowed;
+  }
+
+  .btn-text {
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  .btn-hint {
+    font-size: 0.875rem;
+    opacity: 0.8;
+  }
+
+  /* Progress */
+  .progress-area {
+    margin-top: 1rem;
+    padding: 1.5rem;
+    background: var(--bg-subtle, #f5f5f5);
+    border-radius: 8px;
+  }
+
+  .progress-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .progress-bar {
+    height: 8px;
+    background: var(--border-color, #ddd);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent, #007bff);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+    width: 0%;
+  }
+
+  .progress-fill.processing {
+    animation: progress-pulse 1.5s ease-in-out infinite;
+    width: 100% !important;
+  }
+
+  @keyframes progress-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* Pending Queue */
+  .pending-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .pending-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--bg-subtle, #f9f9f9);
+    border-radius: 8px;
+    border-left: 4px solid var(--border-color, #ddd);
+  }
+
+  .pending-item.processing {
+    border-left-color: var(--accent, #007bff);
+    background: var(--bg-hover, #f0f7ff);
+  }
+
+  .pending-item.error {
+    border-left-color: var(--error, #e53e3e);
+    background: var(--error-bg, #fff5f5);
+  }
+
+  .pending-icon {
+    font-size: 1.5rem;
+  }
+
+  .pending-filename {
+    font-weight: 500;
+    font-size: 0.9375rem;
+  }
+
+  .pending-status {
+    font-size: 0.8rem;
+    color: var(--text-muted, #666);
+    margin-top: 0.25rem;
+  }
+
+  .pending-item.error .pending-status {
+    color: var(--error, #e53e3e);
+  }
+
+  /* Results */
+  .results-area {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: var(--success-bg, #f0fff4);
+    border: 1px solid var(--success-border, #68d391);
+    border-radius: 8px;
+  }
+
+  .results-area h2 {
+    margin: 0 0 1rem;
+    font-size: 1.25rem;
+  }
+
+  .results-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .result-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid var(--border-color, #ddd);
+  }
+
+  .result-thumb {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+
+  .result-info {
+    flex: 1;
+  }
+
+  .result-id {
+    font-family: monospace;
+    font-size: 0.875rem;
+    padding: 0.25rem 0.5rem;
+    background: var(--bg-subtle, #f5f5f5);
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+  }
+
+  .result-meta {
+    font-size: 0.8rem;
+    color: var(--text-muted, #666);
+    margin-top: 0.25rem;
+  }
+
+  .result-status {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    background: var(--success-bg, #f0fff4);
+    color: var(--success-text, #22543d);
+  }
+
+  .result-status.replaced {
+    background: var(--warning-bg, #fffaf0);
+    color: var(--warning-text, #744210);
+  }
+
+  /* Existing Media */
+  .existing-media h2 {
+    font-size: 1.5rem;
+    margin: 2rem 0 1rem;
+  }
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 1rem;
+  }
+
+  .hint {
+    font-size: 0.875rem;
+    color: var(--text-muted, #666);
+  }
+
+  .empty {
+    color: var(--text-muted, #666);
+    font-style: italic;
+    padding: 2rem;
+    text-align: center;
+    background: var(--bg-subtle, #f9f9f9);
+    border-radius: 8px;
+  }
+
+  /* Image Grid */
+  .media-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 3rem;
+  }
+
+  .media-card {
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 8px;
+    overflow: hidden;
+    background: white;
+  }
+
+  .media-preview {
+    aspect-ratio: 1;
+    background: var(--bg-subtle, #f5f5f5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .media-preview img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+
+  .media-info {
+    padding: 0.75rem;
+  }
+
+  /* Audio List */
+  .media-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .audio-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 8px;
+    background: white;
+  }
+
+  .audio-waveform {
+    width: 80px;
+    height: 40px;
+    color: var(--accent, #007bff);
+    flex-shrink: 0;
+  }
+
+  .waveform-svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .audio-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* Copy Button */
+  .copy-id {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.75rem;
+    background: var(--bg-subtle, #f5f5f5);
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 0.875rem;
+    transition: all 0.15s ease;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .copy-id:hover {
+    background: var(--bg-hover, #e5e5e5);
+    border-color: var(--accent, #007bff);
+  }
+
+  .copy-id.copied {
+    background: var(--success-bg, #f0fff4);
+    border-color: var(--success-border, #68d391);
+    color: var(--success-text, #22543d);
+  }
+
+  .copy-icon {
+    font-size: 0.75rem;
+    opacity: 0.6;
+    flex-shrink: 0;
+  }
+
+  .media-meta,
+  .audio-meta {
+    font-size: 0.8rem;
+    color: var(--text-muted, #666);
+    margin-top: 0.375rem;
+  }
+
+  .hidden {
+    display: none !important;
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .status-bar {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .audio-card {
+      flex-wrap: wrap;
+    }
+    
+    .audio-waveform {
+      width: 100%;
+      height: 30px;
+    }
+  }
+</style>
+
+<script>
+  // DOM Elements
+  const dropzone = document.getElementById('dropzone') as HTMLDivElement;
+  const fileInput = document.getElementById('fileInput') as HTMLInputElement;
+  const uploadProgress = document.getElementById('uploadProgress') as HTMLDivElement;
+  const uploadText = document.getElementById('uploadText') as HTMLSpanElement;
+  const uploadFill = document.getElementById('uploadFill') as HTMLDivElement;
+  const processSection = document.getElementById('processSection') as HTMLDivElement;
+  const processBtn = document.getElementById('processBtn') as HTMLButtonElement;
+  const processProgress = document.getElementById('processProgress') as HTMLDivElement;
+  const processText = document.getElementById('processText') as HTMLSpanElement;
+  const pendingSection = document.getElementById('pendingSection') as HTMLDivElement;
+  const resultsArea = document.getElementById('resultsArea') as HTMLDivElement;
+  const resultsList = document.getElementById('resultsList') as HTMLDivElement;
+
+  // Drag & Drop
+  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    dropzone.addEventListener(eventName, preventDefaults, false);
+  });
+
+  function preventDefaults(e: Event) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  ['dragenter', 'dragover'].forEach(eventName => {
+    dropzone.addEventListener(eventName, () => dropzone.classList.add('dragover'), false);
+  });
+
+  ['dragleave', 'drop'].forEach(eventName => {
+    dropzone.addEventListener(eventName, () => dropzone.classList.remove('dragover'), false);
+  });
+
+  dropzone.addEventListener('drop', handleDrop, false);
+  fileInput.addEventListener('change', handleFiles, false);
+
+  function handleDrop(e: DragEvent) {
+    const dt = e.dataTransfer;
+    if (!dt) return;
+    handleFiles({ target: { files: dt.files } } as unknown as Event);
+  }
+
+  async function handleFiles(e: Event) {
+    const target = e.target as HTMLInputElement;
+    const files = target.files;
+    if (!files || files.length === 0) return;
+
+    uploadProgress.classList.remove('hidden');
+    
+    const results: Array<{ id: string; filename: string; success: boolean }> = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const progress = ((i + 1) / files.length) * 100;
+      uploadFill.style.width = `${progress}%`;
+      uploadText.textContent = `Uploading "${file.name}" (${i + 1}/${files.length})...`;
+      
+      try {
+        const result = await uploadFile(file);
+        results.push({ id: result.id, filename: file.name, success: true });
+      } catch (error) {
+        alert(`Failed to upload "${file.name}": ${error instanceof Error ? error.message : 'Unknown error'}`);
+        results.push({ id: '', filename: file.name, success: false });
+      }
+    }
+
+    uploadProgress.classList.add('hidden');
+    
+    // Refresh status
+    await refreshStatus();
+    
+    // Show success message
+    const successCount = results.filter(r => r.success).length;
+    if (successCount > 0) {
+      uploadText.textContent = `${successCount} file(s) uploaded and queued`;
+      uploadFill.style.width = '100%';
+      uploadProgress.classList.remove('hidden');
+      setTimeout(() => {
+        uploadProgress.classList.add('hidden');
+      }, 3000);
+    }
+  }
+
+  async function uploadFile(file: File): Promise<{ id: string; type: string; status: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch('/api/admin/media/upload', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Upload failed');
+    }
+
+    return response.json();
+  }
+
+  // Process Button
+  processBtn.addEventListener('click', async () => {
+    processBtn.disabled = true;
+    processProgress.classList.remove('hidden');
+    processText.textContent = 'Processing files... This may take a while for long audio.';
+    
+    try {
+      const response = await fetch('/api/admin/media/process-pending', {
+        method: 'POST',
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Processing failed');
+      }
+      
+      processProgress.classList.add('hidden');
+      
+      if (result.succeeded > 0) {
+        displayResults(result.results.filter((r: { success: boolean }) => r.success));
+        resultsArea.classList.remove('hidden');
+      }
+      
+      if (result.failed > 0) {
+        const failed = result.results.filter((r: { success: boolean }) => !r.success);
+        alert(`${result.failed} file(s) failed:\n${failed.map((f: { id: string; error?: string }) => `${f.id}: ${f.error}`).join('\n')}`);
+      }
+      
+      // Refresh the page to show updated media grid
+      setTimeout(() => window.location.reload(), 2000);
+      
+    } catch (error) {
+      processProgress.classList.add('hidden');
+      processBtn.disabled = false;
+      alert(`Processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  });
+
+  function displayResults(results: Array<{ id: string }>) {
+    resultsList.innerHTML = results.map((r: { id: string }) => `
+      <div class="result-item">
+        <div class="result-thumb" style="background: #f0f0f0; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+          ✅
+        </div>
+        <div class="result-info">
+          <div class="result-id" data-id="${r.id}">
+            ${r.id}
+            <span class="copy-icon">📋</span>
+          </div>
+          <div class="result-meta">
+            Ready to use in content
+          </div>
+        </div>
+        <span class="result-status">Processed</span>
+      </div>
+    `).join('');
+
+    // Add copy handlers
+    resultsList.querySelectorAll('.result-id').forEach(el => {
+      el.addEventListener('click', () => {
+        const id = el.getAttribute('data-id');
+        if (id) {
+          navigator.clipboard.writeText(id);
+          el.classList.add('copied');
+          setTimeout(() => el.classList.remove('copied'), 2000);
+        }
+      });
+    });
+  }
+
+  // Refresh status display
+  async function refreshStatus() {
+    try {
+      const response = await fetch('/api/admin/media/process-pending');
+      if (!response.ok) return;
+      
+      const status = await response.json();
+      
+      // Update counts
+      const pendingEl = document.getElementById('pendingCount');
+      const processingEl = document.getElementById('processingCount');
+      const errorEl = document.getElementById('errorCount');
+      
+      if (pendingEl) pendingEl.textContent = status.counts.pending;
+      if (processingEl) processingEl.textContent = status.counts.processing;
+      if (errorEl) errorEl.textContent = status.counts.error;
+      
+      // Update button
+      const btnText = processBtn.querySelector('.btn-text');
+      if (btnText) {
+        btnText.textContent = `Process ${status.counts.pending} Pending File${status.counts.pending !== 1 ? 's' : ''}`;
+      }
+      processBtn.disabled = status.counts.pending === 0;
+      processSection.style.opacity = status.counts.pending === 0 ? '0.5' : '1';
+      
+      // Show/hide pending section
+      if (status.counts.pending > 0 || status.counts.error > 0) {
+        pendingSection.classList.remove('hidden');
+      }
+      
+    } catch (e) {
+      console.error('Failed to refresh status:', e);
+    }
+  }
+
+  // Copy handlers for existing media
+  document.querySelectorAll('.copy-id').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-id');
+      if (id) {
+        navigator.clipboard.writeText(id);
+        btn.classList.add('copied');
+        const icon = btn.querySelector('.copy-icon');
+        if (icon) icon.textContent = '✓';
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          if (icon) icon.textContent = '📋';
+        }, 2000);
+      }
+    });
+  });
+
+  // Poll status every 5 seconds if there are pending/processing items
+  const pendingCount = parseInt(document.getElementById('pendingCount')?.textContent || '0');
+  const processingCount = parseInt(document.getElementById('processingCount')?.textContent || '0');
+  
+  if (pendingCount > 0 || processingCount > 0) {
+    setInterval(refreshStatus, 5000);
+  }
+</script>

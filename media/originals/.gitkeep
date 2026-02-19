@@ -1,0 +1,14 @@
+# Drop media files here, then process via /admin/media or npm run media:process
+
+## images/
+- JPG, PNG, TIFF, WebP accepted
+- Max 100MB per file
+- Outputs: WebP variants (640/1024/1920/2560px)
+
+## audio/
+- WAV, AIFF, FLAC, M4A accepted  
+- Max 100MB per file
+- Long tracks (20+ min) OK — process asynchronously
+- Outputs: MP3 256k + OGG 192k + waveform
+
+See media/README.md for full protocol

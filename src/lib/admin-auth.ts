@@ -3,7 +3,10 @@
  * Used by /admin page and /api/admin/* routes.
  */
 
+import { config } from 'dotenv';
 import { createHmac, timingSafeEqual } from 'node:crypto';
+
+config({ path: '.env' });
 
 const COOKIE_NAME = 'admin_session';
 const SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24h

@@ -3,7 +3,16 @@
  * OptimizedImage — Responsive, lazy-loaded images with blurhash
  * 
  * Uses the media processor manifest for variant selection.
- * Falls back to src if variants not available.
+ * WebP-only (Sole-Artist Edition - no AVIF complexity)
+ * 
+ * Usage:
+ *   <OptimizedImage 
+ *     src={image.variants.md.url}
+ *     alt={image.alt}
+ *     variants={image.variants}
+ *     blurhash={image.blurhash}
+ *     dominantColor={image.dominantColor}
+ *   />
  */
 
 import type { HTMLAttributes } from 'astro/types';
@@ -21,9 +30,7 @@ interface Props extends HTMLAttributes<'img'> {
   width?: number;
   height?: number;
   variants?: {
-    [format: string]: {
-      [size: string]: ImageVariant;
-    };
+    [size: string]: ImageVariant;
   };
   blurhash?: string;
   dominantColor?: string;
@@ -53,7 +60,7 @@ const {
 // Calculate aspect ratio for container
 const calculatedAspectRatio = aspectRatio || (width && height ? width / height : undefined);
 
-// Generate srcset for each format
+// Generate srcset from WebP variants
 const generateSrcset = (formatVariants: { [size: string]: ImageVariant }) => {
   return Object.entries(formatVariants)
     .sort((a, b) => a[1].width - b[1].width)
@@ -62,12 +69,10 @@ const generateSrcset = (formatVariants: { [size: string]: ImageVariant }) => {
 };
 
 // Determine if we have processed variants
-const hasVariants = variants && (variants.webp || variants.avif);
-const webpVariants = variants?.webp;
-const avifVariants = variants?.avif;
+const hasVariants = variants && Object.keys(variants).length > 0;
 
-// Use smallest variant as LQIP placeholder (blurhash decoded or tiny image)
-const lqipUrl = webpVariants?.sm?.url || src;
+// Use smallest variant as LQIP placeholder
+const lqipUrl = variants?.sm?.url || src;
 
 // Container style for aspect ratio preservation
 const containerStyle = calculatedAspectRatio
@@ -82,25 +87,14 @@ const containerStyle = calculatedAspectRatio
     data-blurhash={blurhash}
     data-dominant-color={dominantColor}
   >
-    {/* AVIF - best compression, modern browsers */}
-    {avifVariants && (
-      <source
-        type="image/avif"
-        srcset={generateSrcset(avifVariants)}
-        sizes={sizes}
-      />
-    )}
+    {/* WebP - primary format, wide support */}
+    <source
+      type="image/webp"
+      srcset={generateSrcset(variants)}
+      sizes={sizes}
+    />
     
-    {/* WebP - good compression, wide support */}
-    {webpVariants && (
-      <source
-        type="image/webp"
-        srcset={generateSrcset(webpVariants)}
-        sizes={sizes}
-      />
-    )}
-    
-    {/* Fallback JPEG/PNG */}
+    {/* Fallback JPEG/PNG - original src */}
     <img
       src={src}
       alt={alt}
@@ -162,12 +156,10 @@ const containerStyle = calculatedAspectRatio
 
 <script>
   // Decode blurhash and set as background for skeleton
-  // This runs client-side for progressive enhancement
   document.querySelectorAll('.optimized-image[data-blurhash]').forEach((el) => {
     const blurhash = el.getAttribute('data-blurhash');
     if (!blurhash) return;
     
-    // Dynamic import of blurhash decoder only when needed
     import('blurhash').then(({ decode }) => {
       try {
         const pixels = decode(blurhash, 32, 32);

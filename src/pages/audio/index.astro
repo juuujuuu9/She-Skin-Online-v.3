@@ -2,10 +2,20 @@
 import Layout from '@layouts/Layout.astro';
 import { PlayButton } from '@components/AudioControls';
 import { SAMPLE_TRACKS } from '@lib/audioUtils';
+import type { Track } from '@lib/audioStore';
+
+const BALLM_TRACK: Track = {
+  id: 'ballm-mt1',
+  title: 'beside a luv like mine (mt1 stream)',
+  artist: 'she_skin',
+  src: '/media/audio/sheskin - beside a luv like mine (mt1 stream).mp3',
+  album: 'ICT★SNU SOUND Vol. 1',
+  year: 2024,
+};
 
 // Sample release data - replace with CMS data
 const releases = [
-  { id: '1', title: 'ICT★SNU SOUND Vol. 1', year: 2024, coverArt: null, tracks: SAMPLE_TRACKS },
+  { id: '1', title: 'ICT★SNU SOUND Vol. 1', year: 2024, coverArt: '/media/audio/BALLM-COVER.jpg', tracks: [BALLM_TRACK] },
   { id: '2', title: 'Release 2', year: 2024, coverArt: null, tracks: SAMPLE_TRACKS },
   { id: '3', title: 'Release 3', year: 2024, coverArt: null, tracks: SAMPLE_TRACKS },
   { id: '4', title: 'Release 4', year: 2024, coverArt: null, tracks: SAMPLE_TRACKS },
@@ -44,8 +54,8 @@ const releases = [
             <div class="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-colors">
               <PlayButton
                 client:load
-                track={release.tracks[0]}
-                queue={release.tracks}
+                track={{ ...release.tracks[0], coverArt: release.coverArt ?? undefined }}
+                queue={release.tracks.map(t => ({ ...t, coverArt: release.coverArt ?? undefined }))}
                 variant="overlay"
                 size="lg"
                 className="opacity-0 group-hover:opacity-100 transition-opacity"
