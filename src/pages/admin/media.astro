@@ -1,9 +1,9 @@
 ---
 export const prerender = false;
 
-import Layout from '../../../layouts/Layout.astro';
-import { requireAdminAuth } from '../../../lib/admin-auth.js';
-import { loadManifest } from '../../../lib/media-process.js';
+import Layout from '../../layouts/Layout.astro';
+import { requireAdminAuth } from '../../lib/admin-auth';
+import { loadManifest } from '../../lib/media-process';
 
 // Check auth server-side
 const authCheck = requireAdminAuth(Astro.request);

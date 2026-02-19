@@ -2,7 +2,7 @@
 export const prerender = false;
 
 import Layout from '../../layouts/Layout.astro';
-import { requireAdminAuth } from '../../lib/admin-auth.js';
+import { requireAdminAuth } from '../../lib/admin-auth';
 
 const authCheck = requireAdminAuth(Astro.request);
 if (authCheck) {
