@@ -77,3 +77,13 @@ img {
 .text-stroke-white.text-stroke-hover-blue:hover {
   -webkit-text-stroke: 1px var(--color-vcr-blue);
 }
+
+.text-stroke-red {
+  -webkit-text-stroke: 1px #ff0000;
+  paint-order: stroke fill;
+}
+
+.text-stroke-vcr-blue {
+  -webkit-text-stroke: 1px var(--color-vcr-blue);
+  paint-order: stroke fill;
+}

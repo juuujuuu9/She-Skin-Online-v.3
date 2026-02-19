@@ -8,9 +8,10 @@ interface Props {
   description?: string;
   hideHeader?: boolean;
   transparentHeader?: boolean;
+  neonGreenMenu?: boolean;
 }
 
-const { title, description = 'SheSkin — Artist Portfolio & Shop', hideHeader = false, transparentHeader = false } = Astro.props;
+const { title, description = 'SheSkin — Artist Portfolio & Shop', hideHeader = false, transparentHeader = false, neonGreenMenu = false } = Astro.props;
 
 const navItems = [
   { href: '/shop', label: 'Shop' },
@@ -41,28 +42,28 @@ const navItems = [
           {/* Desktop nav - hidden on sm and below */}
           <nav class={`hidden sm:flex items-center justify-between w-full text-sm tracking-wide font-medium ${transparentHeader ? 'text-vcr-blue' : 'text-black'}`}>
             {navItems.map((item) => (
-              <a href={item.href} class={transparentHeader ? 'text-stroke-white text-stroke-hover-blue hover:text-vcr-blue transition-colors' : 'hover:text-gray-600 transition-colors'}>{item.label}</a>
+              <a href={item.href} class={transparentHeader ? 'hover:text-vcr-blue transition-colors' : 'hover:text-gray-600 transition-colors'}>{item.label}</a>
             ))}
           </nav>
           {/* Mobile menu toggle - visible only on sm and below */}
           <button
             type="button"
             id="menu-toggle"
-            class={`sm:hidden flex items-center justify-center w-16 h-16 text-xl font-light transition-colors ${transparentHeader ? 'text-vcr-blue text-stroke-white text-stroke-hover-blue hover:text-vcr-blue' : 'text-black hover:text-gray-600'}`}
+            class={`sm:hidden flex items-center justify-center w-16 h-16 transition-colors touch-manipulation ${neonGreenMenu ? 'text-[2.8125rem] font-light text-vcr-blue hover:text-vcr-blue' : `text-xl font-light ${transparentHeader ? 'text-vcr-blue hover:text-vcr-blue' : 'text-black hover:text-gray-600'}`}`}
             aria-label="Open menu"
           >
             +
           </button>
         </header>
 
-        {/* Mobile tray - slides in from left under header */}
+        {/* Mobile tray - slides in from left, full height, menu aligned below header */}
         <div
           id="menu-tray"
-          class="fixed left-0 top-16 z-40 w-full h-[calc(100vh-4rem)] bg-white border-r border-black transform -translate-x-full transition-transform duration-300 ease-out"
+          class={`fixed left-0 top-0 z-40 w-full h-screen border-r border-black transform -translate-x-full transition-transform duration-300 ease-out ${neonGreenMenu ? 'bg-transparent' : 'bg-white'}`}
         >
-          <nav class={`flex flex-col gap-4 p-6 text-sm tracking-wide font-medium text-left ${transparentHeader ? 'text-vcr-blue' : 'text-black'}`}>
+          <nav class={`flex flex-col gap-4 pt-[5.5rem] px-6 pb-6 text-sm tracking-wide text-left ${neonGreenMenu ? 'font-bold' : 'font-medium'} ${transparentHeader ? 'text-vcr-blue' : 'text-black'}`}>
             {navItems.map((item) => (
-              <a href={item.href} class={transparentHeader ? 'text-stroke-white text-stroke-hover-blue hover:text-vcr-blue transition-colors' : 'hover:text-gray-600 transition-colors'}>{item.label}</a>
+              <a href={item.href} class={transparentHeader ? 'hover:text-vcr-blue transition-colors' : 'hover:text-gray-600 transition-colors'}>{item.label}</a>
             ))}
           </nav>
         </div>
@@ -70,38 +71,42 @@ const navItems = [
         {/* Backdrop when tray is open */}
         <div
           id="menu-backdrop"
-          class="fixed inset-0 top-16 z-30 bg-black/20 opacity-0 pointer-events-none transition-opacity duration-300 sm:hidden"
+          class="fixed inset-0 top-0 z-30 bg-white/60 opacity-0 pointer-events-none transition-opacity duration-300 sm:hidden"
         />
 
         <script is:inline>
-          (function () {
-            const toggle = document.getElementById('menu-toggle');
-            const tray = document.getElementById('menu-tray');
-            const backdrop = document.getElementById('menu-backdrop');
+          (function() {
+            function handleMenuClick(e) {
+              const toggle = document.getElementById('menu-toggle');
+              const tray = document.getElementById('menu-tray');
+              const backdrop = document.getElementById('menu-backdrop');
+              if (!toggle || !tray || !backdrop) return;
 
-            if (!toggle || !tray || !backdrop) return;
+              function openTray() {
+                tray.classList.remove('-translate-x-full');
+                backdrop.classList.remove('opacity-0', 'pointer-events-none');
+                backdrop.classList.add('opacity-100', 'pointer-events-auto');
+              }
 
-            function openTray() {
-              tray.classList.remove('-translate-x-full');
-              backdrop.classList.remove('opacity-0', 'pointer-events-none');
-              backdrop.classList.add('opacity-100', 'pointer-events-auto');
-            }
+              function closeTray() {
+                tray.classList.add('-translate-x-full');
+                backdrop.classList.remove('opacity-100', 'pointer-events-auto');
+                backdrop.classList.add('opacity-0', 'pointer-events-none');
+              }
 
-            function closeTray() {
-              tray.classList.add('-translate-x-full');
-              backdrop.classList.remove('opacity-100', 'pointer-events-auto');
-              backdrop.classList.add('opacity-0', 'pointer-events-none');
-            }
-
-            toggle.addEventListener('click', () => {
-              if (tray.classList.contains('-translate-x-full')) {
-                openTray();
-              } else {
+              if (e.target.closest('#menu-toggle')) {
+                e.preventDefault();
+                if (tray.classList.contains('-translate-x-full')) {
+                  openTray();
+                } else {
+                  closeTray();
+                }
+              } else if (e.target.closest('#menu-backdrop')) {
                 closeTray();
               }
-            });
+            }
 
-            backdrop.addEventListener('click', closeTray);
+            document.addEventListener('click', handleMenuClick);
           })();
         </script>
       </>

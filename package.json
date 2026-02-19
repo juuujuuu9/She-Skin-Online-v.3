@@ -16,7 +16,8 @@
     "media:watch": "chokidar 'media/originals/**/*' -c 'npm run media:process -- --file {path}'",
     "migrate:wp": "tsx scripts/migrate-wp.ts",
     "upload:images": "tsx scripts/upload-product-images.ts",
-    "compress:images": "tsx scripts/compress-images.ts"
+    "compress:images": "tsx scripts/compress-images.ts",
+    "fetch:audio-covers": "tsx scripts/fetch-audio-covers.ts"
   },
   "dependencies": {
     "@astrojs/react": "^4.4.2",
