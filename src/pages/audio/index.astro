@@ -1,21 +1,58 @@
 ---
 import Layout from '@layouts/Layout.astro';
+import { PlayButton } from '@components/AudioControls';
+import { SAMPLE_TRACKS } from '@lib/audioUtils';
+
+// Sample release data - replace with CMS data
+const releases = [
+  { id: '1', title: 'ICT★SNU SOUND Vol. 1', year: 2024, coverArt: null, tracks: SAMPLE_TRACKS },
+  { id: '2', title: 'Release 2', year: 2024, coverArt: null, tracks: SAMPLE_TRACKS },
+  { id: '3', title: 'Release 3', year: 2024, coverArt: null, tracks: SAMPLE_TRACKS },
+  { id: '4', title: 'Release 4', year: 2024, coverArt: null, tracks: SAMPLE_TRACKS },
+  { id: '5', title: 'Release 5', year: 2024, coverArt: null, tracks: SAMPLE_TRACKS },
+  { id: '6', title: 'Release 6', year: 2024, coverArt: null, tracks: SAMPLE_TRACKS },
+  { id: '7', title: 'Release 7', year: 2024, coverArt: null, tracks: SAMPLE_TRACKS },
+  { id: '8', title: 'Release 8', year: 2024, coverArt: null, tracks: SAMPLE_TRACKS },
+  { id: '9', title: 'Release 9', year: 2024, coverArt: null, tracks: SAMPLE_TRACKS },
+];
 ---
 
 <Layout title="ICT★SNU SOUND — she_skin">
   <main class="min-h-screen bg-white">
-    <header class="px-6 py-12 md:py-20 border-b border-gray-100">
-      <div class="max-w-7xl mx-auto">
-        <h1 class="text-4xl md:text-6xl font-bold tracking-tight text-gray-900 mb-4">
+    <header class="px-6 pt-8 md:pt-8">
+      <div class="w-full">
+        <h1 class="sm:text-2xl text-[13px] font-bold tracking-tight text-black mb-4">
           ICT★SNU SOUND
         </h1>
+        <p class="text-sm text-gray-500 max-w-xl">
+          Audio releases and sound works. Click play to begin listening — the player will persist as you navigate.
+        </p>
       </div>
     </header>
-    <section class="px-6 py-12">
-      <div class="max-w-3xl mx-auto">
-        <p class="text-gray-600 leading-relaxed">
-          Audio releases and sound works. Coming soon.
-        </p>
+
+    <section class="px-6 pt-8 py-12">
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        {releases.map((release) => (
+          <div class="relative aspect-square overflow-hidden bg-gray-100 group">
+            {release.coverArt ? (
+              <img src={release.coverArt} alt={release.title} class="w-full h-full object-cover" />
+            ) : (
+              <div class="w-full h-full flex items-center justify-center">
+                <span class="text-xs text-gray-400">Album Art</span>
+              </div>
+            )}
+            <div class="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-colors">
+              <PlayButton
+                client:load
+                track={release.tracks[0]}
+                queue={release.tracks}
+                variant="overlay"
+                size="lg"
+                className="opacity-0 group-hover:opacity-100 transition-opacity"
+              />
+            </div>
+          </div>
+        ))}
       </div>
     </section>
   </main>
