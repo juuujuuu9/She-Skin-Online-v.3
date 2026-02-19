@@ -1,6 +1,6 @@
 ---
 import Layout from '@layouts/Layout.astro';
-import { PlayButton } from '@components/AudioControls';
+import { PlayButton, AddToQueueButton } from '@components/AudioControls';
 import { SAMPLE_TRACKS } from '@lib/audioUtils';
 import type { Track } from '@lib/audioStore';
 
@@ -13,10 +13,17 @@ const BALLM_TRACK: Track = {
   year: 2024,
 };
 
+const LIBC_TRACK: Track = {
+  id: 'libc-driving',
+  title: 'Driving On The Sun',
+  artist: 'LIBC',
+  src: '/media/audio/LIBC - Driving On The Sun.mp3',
+};
+
 // Sample release data - replace with CMS data
 const releases = [
   { id: '1', title: 'ICT★SNU SOUND Vol. 1', year: 2024, coverArt: '/media/audio/BALLM-COVER.jpg', tracks: [BALLM_TRACK] },
-  { id: '2', title: 'Release 2', year: 2024, coverArt: null, tracks: SAMPLE_TRACKS },
+  { id: '2', title: 'Driving On The Sun', year: 2024, coverArt: '/media/audio/Screenshot-2025-12-17-at-12.47.33-AM.webp', tracks: [LIBC_TRACK] },
   { id: '3', title: 'Release 3', year: 2024, coverArt: null, tracks: SAMPLE_TRACKS },
   { id: '4', title: 'Release 4', year: 2024, coverArt: null, tracks: SAMPLE_TRACKS },
   { id: '5', title: 'Release 5', year: 2024, coverArt: null, tracks: SAMPLE_TRACKS },
@@ -51,14 +58,19 @@ const releases = [
                 <span class="text-xs text-gray-400">Album Art</span>
               </div>
             )}
-            <div class="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-colors">
+            <div class="absolute inset-0 flex items-center justify-center gap-2 bg-black/0 group-hover:bg-black/20 transition-colors">
               <PlayButton
                 client:load
                 track={{ ...release.tracks[0], coverArt: release.coverArt ?? undefined }}
                 queue={release.tracks.map(t => ({ ...t, coverArt: release.coverArt ?? undefined }))}
                 variant="overlay"
                 size="lg"
-                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                className="opacity-0 group-hover:opacity-100 transition-opacity !bg-transparent !border !border-white !text-white hover:!bg-white hover:!text-black"
+              />
+              <AddToQueueButton
+                client:load
+                track={{ ...release.tracks[0], coverArt: release.coverArt ?? undefined }}
+                className="opacity-0 group-hover:opacity-100 transition-opacity !h-12 !w-12 !border-white !text-white hover:!bg-white hover:!text-black"
               />
             </div>
           </div>

@@ -18,11 +18,35 @@ export function AudioPlayer() {
     setVolume,
     toggleMute,
     toggleExpanded,
+    removeFromQueue,
   } = useAudio();
   
   const { seek } = useAudioEngine();
   const [isDragging, setIsDragging] = useState(false);
+  const [showOverlay, setShowOverlay] = useState(true);
+  const [isManualOverlay, setIsManualOverlay] = useState(false);
   const progressRef = useRef<HTMLDivElement>(null);
+
+  // When song starts from grid: show overlay, no X, fade after 1s. When opened via click: show X, persist.
+  useEffect(() => {
+    if (!playerVisible || !audio.currentTrack) return;
+    setShowOverlay(true);
+    setIsManualOverlay(false);
+    const timer = setTimeout(() => setShowOverlay(false), 1000);
+    return () => clearTimeout(timer);
+  }, [playerVisible, audio.currentTrack?.id]);
+
+  // Close overlay when menu opens (mobile) or user navigates to another page
+  useEffect(() => {
+    const handleMenuOpened = () => setShowOverlay(false);
+    const handlePageChange = () => setShowOverlay(false);
+    window.addEventListener('menu-opened', handleMenuOpened);
+    document.addEventListener('astro:before-preparation', handlePageChange);
+    return () => {
+      window.removeEventListener('menu-opened', handleMenuOpened);
+      document.removeEventListener('astro:before-preparation', handlePageChange);
+    };
+  }, []);
 
   // Don't render anything if player not visible
   if (!playerVisible) return null;
@@ -46,14 +70,84 @@ export function AudioPlayer() {
 
   return (
     <>
+      {/* Album Art Overlay - persists until X clicked or mouse leaves */}
+      <div
+        className={`fixed top-16 bottom-16 left-0 right-0 w-full bg-white z-40 p-6 flex items-center justify-center overflow-hidden transition-opacity duration-500 ${
+          showOverlay ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+        onMouseLeave={() => {
+          // On desktop (md+), manual overlay closes on mouse leave. On mobile, stays until X/menu/page change.
+          if (isManualOverlay && typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches) {
+            setShowOverlay(false);
+          }
+        }}
+      >
+        {/* Close button - top right, only when opened via player bar click */}
+        {isManualOverlay && (
+          <button
+            type="button"
+            onClick={() => setShowOverlay(false)}
+            className="absolute top-4 right-4 p-2 text-black hover:text-gray-600 transition-colors"
+            aria-label="Close overlay"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
+
+        {/* md and below: column (name, image, links). lg+: horizontal row */}
+        <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-0 w-full">
+          {/* Name */}
+          <div className="md:flex-1 flex items-center justify-center md:justify-start min-w-0 w-full md:w-auto">
+            <h2 className="text-[13px] font-normal tracking-tight text-black uppercase text-center md:text-left truncate md:max-w-none">
+              {audio.currentTrack?.title || 'Unknown Track'}
+            </h2>
+          </div>
+          {/* Image */}
+          <div className="md:flex-1 flex items-center justify-center h-full min-w-0 shrink-0">
+            {audio.currentTrack?.coverArt ? (
+              <img
+                src={audio.currentTrack.coverArt}
+                alt=""
+                className="h-auto max-h-[40vh] md:max-h-full w-auto object-contain min-h-0"
+              />
+            ) : null}
+          </div>
+          {/* Links */}
+          <div className="md:flex-1 flex items-center justify-center md:justify-end gap-4 shrink-0">
+            <a
+              href="#"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm font-medium tracking-wide text-black hover:text-gray-600 transition-colors"
+            >
+              YOUTUBE
+            </a>
+            <a
+              href="#"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm font-medium tracking-wide text-black hover:text-gray-600 transition-colors"
+            >
+              SOUNDCLOUD
+            </a>
+          </div>
+        </div>
+      </div>
+
       {/* Main Player Bar */}
       <footer 
         className="fixed bottom-0 left-0 right-0 z-50 bg-white text-black border-t border-black transition-transform duration-300"
         style={{ transform: audio.isExpanded ? 'translateY(-200px)' : 'translateY(0)' }}
       >
         <div className="flex items-center h-16 px-4 sm:px-6">
-          {/* Track Info */}
-          <div className="flex items-center gap-4 min-w-0 flex-1 sm:flex-none sm:w-64">
+          {/* Track Info - clickable to open overlay */}
+          <button
+            type="button"
+            onClick={() => { setShowOverlay(true); setIsManualOverlay(true); }}
+            className="flex items-center gap-4 min-w-0 flex-1 sm:flex-none sm:w-64 text-left cursor-pointer hover:opacity-80 transition-opacity"
+          >
             <div className="w-10 h-10 flex-shrink-0 bg-gray-200 object-cover overflow-hidden">
               {audio.currentTrack?.coverArt ? (
                 <img 
@@ -70,14 +164,14 @@ export function AudioPlayer() {
               )}
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-medium truncate">
+              <p className="text-xs font-medium truncate uppercase">
                 {audio.currentTrack?.title || 'Unknown Track'}
               </p>
-              <p className="text-[10px] text-gray-600 truncate">
+              <p className="text-[10px] text-gray-600 truncate lowercase">
                 {audio.currentTrack?.artist || 'Unknown Artist'}
               </p>
             </div>
-          </div>
+          </button>
 
           {/* Controls */}
           <div className="flex items-center justify-center gap-2 sm:gap-4 flex-1">
@@ -197,7 +291,7 @@ export function AudioPlayer() {
                 {audio.queue.map((track, index) => (
                   <li 
                     key={`${track.id}-${index}`}
-                    className={`flex items-center gap-3 p-2 text-sm ${
+                    className={`flex items-center gap-3 p-2 text-sm group ${
                       index === audio.currentIndex 
                         ? 'bg-gray-200 text-black' 
                         : 'text-gray-600 hover:bg-gray-200/50'
@@ -228,6 +322,16 @@ export function AudioPlayer() {
                     {index === audio.currentIndex && audio.isPlaying && (
                       <span className="text-xs text-green-700 flex-shrink-0">Playing</span>
                     )}
+                    <button
+                      onClick={() => removeFromQueue(index)}
+                      className="p-1.5 text-gray-500 hover:text-black opacity-0 group-hover:opacity-100 transition-opacity"
+                      aria-label="Remove from queue"
+                      title="Remove from queue"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
+                      </svg>
+                    </button>
                   </li>
                 ))}
               </ul>

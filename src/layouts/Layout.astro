@@ -86,6 +86,7 @@ const navItems = [
                 tray.classList.remove('-translate-x-full');
                 backdrop.classList.remove('opacity-0', 'pointer-events-none');
                 backdrop.classList.add('opacity-100', 'pointer-events-auto');
+                window.dispatchEvent(new CustomEvent('menu-opened'));
               }
 
               function closeTray() {

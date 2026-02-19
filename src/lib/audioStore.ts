@@ -147,9 +147,25 @@ export function toggleExpanded() {
 
 export function addToQueue(track: Track) {
   const state = $audio.get();
+  const newQueue = [...state.queue, track];
+
+  // If queue was empty, show player with this track (paused) so user can see their queue
+  if (state.queue.length === 0) {
+    $audio.set({
+      ...state,
+      currentTrack: track,
+      queue: newQueue,
+      currentIndex: 0,
+      isPlaying: false,
+      progress: 0,
+      duration: 0,
+    });
+    return;
+  }
+
   $audio.set({
     ...state,
-    queue: [...state.queue, track],
+    queue: newQueue,
   });
 }
 
