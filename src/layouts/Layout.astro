@@ -7,7 +7,16 @@ interface Props {
   hideHeader?: boolean;
 }
 
-const { title, description = 'Nucleus Commerce — Artist Portfolio & Shop', hideHeader = false } = Astro.props;
+const { title, description = 'SheSkin — Artist Portfolio & Shop', hideHeader = false } = Astro.props;
+
+const navItems = [
+  { href: '/shop', label: 'Shop' },
+  { href: '/audio', label: 'ICT★SNU SOUND' },
+  { href: '/works/physical', label: 'Physical' },
+  { href: '/works/collaborations', label: 'Collaborations' },
+  { href: '/works/digital', label: 'Digital' },
+  { href: '/cart', label: 'Cart' },
+];
 ---
 
 <!doctype html>
@@ -17,30 +26,84 @@ const { title, description = 'Nucleus Commerce — Artist Portfolio & Shop', hid
     <meta name="description" content={description} />
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet" />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
   </head>
-  <body class="min-h-screen bg-white">
+  <body class="min-h-screen bg-white font-sans uppercase">
     {!hideHeader && (
-      <header class="fixed top-0 left-0 right-0 z-50 p-4 flex items-center justify-between bg-black/50 backdrop-blur-sm">
-        <nav class="flex items-center gap-6">
-          <a href="/" class="text-white hover:text-gray-300 transition-colors font-semibold">
-            Home
-          </a>
-          <a href="/works/physical" class="text-white hover:text-gray-300 transition-colors">
-            Works
-          </a>
-          <a href="/shop" class="text-white hover:text-gray-300 transition-colors">
-            Shop
-          </a>
-        </nav>
-        <div>
-          <a href="/cart" class="text-white hover:text-gray-300 transition-colors">
-            Cart
-          </a>
+      <>
+        <header class="fixed top-0 left-0 right-0 z-50 py-0 px-0 sm:py-6 sm:px-8 flex items-center bg-white border-b border-black justify-between">
+          {/* Desktop nav - hidden on sm and below */}
+          <nav class="hidden sm:flex items-center justify-between w-full text-sm tracking-wide font-medium text-black">
+            {navItems.map((item) => (
+              <a href={item.href} class="hover:text-gray-600 transition-colors">{item.label}</a>
+            ))}
+          </nav>
+          {/* Mobile menu toggle - visible only on sm and below */}
+          <button
+            type="button"
+            id="menu-toggle"
+            class="sm:hidden flex items-center justify-center w-16 h-16 text-xl font-light text-black hover:text-gray-600 transition-colors"
+            aria-label="Open menu"
+          >
+            +
+          </button>
+        </header>
+
+        {/* Mobile tray - slides in from left under header */}
+        <div
+          id="menu-tray"
+          class="fixed left-0 top-16 z-40 w-full h-[calc(100vh-4rem)] bg-white border-r border-black transform -translate-x-full transition-transform duration-300 ease-out"
+        >
+          <nav class="flex flex-col gap-4 p-6 text-sm tracking-wide font-medium text-black text-left">
+            {navItems.map((item) => (
+              <a href={item.href} class="hover:text-gray-600 transition-colors">{item.label}</a>
+            ))}
+          </nav>
         </div>
-      </header>
+
+        {/* Backdrop when tray is open */}
+        <div
+          id="menu-backdrop"
+          class="fixed inset-0 top-16 z-30 bg-black/20 opacity-0 pointer-events-none transition-opacity duration-300 sm:hidden"
+        />
+
+        <script is:inline>
+          (function () {
+            const toggle = document.getElementById('menu-toggle');
+            const tray = document.getElementById('menu-tray');
+            const backdrop = document.getElementById('menu-backdrop');
+
+            if (!toggle || !tray || !backdrop) return;
+
+            function openTray() {
+              tray.classList.remove('-translate-x-full');
+              backdrop.classList.remove('opacity-0', 'pointer-events-none');
+              backdrop.classList.add('opacity-100', 'pointer-events-auto');
+            }
+
+            function closeTray() {
+              tray.classList.add('-translate-x-full');
+              backdrop.classList.remove('opacity-100', 'pointer-events-auto');
+              backdrop.classList.add('opacity-0', 'pointer-events-none');
+            }
+
+            toggle.addEventListener('click', () => {
+              if (tray.classList.contains('-translate-x-full')) {
+                openTray();
+              } else {
+                closeTray();
+              }
+            });
+
+            backdrop.addEventListener('click', closeTray);
+          })();
+        </script>
+      </>
     )}
-    <slot />
+    <div class={hideHeader ? '' : 'pt-16'}>
+      <slot />
+    </div>
   </body>
 </html>

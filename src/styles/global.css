@@ -27,7 +27,7 @@
   --spacing-20: 5rem;
   --spacing-24: 6rem;
 
-  --font-family-sans: system-ui, -apple-system, sans-serif;
+  --font-family-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-sans: var(--font-family-sans);
 
   --radius-sm: 0.125rem;
@@ -43,6 +43,7 @@
 }
 
 html {
+  font-size: 13px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;

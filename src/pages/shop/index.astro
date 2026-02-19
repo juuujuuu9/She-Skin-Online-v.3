@@ -1,0 +1,52 @@
+---
+import Layout from '@layouts/Layout.astro';
+---
+
+<Layout title="Shop — she_skin">
+  <main class="min-h-screen bg-white text-[13px]">
+    {/* Hero Image/Video Section */}
+    <section class="px-4 py-4 sm:px-6 sm:py-12">
+      <div class="w-full aspect-video bg-gray-100 flex items-center justify-center text-gray-400">
+        image/video
+      </div>
+    </section>
+
+    {/* Category Blocks - 2x2 on mobile, 1x4 on sm+ */}
+    <section class="px-4 py-4 sm:px-6 sm:py-12">
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-8">
+        <div class="aspect-[3/4] bg-gray-100 flex items-center justify-center text-gray-400">
+          hats
+        </div>
+        <div class="aspect-[3/4] bg-gray-100 flex items-center justify-center text-gray-400">
+          bags
+        </div>
+        <div class="aspect-[3/4] bg-gray-100 flex items-center justify-center text-gray-400">
+          scarves
+        </div>
+        <div class="aspect-[3/4] bg-gray-100 flex items-center justify-center text-gray-400">
+          accessories
+        </div>
+      </div>
+    </section>
+
+    {/* Products Grid */}
+    <section class="px-4 py-4 sm:px-6 sm:py-12">
+      <div class="mx-auto">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-8">
+          {/* Placeholder products */}
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16].map((i) => (
+            <div class="group mb-4 sm:mb-0 text-center">
+              <div class="aspect-square bg-gray-100 mb-4 overflow-hidden">
+                <div class="w-full h-full flex items-center justify-center text-gray-400">
+                  <span>Product {i}</span>
+                </div>
+              </div>
+              <h3 class="font-medium text-gray-900">Product Name {i}</h3>
+              <p class="text-gray-600 mt-1">$120.00</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  </main>
+</Layout>
