@@ -1,7 +1,9 @@
 ---
 import '../styles/global.css';
+import 'lenis/dist/lenis.css';
 import { ClientRouter } from 'astro:transitions';
 import { AudioPlayer } from '@components/AudioPlayer';
+import { LenisSmoothScroll } from '@components/Lenis';
 
 interface Props {
   title: string;
@@ -118,5 +120,8 @@ const navItems = [
     
     {/* Persistent Audio Player - stays mounted and keeps playing across page navigations */}
     <AudioPlayer client:load transition:persist="audio-player" />
+
+    {/* Lenis smooth scroll: non-admin pages only, screens > md */}
+    <LenisSmoothScroll client:load />
   </body>
 </html>
