@@ -159,7 +159,11 @@ export function AudioPlayer() {
           {/* Track Info - clickable to open overlay */}
           <button
             type="button"
-            onClick={() => { setShowOverlay(true); setIsManualOverlay(true); }}
+            onClick={() => {
+              if (audio.isExpanded) toggleExpanded();
+              setShowOverlay(true);
+              setIsManualOverlay(true);
+            }}
             className="flex items-center gap-4 min-w-0 flex-1 sm:flex-none sm:w-64 text-left cursor-pointer hover:opacity-80 transition-opacity"
           >
             <div className="w-10 h-10 flex-shrink-0 bg-gray-200 object-cover overflow-hidden">
@@ -270,7 +274,11 @@ export function AudioPlayer() {
 
           {/* Expand / Queue Toggle */}
           <button 
-            onClick={toggleExpanded}
+            onClick={() => {
+              setShowOverlay(false);
+              setIsManualOverlay(false);
+              toggleExpanded();
+            }}
             className="p-2 text-gray-600 hover:text-black transition-colors ml-2"
             aria-label={audio.isExpanded ? 'Collapse' : 'Expand'}
           >

@@ -73,7 +73,13 @@ export function AudioGrid({ releases }: AudioGridProps) {
             </div>
           )}
           {release.tracks.length > 0 && (
-            <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/0 group-hover:bg-black/20 transition-colors">
+            <div
+              className={`absolute inset-0 transition-colors ${
+                effectiveCols === 1
+                  ? 'flex items-end justify-between p-3'
+                  : 'flex items-center justify-center gap-2 bg-black/0 group-hover:bg-black/20'
+              }`}
+            >
               <PlayButton
                 track={{
                   ...release.tracks[0],
@@ -85,14 +91,18 @@ export function AudioGrid({ releases }: AudioGridProps) {
                 }))}
                 variant="overlay"
                 size="lg"
-                className="opacity-0 group-hover:opacity-100 transition-opacity bg-transparent! border! border-white! text-white! hover:bg-white! hover:text-black!"
+                className={`transition-opacity bg-transparent! border! border-white! text-white! hover:bg-white! hover:text-black! ${
+                  effectiveCols === 1 ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                }`}
               />
               <AddToQueueButton
                 track={{
                   ...release.tracks[0],
                   coverArt: release.coverArt ?? undefined,
                 }}
-                className="opacity-0 group-hover:opacity-100 transition-opacity h-12! w-12! border-white! text-white! hover:bg-white! hover:text-black!"
+                className={`transition-opacity h-12! w-12! border-white! text-white! hover:bg-white! hover:text-black! ${
+                  effectiveCols === 1 ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                }`}
               />
             </div>
           )}
