@@ -40,7 +40,7 @@ const navItems = [
   <body class="min-h-screen bg-white font-sans uppercase">
     {!hideHeader && (
       <>
-        <header class={`fixed top-0 left-0 right-0 z-50 py-0 px-0 sm:py-6 sm:px-8 flex items-center justify-between ${transparentHeader ? '' : 'bg-white'}`}>
+        <header class={`fixed top-0 left-0 right-0 z-50 py-0 px-6 sm:py-6 flex items-center justify-between ${transparentHeader ? '' : 'bg-white'}`}>
           {/* Desktop nav - hidden on sm and below */}
           <nav class={`hidden sm:flex items-center justify-between w-full text-sm tracking-wide font-medium ${transparentHeader ? 'text-vcr-blue' : 'text-black'}`}>
             {navItems.map((item) => (
