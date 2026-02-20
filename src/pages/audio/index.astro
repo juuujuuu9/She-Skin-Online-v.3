@@ -1,6 +1,6 @@
 ---
 import Layout from '@layouts/Layout.astro';
-import { PlayButton, AddToQueueButton } from '@components/AudioControls';
+import { AudioGrid } from '@components/AudioGrid';
 import type { Track } from '@lib/audioStore';
 
 const BALLM_TRACK: Track = {
@@ -47,36 +47,7 @@ const releases = [
     </header>
 
     <section class="px-6 pt-8 py-12">
-      <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        {releases.map((release) => (
-          <div class="relative aspect-square overflow-hidden bg-gray-100 group">
-            {release.coverArt ? (
-              <img src={release.coverArt} alt={release.title} class="w-full h-full object-cover" />
-            ) : (
-              <div class="w-full h-full flex items-center justify-center">
-                <span class="text-xs text-gray-400">Album Art</span>
-              </div>
-            )}
-            {release.tracks.length > 0 && (
-              <div class="absolute inset-0 flex items-center justify-center gap-2 bg-black/0 group-hover:bg-black/20 transition-colors">
-                <PlayButton
-                  client:load
-                  track={{ ...release.tracks[0], coverArt: release.coverArt ?? undefined }}
-                  queue={release.tracks.map(t => ({ ...t, coverArt: release.coverArt ?? undefined }))}
-                  variant="overlay"
-                  size="lg"
-                  className="opacity-0 group-hover:opacity-100 transition-opacity !bg-transparent !border !border-white !text-white hover:!bg-white hover:!text-black"
-                />
-                <AddToQueueButton
-                  client:load
-                  track={{ ...release.tracks[0], coverArt: release.coverArt ?? undefined }}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity !h-12 !w-12 !border-white !text-white hover:!bg-white hover:!text-black"
-                />
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+      <AudioGrid client:load releases={releases} />
     </section>
   </main>
 </Layout>
