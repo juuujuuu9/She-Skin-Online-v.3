@@ -72,7 +72,7 @@ export function AudioPlayer() {
     <>
       {/* Album Art Overlay - persists until X clicked or mouse leaves */}
       <div
-        className={`fixed top-16 bottom-16 left-0 right-0 w-full bg-white z-40 p-6 flex items-center justify-center overflow-hidden transition-opacity duration-500 ${
+        className={`fixed top-16 bottom-16 left-0 right-0 w-full bg-white z-[70] p-6 flex items-center justify-center overflow-hidden transition-opacity duration-500 ${
           showOverlay ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         onMouseLeave={() => {
@@ -138,7 +138,7 @@ export function AudioPlayer() {
 
       {/* Main Player Bar */}
       <footer 
-        className="fixed bottom-0 left-0 right-0 z-50 bg-white text-black border-t border-black transition-transform duration-300"
+        className="fixed bottom-0 left-0 right-0 z-50 bg-white text-black transition-transform duration-300"
         style={{ transform: audio.isExpanded ? 'translateY(-200px)' : 'translateY(0)' }}
       >
         <div className="flex items-center h-16 px-4 sm:px-6">
