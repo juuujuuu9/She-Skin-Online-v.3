@@ -1,36 +1,43 @@
 import { useState, useEffect } from 'react';
 import {
-  PHYSICAL_GRID_STORAGE_KEY,
   PHYSICAL_GRID_COLS_EVENT,
+  DEFAULT_COLS_MOBILE,
+  DEFAULT_COLS_DESKTOP,
+  MOBILE_BREAKPOINT_PX,
 } from '@components/PhysicalGrid';
 
-const DEFAULT_COLS = 4;
-
-function readColsFromStorage(): number {
-  if (typeof window === 'undefined') return DEFAULT_COLS;
-  const saved = localStorage.getItem(PHYSICAL_GRID_STORAGE_KEY);
-  if (!saved) return DEFAULT_COLS;
-  const n = parseInt(saved, 10);
-  return n >= 2 && n <= 6 ? n : DEFAULT_COLS;
+function getDefaultCols(isMobile: boolean): number {
+  return isMobile ? DEFAULT_COLS_MOBILE : DEFAULT_COLS_DESKTOP;
 }
 
 export function PhysicalGridControls() {
-  const [cols, setCols] = useState(DEFAULT_COLS);
+  const [cols, setCols] = useState(DEFAULT_COLS_DESKTOP);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    setCols(readColsFromStorage());
-    const handler = () => setCols(readColsFromStorage());
-    window.addEventListener(PHYSICAL_GRID_COLS_EVENT, handler);
-    return () => window.removeEventListener(PHYSICAL_GRID_COLS_EVENT, handler);
+    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT_PX}px)`);
+    const update = () => {
+      const mobile = mql.matches;
+      setIsMobile(mobile);
+      setCols(getDefaultCols(mobile));
+    };
+    update();
+    mql.addEventListener('change', update);
+    const handler = (e: CustomEvent<number>) => setCols(e.detail);
+    window.addEventListener(PHYSICAL_GRID_COLS_EVENT, handler as EventListener);
+    return () => {
+      mql.removeEventListener('change', update);
+      window.removeEventListener(PHYSICAL_GRID_COLS_EVENT, handler as EventListener);
+    };
   }, []);
 
+  const minCols = isMobile ? 1 : 2;
+  const maxCols = isMobile ? 3 : 6;
+
   const updateCols = (next: number) => {
-    const clamped = Math.max(2, Math.min(6, next));
+    const clamped = Math.max(minCols, Math.min(maxCols, next));
     setCols(clamped);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(PHYSICAL_GRID_STORAGE_KEY, String(clamped));
-      window.dispatchEvent(new CustomEvent(PHYSICAL_GRID_COLS_EVENT));
-    }
+    window.dispatchEvent(new CustomEvent(PHYSICAL_GRID_COLS_EVENT, { detail: clamped }));
   };
 
   return (
@@ -42,7 +49,7 @@ export function PhysicalGridControls() {
       <button
         type="button"
         onClick={() => updateCols(cols - 1)}
-        disabled={cols <= 2}
+        disabled={cols <= minCols}
         className="w-8 h-8 flex items-center justify-center text-base font-light text-black hover:opacity-60 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
         aria-label="Grow (fewer columns)"
       >
@@ -51,7 +58,7 @@ export function PhysicalGridControls() {
       <button
         type="button"
         onClick={() => updateCols(cols + 1)}
-        disabled={cols >= 6}
+        disabled={cols >= maxCols}
         className="w-8 h-8 flex items-center justify-center text-base font-light text-black hover:opacity-60 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
         aria-label="Shrink (more columns)"
       >

@@ -40,7 +40,7 @@ const navItems = [
   <body class="min-h-screen bg-white font-sans uppercase">
     {!hideHeader && (
       <>
-        <header class={`fixed top-0 left-0 right-0 z-50 py-0 px-6 sm:py-6 flex items-center justify-between ${transparentHeader ? '' : 'bg-white'}`}>
+        <header class={`fixed top-0 left-0 right-0 z-[75] py-0 px-0 sm:px-6 sm:py-6 flex items-center justify-between ${transparentHeader ? '' : 'bg-white'}`}>
           {/* Desktop nav - hidden on sm and below */}
           <nav class={`hidden sm:flex items-center justify-between w-full text-sm tracking-wide font-medium ${transparentHeader ? 'text-vcr-blue' : 'text-black'}`}>
             {navItems.map((item) => (
@@ -61,7 +61,7 @@ const navItems = [
         {/* Mobile tray - slides in from left, full height, menu aligned below header */}
         <div
           id="menu-tray"
-          class={`fixed left-0 top-0 z-40 w-full h-screen border-r border-black transform -translate-x-full transition-transform duration-300 ease-out ${neonGreenMenu ? 'bg-transparent' : 'bg-white'}`}
+          class={`fixed left-0 top-0 z-[70] w-full h-screen transform -translate-x-full transition-transform duration-300 ease-out ${neonGreenMenu ? 'bg-transparent' : 'bg-white'}`}
         >
           <nav class={`flex flex-col gap-4 pt-[5.5rem] px-6 pb-6 text-sm tracking-wide text-left ${neonGreenMenu ? 'font-bold' : 'font-medium'} ${transparentHeader ? 'text-vcr-blue' : 'text-black'}`}>
             {navItems.map((item) => (
@@ -73,7 +73,7 @@ const navItems = [
         {/* Backdrop when tray is open */}
         <div
           id="menu-backdrop"
-          class="fixed inset-0 top-0 z-30 bg-white/60 opacity-0 pointer-events-none transition-opacity duration-300 sm:hidden"
+          class="fixed inset-0 top-0 z-[65] bg-white/60 opacity-0 pointer-events-none transition-opacity duration-300 sm:hidden"
         />
 
         <script is:inline>

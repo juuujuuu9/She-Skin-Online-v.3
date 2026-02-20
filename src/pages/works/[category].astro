@@ -87,7 +87,7 @@ const config = categoryConfig[categoryProp];
           <h2 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-8">
             Featured
           </h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
             {featuredWorks.map((work) => (
               <a 
                 href={`/works/${work.data.slug}`}
@@ -137,7 +137,7 @@ const config = categoryConfig[categoryProp];
       <div class="w-full">
         {config.layout === 'grid' ? (
           /* Grid Layout for visual works */
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {regularWorks.map((work) => (
               <a 
                 href={`/works/${work.data.slug}`}

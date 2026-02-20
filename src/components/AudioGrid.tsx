@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { PlayButton, AddToQueueButton } from '@components/AudioControls';
 import type { Track } from '@lib/audioStore';
 
-export const AUDIO_GRID_STORAGE_KEY = 'sheskin-audio-grid-cols-v2';
-const DEFAULT_COLS = 4;
+export const DEFAULT_COLS_DESKTOP = 4;
+export const DEFAULT_COLS_MOBILE = 2;
+export const MOBILE_BREAKPOINT_PX = 640; // sm
 export const AUDIO_GRID_COLS_EVENT = 'audio-grid-cols-changed';
 
 interface Release {
@@ -18,31 +19,40 @@ interface AudioGridProps {
   releases: Release[];
 }
 
-function readColsFromStorage(): number {
-  if (typeof window === 'undefined') return DEFAULT_COLS;
-  const saved = localStorage.getItem(AUDIO_GRID_STORAGE_KEY);
-  if (!saved) return DEFAULT_COLS;
-  const n = parseInt(saved, 10);
-  return n >= 2 && n <= 6 ? n : DEFAULT_COLS;
+function getDefaultCols(isMobile: boolean): number {
+  return isMobile ? DEFAULT_COLS_MOBILE : DEFAULT_COLS_DESKTOP;
 }
 
 export function AudioGrid({ releases }: AudioGridProps) {
-  const [cols, setCols] = useState(DEFAULT_COLS);
+  const [cols, setCols] = useState(DEFAULT_COLS_DESKTOP);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    setCols(readColsFromStorage());
-    const handler = () => setCols(readColsFromStorage());
-    window.addEventListener(AUDIO_GRID_COLS_EVENT, handler);
-    return () => window.removeEventListener(AUDIO_GRID_COLS_EVENT, handler);
+    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT_PX}px)`);
+    const update = () => {
+      const mobile = mql.matches;
+      setIsMobile(mobile);
+      setCols(getDefaultCols(mobile));
+    };
+    update();
+    mql.addEventListener('change', update);
+    const handler = (e: CustomEvent<number>) => setCols(e.detail);
+    window.addEventListener(AUDIO_GRID_COLS_EVENT, handler as EventListener);
+    return () => {
+      mql.removeEventListener('change', update);
+      window.removeEventListener(AUDIO_GRID_COLS_EVENT, handler as EventListener);
+    };
   }, []);
 
+  const effectiveCols = isMobile ? Math.max(1, Math.min(3, cols)) : cols;
   const gridColsClass = {
+    1: 'grid-cols-1',
     2: 'grid-cols-2',
     3: 'grid-cols-3',
     4: 'grid-cols-4',
     5: 'grid-cols-5',
     6: 'grid-cols-6',
-  }[cols];
+  }[effectiveCols];
 
   return (
     <div className={`grid ${gridColsClass} gap-4`}>
