@@ -1,0 +1,389 @@
+# Portfolio items: title, image URL, link/video (from pasted HTML)
+
+1. **harto falion --- Best ofthe Worst --- {Official MV} ---**
+   - Image: https://www.sheskin.org/wp-content/uploads/2025/11/Screenshot-2025-11-04-at-1.06.25-PM-1024x570.png
+   - Link:  https://youtu.be/U6cmvuACo2I?si=DYBiYi0iT87fgk4y
+
+2. **"As For The Love" Presented by Thank You Gallery @ Virginia MOCA**
+   - Image: https://www.sheskin.org/wp-content/uploads/2025/10/she_skin-x-TYG-flyer-819x1024.jpg
+   - Link:  https://youtu.be/OFfoULBthv4?si=RAHWZ3DaINK5lgm2
+
+3. **HAUNTED MOUND VIRGINIA 8.3.2K99**
+   - Image: https://www.sheskin.org/wp-content/uploads/2025/08/Screenshot-2025-08-05-at-8.09.49-PM-min-1024x569.png
+   - Link:  https://www.youtube.com/watch?v=GEqUoLUc3GA
+
+4. **she_skin x Snack Skateboards**
+   - Image: https://www.sheskin.org/wp-content/uploads/2025/05/snack-collab-pic-min-1024x1024.jpg
+   - Link:  (no link)
+
+5. **HUF "FERRELL TEE"**
+   - Image: https://www.sheskin.org/wp-content/uploads/2025/05/huf-1-819x1024.jpg
+   - Link:  (no link)
+
+6. **CANDY X VARG2TM X EUROHEAD X SPOKE COVER**
+   - Image: https://www.sheskin.org/wp-content/uploads/2025/05/candy-cover-new-copy-1024x1024.jpg
+   - Link:  (no link)
+
+7. **Carpet Company Deck Design**
+   - Image: https://www.sheskin.org/wp-content/uploads/2024/12/carpet_she-819x1024.jpg
+   - Link:  (no link)
+
+8. **Nettspend 12.10 Show Edit (shot: @brickprod + analog: @phibs.xyz)**
+   - Image: https://www.sheskin.org/wp-content/uploads/2024/12/Screen-Shot-2024-12-23-at-9.17.33-PM-1024x671.jpg
+   - Link:  https://youtu.be/eEPS8lN1MSo
+
+9. **$ilkmoney - "WWTGTOTLDUAFNLB?" Album Promo**
+   - Image: https://www.sheskin.org/wp-content/uploads/2024/12/Screen-Shot-2024-12-13-at-4.17.36-PM-min-574x1024.png
+   - Link:  (no link)
+
+10. **Candy (Supporting Flyer + Illustration)**
+    - Image: https://www.sheskin.org/wp-content/uploads/2024/12/Screen-Shot-2024-12-23-at-9.40.46-PM-815x1024.png
+    - Link:  (no link)
+
+11. **Candy Merch Logo**
+    - Image: https://www.sheskin.org/wp-content/uploads/2024/10/Untitled-2-min-1024x683.jpg
+    - Link:  (no link)
+
+12. **Tommy**
+    - Image: https://www.sheskin.org/wp-content/uploads/2024/09/Screen-Shot-2024-09-29-at-11.47.38-AM-min-1024x577.png
+    - Link:  https://www.youtube.com/watch?v=PbTdTm4tPoA&feature=youtu.be
+
+13. **CANDY TOUR FLYER**
+    - Image: https://www.sheskin.org/wp-content/uploads/2024/06/CANDY-FLYER-FINAL-copy-min-819x1024.jpg
+    - Link:  (no link)
+
+14. **CANDY FT. JUSTICE TRIPP- YOU WILL NEVER GET ME (OFFICIAL VISUALIZER)**
+    - Image: https://www.sheskin.org/wp-content/uploads/2024/05/Screen-Shot-2024-05-14-at-1.19.09-PM-1024x570.png
+    - Link:  https://youtu.be/QfUjo2Q_BAc?si=E6UKBzlYbMAxeEVJ
+
+15. **Harto Falion- 1doorcloses, 1dooropens (Music Video) Edit**
+    - Image: https://www.sheskin.org//wp-content/uploads/2023/12/Screen-Shot-2023-11-27-at-1.37.03-PM-1024x575.png
+    - Link:  https://youtu.be/Bn1WSec4NVs?si=jSVRUpp6eLKPzFoT
+
+16. **Hood By Air: Anonymous Club Video Edit (2020)**
+    - Image: https://www.sheskin.org//wp-content/uploads/2023/09/Screen-Shot-2024-03-01-at-2.49.13-PM-1024x578.png
+    - Link:  (no link)
+
+17. **D. Thornhill- Move Yo Bodi (MUSIC VIDEO)**
+    - Image: https://www.sheskin.org//wp-content/uploads/2023/05/Screen-Shot-2023-05-29-at-1.38.23-PM-1024x570.png
+    - Link:  https://youtu.be/8N-8VQ1idqA
+
+18. **DIESEL D- EMBRACE (MUSIC VIDEO)**
+    - Image: https://www.sheskin.org//wp-content/uploads/2023/02/Screen-Shot-2023-02-28-at-1.19.23-PM-1024x575.png
+    - Link:  https://youtu.be/O9yoFEAulys
+
+19. **COMMERCIAL FOR LILYPADMAG X NEOSHIBUYA (SHIBUYA CROSSING)**
+    - Image: https://www.sheskin.org//wp-content/uploads/2023/02/Screen-Shot-2023-02-18-at-10.10.23-PM-718x1024.png
+    - Link:  https://youtu.be/km1KuzNAZQ4
+
+20. **HERNBEAN5150 + LIBC- PSYCHOSIS (MUSIC VIDEO)**
+    - Image: https://www.sheskin.org//wp-content/uploads/2023/01/hb-psychosis-thumbnail-1024x576.jpg
+    - Link:  https://youtu.be/HbekS8qiTLQ
+
+21. **HERNBEAN5150- LOBS (OFFICIAL VIDEO)**
+    - Image: https://www.sheskin.org//wp-content/uploads/2023/01/Screen-Shot-2023-01-10-at-2.24.54-PM-1024x575.png
+    - Link:  https://www.youtube.com/watch?v=_59-Ch429MU
+
+22. **Hernbean5150- Me N My Baby (Official Video)**
+    - Image: https://www.sheskin.org//wp-content/uploads/2023/01/Screen-Shot-2023-01-07-at-8.35.00-PM-1024x640.png
+    - Link:  https://youtu.be/wLCT8zoMOuk
+
+23. **LilyPadMag Issue #3 Article**
+    - Image: https://www.sheskin.org//wp-content/uploads/2022/12/lp2-819x1024.jpg
+    - Link:  https://lilypadmag.com/collections/shop/products/issue-3
+
+24. **KONCEPT JACK$ON TITLE ANIMATION FEAT: KEEF JOJO**
+    - Image: https://www.sheskin.org//wp-content/uploads/2022/12/Screen-Shot-2022-12-05-at-1.37.03-PM-1024x803.png
+    - Link:  https://youtu.be/JQtR4g_vcBw
+
+25. **KONCEPT JACK$ON ALBUM DESIGN**
+    - Image: https://www.sheskin.org//wp-content/uploads/2022/12/kon-cover-copy-1024x1024.jpg
+    - Link:  https://konceptjackson.bandcamp.com/album/htr-vol-1-the-legend-of-tawny-tone
+
+26. **CRYSTALLMESS NTS ANIMATION**
+    - Image: https://www.sheskin.org//wp-content/uploads/2022/11/gw-titles-2-1024x1024.jpg
+    - Link:  https://www.nts.live/shows/crystallmess
+
+27. **LIL TUT- JOSIAH (PROD. LIBC) COVER DESIGN**
+    - Image: https://www.sheskin.org//wp-content/uploads/2022/08/6D7BE3A2-1364-4F1C-9052-65FDB1FC162D-1024x1024.jpg
+    - Link:  https://soundcloud.com/caleb-barnett-825638366/sets/josiah
+
+28. **DIESEL D + HB5150: BRUDDAS UNITE 02**
+    - Image: https://www.sheskin.org//wp-content/uploads/2022/08/Screen-Shot-2022-08-16-at-2.04.51-AM-1024x979.png
+    - Link:  https://youtu.be/6aAU_BcXzXg
+
+29. **HERNBEAN5150- MASTER PEACE (PROD. LIBC) VIDEO**
+    - Image: https://www.sheskin.org//wp-content/uploads/2022/07/Screen-Shot-2022-07-05-at-6.08.24-PM-1024x576.png
+    - Link:  https://youtu.be/x8fCsoRcTMo
+
+30. **WHERE IS NITE LOVELL 2022 TOUR -STAGE VIDEO DESIGN PACK**
+    - Image: https://www.sheskin.org//wp-content/uploads/2022/05/Screen-Shot-2022-05-20-at-1.26.05-AM-1024x573.png
+    - Link:  https://youtu.be/PCwdk_WzyvI?t=3273
+
+31. **Hernbean5150 - Thicker (Prod. Bailey Goldsborough) Video**
+    - Image: https://www.sheskin.org//wp-content/uploads/2022/03/Screen-Shot-2022-03-12-at-1.04.48-PM-1024x576.png
+    - Link:  https://youtu.be/UOl_kRA3Mbw
+
+32. **Hernbean5150- 2B King (Official Music Video)**
+    - Image: https://www.sheskin.org//wp-content/uploads/2022/03/Screen-Shot-2022-03-01-at-11.58.17-AM.png
+    - Link:  https://youtu.be/k_SoW0hPFm0
+
+33. **D. THORNHILL- H.P. BOUNCE (MUSIC VIDEO)**
+    - Image: https://www.sheskin.org//wp-content/uploads/2022/01/Screen-Shot-2022-01-28-at-12.46.49-PM-1024x576.png
+    - Link:  https://youtu.be/PJeb9N77lw4
+
+34. **D. Thornhill 2022 (Short)**
+    - Image: https://www.sheskin.org//wp-content/uploads/2022/01/48DA8149-5CF8-46D9-BA47-633CDCA7BAB8.jpeg
+    - Link:  https://youtu.be/xKx6VRWuPtg
+
+35. **Hernbean5150- Clothes (prod. she_skin) Animation**
+    - Image: https://www.sheskin.org//wp-content/uploads/2021/11/hernbean-1024x1024.jpg
+    - Link:  https://youtu.be/cQgRZNFyiH8
+
+36. **POP-KULTUR BERLIN AS IF IT WAS ALL 4U SHORT FILM**
+    - Image: https://www.sheskin.org//wp-content/uploads/2021/08/Screen-Shot-2021-08-07-at-3.02.33-PM-1024x580.png
+    - Link:  https://youtu.be/18L9Uz8r634
+
+37. **W/ D. n B.G**
+    - Image: https://www.sheskin.org//wp-content/uploads/2021/08/Screen-Shot-2021-08-10-at-4.24.50-PM-1024x598.png
+    - Link:  https://youtu.be/6rnht2vXG3E
+
+38. **CA-AOT2 CON_ALMA STREAM VIDEO**
+    - Image: https://www.sheskin.org//wp-content/uploads/2021/08/Screen-Shot-2021-08-06-at-3.31.07-PM-1024x570.jpg
+    - Link:  https://youtu.be/Rw-OTKno7Pg
+
+39. **Hernbean5150- Obsession (Prod. she_skin) (Music Video)**
+    - Image: https://www.sheskin.org//wp-content/uploads/2021/07/Screen-Shot-2021-07-16-at-1.28.34-PM-1024x572.png
+    - Link:  https://youtu.be/xwm47iEFIkM
+
+40. **TOWHEAD RECORDINGS: RXK NEPHEW CD DESIGN**
+    - Image: https://www.sheskin.org//wp-content/uploads/2021/06/RXK_SLTHRMN-1024x1024.jpg
+    - Link:  https://towheadrecordings.bandcamp.com/album/slitherman-activated
+
+41. **Commune Gallery: Cause and Effect Tokyo T-Shirt Design**
+    - Image: https://www.sheskin.org//wp-content/uploads/2021/05/commune-1024x1024.jpg
+    - Link:  http://www.ccommunee.com/onlineshop/
+
+42. **Hernbean5150- Negative Actions (Prod. LIBC) (Music Video)**
+    - Image: https://www.sheskin.org//wp-content/uploads/2021/04/Screen-Shot-2021-04-30-at-12.45.42-PM-1024x573.png
+    - Link:  https://youtu.be/6S2_IVaTsm8
+
+43. **Koncept Jack$on- My Boss Bitch (Official Video)**
+    - Image: https://www.sheskin.org//wp-content/uploads/2021/02/Screen-Shot-2021-02-23-at-4.00.51-PM-1024x573.png
+    - Link:  https://youtu.be/3ADaBNtUY6M
+
+44. **Hernbean5150- NGBA (Prod. she_skin) Official Video**
+    - Image: https://www.sheskin.org//wp-content/uploads/2021/01/Screen-Shot-2021-01-21-at-1.37.06-AM-1024x579.png
+    - Link:  https://www.youtube.com/watch?v=iRKk4jNPosA
+
+45. **BT7 CARHARTT WIP AD DESIGN**
+    - Image: https://www.sheskin.org//wp-content/uploads/2020/11/Screen-Shot-2020-11-26-at-7.20.40-PM-1024x992.png
+    - Link:  https://us.carhartt-wip.com/blogs/journal/detroit-danny-browns-bruiser-thanksgiving-celebration
+
+46. **D. Thornhill - ISEEYOUGAL (OFFICIAL MUSIC VIDEO)**
+    - Image: https://www.sheskin.org//wp-content/uploads/2020/11/Screen-Shot-2020-11-18-at-11.34.41-AM-1024x574.jpg
+    - Link:  https://youtu.be/X2rAUJAmBd0
+
+47. **Solace of Mind Skateboards x she_skin Deck**
+    - Image: https://www.sheskin.org//wp-content/uploads/2021/01/solace-of-mind-boards-1024x1024.jpg
+    - Link:  (no link)
+
+48. **Hernbean5150- Bronny (Official Video)**
+    - Image: https://www.sheskin.org//wp-content/uploads/2020/10/Screen-Shot-2020-10-19-at-1.31.04-PM.png
+    - Link:  https://youtu.be/knj540FzvUw
+
+49. **Koncept Jack$on- What's Done In The Dark Illustration**
+    - Image: https://www.sheskin.org//wp-content/uploads/2020/09/a1-1024x1024.jpg
+    - Link:  https://konceptjackson.bandcamp.com/album/whats-done-in-the-dark-produced-by-no-face
+
+50. **Cause And Effect T-Shirt Design (Supply Tokyo)**
+    - Image: https://www.sheskin.org//wp-content/uploads/2021/01/1_000000004675.jpg
+    - Link:  https://www.supply-tokyo.com/shopdetail/000000004675/ct380/page1/recommend/
+
+51. **Hernbean5150- One Hundred Percent On Nothing (Official Video)**
+    - Image: https://www.sheskin.org//wp-content/uploads/2020/07/Screen-Shot-2020-07-21-at-9.45.26-PM-1024x570.png
+    - Link:  https://youtu.be/vfsLVa7sha4
+
+52. **New York Dance Music IV Illustration**
+    - Image: https://www.sheskin.org//wp-content/uploads/2020/07/final-fr-nydm4-1024x1024.jpg
+    - Link:  https://towheadrecordings.bandcamp.com/album/new-york-dance-music-iv
+
+53. **New York Dance Music 3 Illustration**
+    - Image: https://www.sheskin.org//wp-content/uploads/2020/06/1n-1024x1024.jpg
+    - Link:  https://towheadrecordings.bandcamp.com/album/new-york-dance-music-iii
+
+54. **Hernbean5150- Felons (Official Video)**
+    - Image: https://www.sheskin.org//wp-content/uploads/2020/05/Screen-Shot-2020-05-11-at-4.30.49-PM-1024x575.png
+    - Link:  https://youtu.be/jQCHeoTOYMU
+
+55. **New York Dance Music 2 Illustration**
+    - Image: https://www.sheskin.org//wp-content/uploads/2020/05/NYDM_2-B-1024x1024.jpg
+    - Link:  https://towheadrecordings.bandcamp.com/album/new-york-dance-music-ii
+
+56. **New York Dance Music Illustration**
+    - Image: https://www.sheskin.org//wp-content/uploads/2020/04/3-1024x1024.jpg
+    - Link:  https://towheadrecordings.bandcamp.com/album/new-york-dance-music
+
+57. **Boiler Room Crystallmess T-Shirt Illustration**
+    - Image: https://www.sheskin.org//wp-content/uploads/2020/01/paris-collab-front-1024x1024.jpg
+    - Link:  (no link)
+
+58. **Sickboyrari- Choppa Sing Like Violins (Official Music Video)**
+    - Image: https://www.sheskin.org//wp-content/uploads/2019/08/Screen-Shot-2020-04-20-at-1.28.54-AM-1024x575.png
+    - Link:  https://www.youtube.com/watch?v=7q10ik_WgKE
+
+59. **Hernon- Mia Wallace (Official Video)**
+    - Image: https://www.sheskin.org//wp-content/uploads/2019/07/Screen-Shot-2019-07-27-at-2.21.50-PM-1024x576.png
+    - Link:  https://www.youtube.com/watch?v=xoX_N5lrT5Q&feature=youtu.be
+
+60. **Utmost Co VA: Art Exhibition**
+    - Image: https://www.sheskin.org//wp-content/uploads/2019/06/Screen-Shot-2019-06-02-at-4.20.31-AM-1024x624.png
+    - Link:  https://youtu.be/FdmtXDGi5rc
+
+61. **YESH Single Cover Art/ clip Treatment**
+    - Image: https://www.sheskin.org//wp-content/uploads/2019/08/yesh-1024x1024.jpg
+    - Link:  (no link)
+
+62. **Outro- Rmzy, A she_skin Short**
+    - Image: https://www.sheskin.org//wp-content/uploads/2019/04/Screen-Shot-2020-04-20-at-1.40.07-AM-1024x572.png
+    - Link:  https://www.youtube.com/watch?v=WY--MrhqSZE
+
+63. **Heads Magazine #9**
+    - Image: https://www.sheskin.org//wp-content/uploads/2019/03/FullSizeRender-1-1024x818.jpg
+    - Link:  (no link)
+
+64. **Cityboy- John Gotti! Ft. Autumn! (Official she_skin Short)**
+    - Image: https://www.sheskin.org//wp-content/uploads/2019/02/Screen-Shot-2020-04-20-at-1.47.56-AM-1024x573.png
+    - Link:  https://youtu.be/hSSStKEj1Og
+
+65. **VALET: GALLERY 5**
+    - Image: https://www.sheskin.org//wp-content/uploads/2019/01/Screen-Shot-2019-01-05-at-10.17.32-PM-1024x626.png
+    - Link:  https://youtu.be/EXNQgjti4QM
+
+66. **Grimm Doza ' the haunting in New jersey'**
+    - Image: https://www.sheskin.org//wp-content/uploads/2018/11/GRIMM1final.jpg
+    - Link:  (no link)
+
+67. **Rabit- The Quickening**
+    - Image: https://www.sheskin.org//wp-content/uploads/2018/10/Screen-Shot-2018-10-01-at-3.46.30-PM-1024x623.png
+    - Link:  https://www.youtube.com/watch?v=hNWFVOm8sh0
+
+68. **Cakesdakilla/ LSDXOXO - BED REST Art**
+    - Image: https://www.sheskin.org//wp-content/uploads/2018/08/CAKES-DA-KILLA-LSDXOXO-copy-1024x1024.jpg
+    - Link:  (no link)
+
+69. **CYRAX, ' STAY ACTIVE' LAST STUDIO SESSION**
+    - Image: https://www.sheskin.org//wp-content/uploads/2018/08/Screen-Shot-2018-08-24-at-1.40.50-PM-1024x596.png
+    - Link:  https://www.youtube.com/watch?v=zCc_NwBXpdk&feature=youtu.be
+
+70. **Sickboyrari- Feel my Pain (Official Video)**
+    - Image: https://www.sheskin.org//wp-content/uploads/2018/07/Screen-Shot-2018-07-26-at-9.14.19-PM-1024x623.png
+    - Link:  https://www.youtube.com/watch?v=0nh-QmDzkng
+
+71. **CITYBOYJOHNNY!- BAG *SHORT***
+    - Image: https://www.sheskin.org//wp-content/uploads/2018/06/Screen-Shot-2018-06-26-at-1.46.14-PM-1024x625.png
+    - Link:  https://youtu.be/owREq0fI8wg
+
+72. **COLOR PLUS "LITESOWT" /PAXICO RECORDS/ CASSETTE**
+    - Image: https://www.sheskin.org//wp-content/uploads/2018/07/color_plus_litesowt_mockup-cassette-300x300.jpg
+    - Link:  https://paxicorecords.com/2018/06/22/color-plus-litesowt-cassette/
+
+73. **Sickboyrari "hangin out like a 30"**
+    - Image: https://www.sheskin.org//wp-content/uploads/2018/03/Screen-Shot-2018-03-09-at-10.13.44-PM-1024x623.png
+    - Link:  https://www.youtube.com/watch?v=KOTlpObue0I
+
+74. **WIARDON "WINDBREAKER MUSIC" /PAXICO RECORDS/ CASSETTE**
+    - Image: https://www.sheskin.org//wp-content/uploads/2018/03/0012797338_10-300x300.jpg
+    - Link:  http://hyperurl.co/wiardon
+
+75. **DANNY BROWN/ BRUISER THANKSGIVING 4/ MERCHANDISE DESIGN/2017**
+    - Image: (no image in block)
+    - Link:  (no link)
+
+76. **'Apocalyptic Fantasies'/ Flyer & Digital Display/ Lhaga Koondhor/ Shanghai 2017**
+    - Image: https://www.sheskin.org//wp-content/uploads/2017/10/Screen-Shot-2017-10-04-at-1.21.13-PM-1024x624.png
+    - Link:  https://youtu.be/PwidoAWLL10
+
+77. **Solace Of Mind/ Richmond 2017**
+    - Image: https://www.sheskin.org//wp-content/uploads/2017/10/Screen-Shot-2017-10-03-at-5.23.21-PM-1024x626.png
+    - Link:  https://youtu.be/uCwIqn1i1is
+
+78. **Sickboyrari /"Lil Rari XO" /Richmond 2017**
+    - Image: https://www.sheskin.org//wp-content/uploads/2017/09/Screen-Shot-2017-09-16-at-3.23.57-AM-1024x625.png
+    - Link:  https://www.youtube.com/watch?v=2rGLClq9o-I
+
+79. **Opaque Poetics /UK September 2017**
+    - Image: https://www.sheskin.org//wp-content/uploads/2017/08/IMG_4031-217x300.jpg
+    - Link:  http://www.wysingartscentre.org/
+
+80. **Wedidit Records /US August 2017**
+    - Image: https://www.sheskin.org//wp-content/uploads/2017/08/wedidit.gif
+    - Link:  http://www.wediditcollective.com/tombstone-recordings/
+
+81. **Cardi B / Tracy Bailey Jr 2017**
+    - Image: https://www.sheskin.org//wp-content/uploads/2017/08/Screen-Shot-2017-08-01-at-1.39.16-PM-1024x624.png
+    - Link:  https://youtu.be/2GZPuwL6enk
+
+82. **Ace Mo/ bootleg tapes "Street Cell Clip" New York 2017**
+    - Image: https://www.sheskin.org//wp-content/uploads/2017/07/Screen-Shot-2017-08-02-at-1.09.47-PM-1024x623.png
+    - Link:  https://www.youtube.com/watch?v=hzEr7_gEeis
+
+83. **DJ NJ DRONE/CLIP 2017**
+    - Image: https://www.sheskin.org//wp-content/uploads/2017/07/Screen-Shot-2017-07-17-at-6.01.06-PM-1-1024x624.png
+    - Link:  https://www.youtube.com/watch?v=NC8tOKytRnA
+
+84. **Sickboyrari/ Richmond 2017**
+    - Image: https://www.sheskin.org//wp-content/uploads/2017/07/Screen-Shot-2017-08-02-at-1.58.39-PM-1024x625.png
+    - Link:  https://youtu.be/EINzpPQCHDg
+
+85. **Swim Team/ Izy 2017 US**
+    - Image: https://www.sheskin.org//wp-content/uploads/2017/08/izy-head-roll-1-300x300.jpg
+    - Link:  https://play.spotify.com/album/2TPYJppdOPuocQSVMSLarc?play=true&utm_source=open.spotify.com&utm_medium=open&utm_content=opensignuptest
+
+86. **Swim Team/ Izy 2017 US**
+    - Image: https://www.sheskin.org//wp-content/uploads/2017/07/izyfinal-300x300.jpg
+    - Link:  https://soundcloud.com/izywater/izy-ice-cold
+
+87. **Utmost Co./ Los Angeles 2017**
+    - Image: https://www.sheskin.org/wp-content/uploads/2017/06/Screen-Shot-2024-05-14-at-2.34.08-PM-1024x558.png
+    - Link:  https://www.youtube.com/watch?v=Rwg6N_l0AHg
+
+88. **Goth Money/ Karmah, Hunned Mill, Sickboyrari/2017**
+    - Image: https://www.sheskin.org//wp-content/uploads/2017/06/Screen-Shot-2017-09-16-at-1.07.39-AM-1024x622.png
+    - Link:  https://youtu.be/Esaau4swI3A
+
+89. **Curtly Thomas/ Halcyon Veil 2016 LDN**
+    - Image: https://www.sheskin.org//wp-content/uploads/2017/06/CURTLYYAH-300x300.jpg
+    - Link:  https://soundcloud.com/halcyon-veil/clubcouturexxx
+
+90. **Warp Records/Danny Brown/ Atrocity Exhibition 2016**
+    - Image: https://www.sheskin.org/wp-content/uploads/2016/11/Screen-Shot-2024-05-14-at-2.35.43-PM-1024x475.png
+    - Link:  https://www.youtube.com/watch?v=FR_yo8wAgJ4
+
+91. **Divine Council/ P. Sherman Edit 2016 Richmond VA**
+    - Image: https://www.sheskin.org//wp-content/uploads/2017/06/p-sherman-artwork-1-300x300.jpeg
+    - Link:  https://open.spotify.com/track/5dJ5mUZnAE8CZwMQCKLImp
+
+92. **Cyrax /Richmond 2016**
+    - Image: https://www.sheskin.org//wp-content/uploads/2016/06/Screen-Shot-2017-08-02-at-1.52.58-PM-1024x626.png
+    - Link:  https://youtu.be/EIiOJP9AKjs
+
+93. **Divine Council/ Wedidit / Richmond 2015**
+    - Image: https://www.sheskin.org/wp-content/uploads/2016/04/Screen-Shot-2024-05-14-at-2.37.03-PM-1024x506.png
+    - Link:  https://www.youtube.com/watch?v=Jc84-len35E
+
+94. **Berlin Community Radio / Curtly Thomas 2016 BER**
+    - Image: https://www.sheskin.org//wp-content/uploads/2017/06/CIL-300x300.jpg
+    - Link:  http://www.berlincommunityradio.com/
+
+95. **Divine Council/ P. Sherman Edit 2015 US**
+    - Image: https://www.sheskin.org/wp-content/uploads/2015/06/Screen-Shot-2024-05-14-at-2.38.32-PM-1024x795.png
+    - Link:  https://www.youtube.com/watch?v=W81kjiFGtqE
+
+96. **Divine Council/ CYRAX- TRUE Edit 2015 US**
+    - Image: https://www.sheskin.org/wp-content/uploads/2015/06/Screen-Shot-2024-05-14-at-2.43.36-PM-1024x586.png
+    - Link:  https://www.youtube.com/watch?v=s2zfu4Ydnxg
+
+97. **Esprit 空想/ George Clanton 2014**
+    - Image: https://www.sheskin.org//wp-content/uploads/2017/07/esprit-297x300.jpg
+    - Link:  http://esprit.100percentelectronica.com/

@@ -4,40 +4,94 @@
  * 
  * Routes:
  *   /works/audio          → Audio works archive
- *   /works/physical       → Physical works archive
- *   /works/digital        → Digital works archive
+ *   /works/physical       → Physical works archive (from public/media/physical)
+ *   /works/digital        → Digital works archive (from public/media/digital)
  *   /works/collaborations → Collaboration archive
  */
 
 import { getCollection } from 'astro:content';
+import { readdirSync } from 'fs';
+import { join } from 'path';
 import OptimizedImage from '@components/ui/OptimizedImage.astro';
 import Layout from '@layouts/Layout.astro';
+import { WorksGrid } from '@components/WorksGrid';
+import { WorksGridControls } from '@components/WorksGridControls';
+import { collaborationsGridItems } from '../../data/collaborations';
 
 export async function getStaticPaths() {
   const categories = ['audio', 'physical', 'digital', 'collaborations'] as const;
-  
-  return categories.map((category) => ({
-    params: { category },
-    props: { category },
-  }));
+
+  function getDigitalGridItems() {
+    const digitalDir = join(process.cwd(), 'public', 'media', 'digital');
+    try {
+      const files = readdirSync(digitalDir)
+        .filter((f) => f.endsWith('.webp'))
+        .sort()
+        .reverse();
+      return files.map((file) => {
+        const slug = file.replace(/\.webp$/i, '');
+        return {
+          slug,
+          forSale: false,
+          image: { src: `/media/digital/${file}`, alt: slug },
+          href: '#',
+        };
+      });
+    } catch {
+      return [];
+    }
+  }
+
+  function getPhysicalGridItems() {
+    const physicalDir = join(process.cwd(), 'public', 'media', 'physical');
+    try {
+      const files = readdirSync(physicalDir)
+        .filter((f) => f.endsWith('.webp'))
+        .sort()
+        .reverse();
+      return files.map((file) => {
+        const slug = file.replace(/\.webp$/i, '');
+        return {
+          slug,
+          forSale: false,
+          image: { src: `/media/physical/${file}`, alt: slug },
+          href: '#',
+        };
+      });
+    } catch {
+      return [];
+    }
+  }
+
+  const gridItemType = { slug: '', forSale: false, image: null as { src: string; alt: string } | null, href: '#' as string | undefined };
+  type GridItem = typeof gridItemType & { title?: string; year?: number };
+
+  return categories.map((category) => {
+    const props: { category: (typeof categories)[number]; digitalGridItems?: GridItem[]; physicalGridItems?: GridItem[] } = { category };
+    if (category === 'digital') {
+      props.digitalGridItems = getDigitalGridItems();
+    }
+    if (category === 'physical') {
+      props.physicalGridItems = getPhysicalGridItems();
+    }
+    return { params: { category }, props };
+  });
 }
 
 const { category } = Astro.params;
-const { category: categoryProp } = Astro.props;
+const { category: categoryProp, digitalGridItems, physicalGridItems } = Astro.props;
 
-// Get all works in this category
-const allWorks = await getCollection('works', (entry) => 
-  entry.data.category === categoryProp
-);
+// Digital and physical: use images from public/media; others use content collection
+const isDigital = categoryProp === 'digital';
+const isPhysical = categoryProp === 'physical';
+const allWorks = isDigital || isPhysical ? [] : await getCollection('works', (entry) => entry.data.category === categoryProp);
 
 // Sort by date (newest first)
-const works = allWorks.sort((a, b) => 
-  b.data.date.getTime() - a.data.date.getTime()
-);
+const works = allWorks.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 
 // Get featured works first
-const featuredWorks = works.filter(w => w.data.featured);
-const regularWorks = works.filter(w => !w.data.featured);
+const featuredWorks = works.filter((w) => w.data.featured);
+const regularWorks = works.filter((w) => !w.data.featured);
 
 // Category display config
 const categoryConfig = {
@@ -64,19 +118,50 @@ const categoryConfig = {
 };
 
 const config = categoryConfig[categoryProp];
+
+// Digital, physical, and collaborations use the adjustable grid with +/- controls
+const useWorksGrid = categoryProp === 'digital' || categoryProp === 'physical' || categoryProp === 'collaborations';
+const worksGridItems = useWorksGrid
+  ? isDigital
+    ? (digitalGridItems ?? [])
+    : isPhysical
+      ? (physicalGridItems ?? [])
+      : categoryProp === 'collaborations'
+        ? collaborationsGridItems
+        : regularWorks.map((w) => ({
+          slug: w.data.slug,
+          title: w.data.title,
+          year: w.data.date.getFullYear(),
+          forSale: w.data.forSale ?? false,
+          image:
+            w.data.coverImage && w.data.media?.[0]?.type === 'image'
+              ? { src: w.data.media[0].src, alt: w.data.media[0].alt }
+              : null,
+        }))
+  : [];
 ---
 
 <Layout title={`${config.title} - she_skin`}>
   <main class="min-h-screen bg-white">
     {/* Header */}
     <header class="px-6 pt-16">
-      <div class="w-full">
-        <h1 class="sm:text-2xl text-[13px] font-bold tracking-tight text-black mb-4">
-          {config.title}
-        </h1>
-        <p class="text-sm text-gray-500 max-w-xl">
-          {config.subtitle}
-        </p>
+      <div class="w-full flex items-start justify-between gap-4">
+        <div class="min-w-0">
+          <h1 class="sm:text-2xl text-[13px] font-bold tracking-tight text-black mb-4">
+            {config.title}
+          </h1>
+          <p class="text-sm text-gray-500 max-w-xl">
+            {config.subtitle}
+          </p>
+        </div>
+        {useWorksGrid ? <div class="w-12 shrink-0" aria-hidden="true" /> : null}
+        {useWorksGrid && (
+          <WorksGridControls
+            client:load
+            defaultColsDesktop={categoryProp === 'digital' || categoryProp === 'physical' || categoryProp === 'collaborations' ? 6 : undefined}
+            defaultColsMobile={categoryProp === 'digital' || categoryProp === 'physical' || categoryProp === 'collaborations' ? 3 : undefined}
+          />
+        )}
       </div>
     </header>
 
@@ -135,8 +220,16 @@ const config = categoryConfig[categoryProp];
     {/* Main Grid/List */}
     <section class="px-6 pt-6 pb-12">
       <div class="w-full">
-        {config.layout === 'grid' ? (
-          /* Grid Layout for visual works */
+        {useWorksGrid ? (
+          <WorksGrid
+            client:load
+            works={worksGridItems}
+            titleClassName={categoryProp === 'collaborations' ? 'text-[13px] font-medium text-gray-900 group-hover:text-gray-700 line-clamp-2' : undefined}
+            defaultColsDesktop={categoryProp === 'digital' || categoryProp === 'physical' || categoryProp === 'collaborations' ? 6 : undefined}
+            defaultColsMobile={categoryProp === 'digital' || categoryProp === 'physical' || categoryProp === 'collaborations' ? 3 : undefined}
+          />
+        ) : config.layout === 'grid' ? (
+          /* Grid Layout for physical (fixed grid) */
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {regularWorks.map((work) => (
               <a 
@@ -237,7 +330,7 @@ const config = categoryConfig[categoryProp];
     </section>
 
     {/* Empty State */}
-    {works.length === 0 && (
+    {works.length === 0 && !(isDigital && (digitalGridItems?.length ?? 0) > 0) && !(isPhysical && (physicalGridItems?.length ?? 0) > 0) && (
       <div class="px-6 py-20 text-center">
         <p class="text-gray-500">No works in this category yet.</p>
       </div>

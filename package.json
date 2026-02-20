@@ -18,7 +18,9 @@
     "migrate:wp": "tsx scripts/migrate-wp.ts",
     "upload:images": "tsx scripts/upload-product-images.ts",
     "compress:images": "tsx scripts/compress-images.ts",
-    "fetch:audio-covers": "tsx scripts/fetch-audio-covers.ts"
+    "fetch:audio-covers": "tsx scripts/fetch-audio-covers.ts",
+    "fetch:digital": "tsx scripts/fetch-digital.ts",
+    "fetch:physical": "tsx scripts/fetch-physical.ts"
   },
   "dependencies": {
     "@astrojs/react": "^4.4.2",
