@@ -12,15 +12,15 @@ const config = getShopPasswordConfig();
   <ShopPasswordGate needsPassword={!access.hasAccess && access.needsPassword} hint={config.hint}>
     <main class="min-h-screen bg-white text-[13px]">
       {/* Hero Image/Video Section */}
-      <section class="px-6 pt-16 pb-12">
+      <section class="px-6 pt-16 pb-2">
         <div class="w-full aspect-video bg-gray-100 flex items-center justify-center text-gray-400">
           image/video
         </div>
       </section>
 
-      {/* Category Blocks - 1→3 cols on mobile, 4 on lg+ */}
-      <section class="px-6 pt-6 pb-12">
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-8">
+      {/* Category Blocks - 2 cols on mobile, 3 md, 4 lg+ */}
+      <section class="px-6 py-8">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 max-sm:gap-6 sm:gap-8">
           <div class="aspect-[3/4] bg-gray-100 flex items-center justify-center text-gray-400">
             hats
           </div>
@@ -37,12 +37,12 @@ const config = getShopPasswordConfig();
       </section>
 
       {/* Products Grid */}
-      <section class="px-6 pt-6 pb-12">
+      <section class="px-6 pt-2 pb-12">
         <div class="w-full">
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-8">
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 max-sm:gap-6 sm:gap-8">
             {/* Placeholder products */}
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16].map((i) => (
-              <div class="group mb-4 sm:mb-0 text-center">
+              <div class="group sm:mb-0 text-center">
                 <div class="aspect-square bg-gray-100 mb-4 overflow-hidden">
                   <div class="w-full h-full flex items-center justify-center text-gray-400">
                     <span>Product {i}</span>
