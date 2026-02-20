@@ -70,6 +70,20 @@ export function AudioPlayer() {
 
   return (
     <>
+      {/* Mobile: close (X) in header opposite hamburger - same slot size (w-16 h-16), z above header */}
+      {isManualOverlay && showOverlay && (
+        <button
+          type="button"
+          onClick={() => setShowOverlay(false)}
+          className="sm:hidden fixed top-[3px] right-0 z-[76] flex items-center justify-center w-16 h-16 text-black hover:text-gray-600 transition-colors touch-manipulation"
+          aria-label="Close overlay"
+        >
+          <svg className="w-[1.25em] h-[1.25em]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M7.5 7.5l9 9M16.5 7.5l-9 9" />
+          </svg>
+        </button>
+      )}
+
       {/* Album Art Overlay - persists until X clicked or mouse leaves */}
       <div
         className={`fixed top-16 bottom-16 left-0 right-0 w-full bg-white z-[70] p-6 flex items-center justify-center overflow-hidden transition-opacity duration-500 ${
@@ -82,12 +96,12 @@ export function AudioPlayer() {
           }
         }}
       >
-        {/* Close button - top right, only when opened via player bar click */}
+        {/* Close button - top right on desktop only; on mobile the X lives in the header */}
         {isManualOverlay && (
           <button
             type="button"
             onClick={() => setShowOverlay(false)}
-            className="absolute top-4 right-4 p-2 text-black hover:text-gray-600 transition-colors"
+            className="absolute top-4 right-4 p-2 text-black hover:text-gray-600 transition-colors max-sm:hidden"
             aria-label="Close overlay"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
