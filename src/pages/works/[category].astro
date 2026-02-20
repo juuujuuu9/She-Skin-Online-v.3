@@ -28,7 +28,7 @@ export async function getStaticPaths() {
         .filter((f) => f.endsWith('.webp'))
         .sort()
         .reverse();
-      return files.map((file) => {
+      const items = files.map((file) => {
         const slug = file.replace(/\.webp$/i, '');
         return {
           slug,
@@ -37,6 +37,26 @@ export async function getStaticPaths() {
           href: '#',
         };
       });
+      // Put 3 random images (not the current first 3) at the front — seeded for deterministic build
+      if (items.length > 3) {
+        let seed = 97;
+        const next = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+        const pickFrom = (min: number, max: number) => Math.floor(next() * (max - min + 1)) + min;
+        const indices = new Set<number>();
+        while (indices.size < 3) indices.add(pickFrom(3, items.length - 1));
+        const [i0, i1, i2] = [...indices];
+        const first3 = [items[i0], items[i1], items[i2]];
+        const rest = items.filter((_, i) => i !== i0 && i !== i1 && i !== i2);
+        const result = [...first3, ...rest];
+        // Pin third slot to kray-shyne-2018
+        const thirdIdx = 2;
+        const krayIdx = result.findIndex((x) => x.image.src.includes('kray-shyne-2018'));
+        if (krayIdx >= 0 && krayIdx !== thirdIdx) {
+          [result[thirdIdx], result[krayIdx]] = [result[krayIdx], result[thirdIdx]];
+        }
+        return result;
+      }
+      return items;
     } catch {
       return [];
     }
@@ -158,8 +178,13 @@ const worksGridItems = useWorksGrid
         {useWorksGrid && (
           <WorksGridControls
             client:load
-            defaultColsDesktop={categoryProp === 'digital' || categoryProp === 'physical' || categoryProp === 'collaborations' ? 6 : undefined}
-            defaultColsMobile={categoryProp === 'digital' || categoryProp === 'physical' || categoryProp === 'collaborations' ? 3 : undefined}
+            defaultColsDesktop={
+              categoryProp === 'digital' ? 3
+              : categoryProp === 'physical' ? 5
+              : categoryProp === 'collaborations' ? 3
+              : undefined
+            }
+            defaultColsMobile={categoryProp === 'collaborations' ? 1 : categoryProp === 'digital' || categoryProp === 'physical' ? 3 : undefined}
           />
         )}
       </div>
@@ -225,8 +250,14 @@ const worksGridItems = useWorksGrid
             client:load
             works={worksGridItems}
             titleClassName={categoryProp === 'collaborations' ? 'text-[13px] font-medium text-gray-900 group-hover:text-gray-700 line-clamp-2' : undefined}
-            defaultColsDesktop={categoryProp === 'digital' || categoryProp === 'physical' || categoryProp === 'collaborations' ? 6 : undefined}
-            defaultColsMobile={categoryProp === 'digital' || categoryProp === 'physical' || categoryProp === 'collaborations' ? 3 : undefined}
+            defaultColsDesktop={
+              categoryProp === 'digital' ? 3
+              : categoryProp === 'physical' ? 5
+              : categoryProp === 'collaborations' ? 3
+              : undefined
+            }
+            defaultColsMobile={categoryProp === 'collaborations' ? 1 : categoryProp === 'digital' || categoryProp === 'physical' ? 3 : undefined}
+            alignRowsCenter={categoryProp === 'digital' || categoryProp === 'physical' || categoryProp === 'collaborations'}
           />
         ) : config.layout === 'grid' ? (
           /* Grid Layout for physical (fixed grid) */

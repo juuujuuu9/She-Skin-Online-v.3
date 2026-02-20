@@ -23,6 +23,8 @@ interface WorksGridProps {
   defaultColsDesktop?: number;
   /** Default columns on mobile (e.g. 3 for digital/collaborations) */
   defaultColsMobile?: number;
+  /** Center items vertically within each row (e.g. for physical) */
+  alignRowsCenter?: boolean;
 }
 
 function getDefaultCols(
@@ -39,6 +41,7 @@ export function WorksGrid({
   titleClassName,
   defaultColsDesktop,
   defaultColsMobile,
+  alignRowsCenter,
 }: WorksGridProps) {
   const overrides =
     defaultColsDesktop != null || defaultColsMobile != null
@@ -80,7 +83,7 @@ export function WorksGrid({
   }[effectiveCols];
 
   return (
-    <div className={`grid ${gridColsClass} gap-6 items-start`}>
+    <div className={`grid ${gridColsClass} gap-6 ${alignRowsCenter ? 'items-center' : 'items-start'}`}>
       {works.map((work) => (
         <a
           key={work.slug}
