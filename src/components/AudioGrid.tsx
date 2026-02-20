@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { PlayButton, AddToQueueButton } from '@components/AudioControls';
 import type { Track } from '@lib/audioStore';
 
-export const DEFAULT_COLS_DESKTOP = 4;
+export const DEFAULT_COLS_DESKTOP = 3;
 export const DEFAULT_COLS_MOBILE = 2;
 export const MOBILE_BREAKPOINT_PX = 640; // sm
 export const AUDIO_GRID_COLS_EVENT = 'audio-grid-cols-changed';
