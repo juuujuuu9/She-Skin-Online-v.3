@@ -187,12 +187,49 @@ npm run dev
 
 ---
 
-## Next Steps (Future Improvements)
+## Additional Improvements Applied
 
-1. **Rate Limiting** - Add to login and API endpoints
-2. **Audit Logging** - Track all admin actions
-3. **Input Validation** - Schema validation on all inputs
-4. **Content Security Policy** - Add CSP headers
+### 5. Rate Limiting
+
+**Implementation:**
+- Created `src/lib/rate-limit.ts` with configurable rate limits
+- Applied to login: 5 attempts per 15 minutes
+- Functions for other endpoints ready to use
+
+**Files:**
+- `src/lib/rate-limit.ts` - Rate limiting utilities
+- `src/pages/admin/login.astro` - Rate limiting on login
+
+### 6. Audit Logging
+
+**Implementation:**
+- Created `src/lib/audit.ts` for comprehensive action logging
+- Logs: login, logout, failed logins, all admin actions
+- Tracks: user, IP, user agent, timestamp, success/failure
+- Batch inserts for performance
+
+**Database:**
+- New table: `audit_logs` with indexes
+- Migration: `drizzle/0005_audit_logs.sql`
+
+**Files:**
+- `src/lib/audit.ts` - Audit logging utilities
+- `drizzle/0005_audit_logs.sql` - Database migration
+- `src/pages/admin/login.astro` - Login auditing
+- `src/pages/api/admin/logout.ts` - Logout auditing
+
+---
+
+## Complete Security Feature Checklist
+
+- [x] CSRF Protection
+- [x] Soft Deletes
+- [x] Security Headers
+- [x] Debug Cleanup
+- [x] Rate Limiting
+- [x] Audit Logging
+- [ ] Input Validation Schema (recommended next)
+- [ ] Content Security Policy (recommended next)
 
 ---
 

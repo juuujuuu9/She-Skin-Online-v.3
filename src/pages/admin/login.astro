@@ -1,14 +1,14 @@
 ---
 /**
- * Admin Login — Database-backed authentication
+ * Admin Login — Database-backed authentication with rate limiting and audit logging
  */
 
 export const prerender = false;
 
 import Layout from '@layouts/Layout.astro';
-import { checkAdminAuth, verifyAdminCredentials, createSessionCookie, hashPassword } from '@lib/admin-auth';
-import { db } from '@lib/db';
-import { users } from '@lib/db/schema';
+import { checkAdminAuth, verifyAdminCredentials, createSessionCookie } from '@lib/admin-auth';
+import { checkRateLimit, ADMIN_RATE_LIMITS, getClientIdentifier } from '@lib/rate-limit';
+import { logAction, AuditActions, AuditResources } from '@lib/audit';
 
 // Check if already logged in (but allow showing login page for session errors)
 const sessionExpired = Astro.url.searchParams.get('session') === 'expired';
@@ -24,7 +24,6 @@ if (!sessionExpired) {
 
 // For session errors, clear the bad cookie before showing login page
 if (sessionExpired || sessionReason) {
-  // Set an expired cookie to clear any invalid session
   Astro.response.headers.append('Set-Cookie', 'admin_session=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax');
 }
 
@@ -32,75 +31,102 @@ let error = '';
 
 // Handle POST
 if (Astro.request.method === 'POST') {
-  const debugLogin = import.meta.env.DEV;
-  if (debugLogin) {
-    console.debug('[admin/login] POST received');
-  }
-
   try {
     const formData = await Astro.request.formData();
     const username = (formData.get('username')?.toString() ?? '').trim();
     const password = (formData.get('password')?.toString() ?? '').trim();
 
-    if (debugLogin) {
-      console.debug('[admin/login] Form: username present=', !!username, 'password length=', password.length);
-    }
-
     if (!username || !password) {
-      if (debugLogin) console.debug('[admin/login] Rejected: missing username or password');
       error = 'Username and password are required';
     } else {
-      const result = await verifyAdminCredentials(username, password);
-
-      if (debugLogin) {
-        console.debug('[admin/login] verifyAdminCredentials result: valid=', result.valid, 'userId=', result.userId ?? '(none)');
-      }
-
-      if (result.valid && result.userId) {
-        // Use 200 + HTML redirect instead of 302 so browsers reliably store Set-Cookie
-        // (some browsers don't persist cookies set on redirect responses)
-        const { name, value } = createSessionCookie(result.userId);
-        const maxAge = 60 * 60 * 24;
-        const secure = import.meta.env.PROD;
-        const cookieParts = [
-          `${name}=${value}`,
-          'Path=/',
-          'Max-Age=' + maxAge,
-          'HttpOnly',
-          'SameSite=Lax',
-        ];
-        if (secure) cookieParts.push('Secure');
-        const setCookie = cookieParts.join('; ');
-
-        if (debugLogin) {
-          console.debug('[admin/login] Session cookie created:');
-          console.debug('  Cookie name:', name);
-          console.debug('  Cookie value length:', value.length);
-          console.debug('  Cookie attributes:', cookieParts.slice(1).join('; '));
-          console.debug('[admin/login] Redirecting to /admin in 150ms...');
-        }
-
-        // Give the browser a moment to persist the cookie before navigating (fixes no_cookie on subsequent fetch)
-        const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Signing in…</title></head><body><p>Signing in…</p><script>setTimeout(function(){ window.location.replace('/admin'); }, 150);</script><a href="/admin">Continue</a></body></html>`;
-        return new Response(html, {
-          status: 200,
-          headers: {
-            'Content-Type': 'text/html; charset=utf-8',
-            'Cache-Control': 'no-store',
-            'Set-Cookie': setCookie,
-          },
-        });
+      // Check rate limit
+      const clientId = getClientIdentifier(Astro.request);
+      const rateLimitKey = `login:${clientId}`;
+      const rateCheck = checkRateLimit(
+        rateLimitKey,
+        ADMIN_RATE_LIMITS.login.maxAttempts,
+        ADMIN_RATE_LIMITS.login.windowMs
+      );
+      
+      if (!rateCheck.allowed) {
+        error = `Too many login attempts. Please try again in ${Math.ceil((rateCheck.resetAt - Date.now()) / 60000)} minutes.`;
+        
+        // Log rate limit hit
+        await logAction(
+          Astro.request,
+          null,
+          username,
+          AuditActions.LOGIN_FAILED,
+          AuditResources.USER,
+          null,
+          { reason: 'rate_limit_exceeded' },
+          false,
+          'Rate limit exceeded'
+        );
       } else {
-        if (debugLogin) console.debug('[admin/login] Rejected: invalid credentials');
-        error = 'Invalid username or password';
+        const result = await verifyAdminCredentials(username, password);
+
+        if (result.valid && result.userId) {
+          // Successful login - reset rate limit
+          // (optional: keep tracking for anomaly detection)
+          
+          // Log successful login
+          await logAction(
+            Astro.request,
+            result.userId,
+            username,
+            AuditActions.LOGIN,
+            AuditResources.USER,
+            result.userId,
+            { remainingAttempts: rateCheck.remaining },
+            true
+          );
+          
+          // Create session
+          const { name, value } = createSessionCookie(result.userId);
+          const maxAge = 60 * 60 * 24;
+          const secure = import.meta.env.PROD;
+          const cookieParts = [
+            `${name}=${value}`,
+            'Path=/',
+            'Max-Age=' + maxAge,
+            'HttpOnly',
+            'SameSite=Lax',
+          ];
+          if (secure) cookieParts.push('Secure');
+          const setCookie = cookieParts.join('; ');
+
+          // HTML redirect to ensure cookie is stored
+          const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Signing in…</title></head><body><p>Signing in…</p><script>setTimeout(function(){ window.location.replace('/admin'); }, 150);</script><a href="/admin">Continue</a></body></html>`;
+          return new Response(html, {
+            status: 200,
+            headers: {
+              'Content-Type': 'text/html; charset=utf-8',
+              'Cache-Control': 'no-store',
+              'Set-Cookie': setCookie,
+            },
+          });
+        } else {
+          error = 'Invalid username or password';
+          
+          // Log failed login
+          await logAction(
+            Astro.request,
+            null,
+            username,
+            AuditActions.LOGIN_FAILED,
+            AuditResources.USER,
+            null,
+            { remainingAttempts: rateCheck.remaining - 1 },
+            false,
+            'Invalid credentials'
+          );
+        }
       }
     }
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Unknown error';
     console.error('[admin/login] Login error:', e);
-    if (debugLogin) {
-      console.debug('[admin/login] Caught error:', msg);
-    }
     if (import.meta.env.DEV) {
       error = `Error: ${msg}`;
     } else {
