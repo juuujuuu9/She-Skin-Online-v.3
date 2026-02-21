@@ -62,15 +62,15 @@
 |------|----------|--------|
 | Bunny lib | `src/lib/bunny.ts` | `isBunnyConfigured()`, `uploadToBunny()`, `uploadImageToBunny()`, `deleteFromBunny()` |
 | Env vars | `.env` / `.env.example` | `BUNNY_API_KEY`, `BUNNY_STORAGE_ZONE`, `BUNNY_CDN_URL`; optional `BUNNY_STORAGE_ENDPOINT` |
-| Upload API (images) | `src/pages/api/admin/upload.ts` | Auth via `checkAdminAuth` → FormData `file` + optional `folder` → `uploadToBunny()` → returns CDN URL |
+| Upload API | `src/pages/api/admin/media/upload.ts` | Auth via `checkAdminAuth` → FormData `file` + optional `folder` → `uploadToBunny()` (direct mode) or queued for processing → returns CDN URL or queued status |
 | Upload API (audio) | `src/pages/api/admin/audio/upload.ts` | Auth via `checkAdminAuth` → FormData `audio`, `cover`, metadata → `uploadToBunny()` for audio + cover |
 | Media pipeline | `src/lib/media-process.ts`, `scripts/media-processor.ts` | When Bunny configured, processed assets can be uploaded to Bunny; admin media upload goes to local `media/originals` then processing (which may push to Bunny) |
 
 ### 2.2 Flow: admin → Bunny
 
 1. **Image upload (collaborations / physical / etc.):**  
-   Admin page sends multipart to `POST /api/admin/upload` with `file` and optional `folder`.  
-   API checks admin auth → validates image type → builds path `{folder}/{timestamp}-{safeName}` → `uploadToBunny(buffer, filename)` → returns JSON with `url` (CDN URL).
+   Admin page sends multipart to `POST /api/admin/media/upload` with `file` and optional `folder`.  
+   API checks admin auth → validates image type → when `folder` provided, builds path `{folder}/{timestamp}-{safeName}` → `uploadToBunny(buffer, filename)` → returns JSON with `url` (CDN URL) immediately. Without `folder`, queues for background processing.
 
 2. **Audio upload:**  
    Admin sends to `POST /api/admin/audio/upload` with `audio`, optional `cover`, and metadata.  

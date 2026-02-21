@@ -11,10 +11,25 @@ import { db } from '@lib/db';
 import { media } from '@lib/db/schema';
 import { isNull, desc } from 'drizzle-orm';
 
+// Debug: log cookies received
+if (import.meta.env.DEV) {
+  const cookieHeader = Astro.request.headers.get('cookie');
+  const cookieNames = cookieHeader ? cookieHeader.split(';').map(c => c.split('=')[0].trim()).join(', ') : 'none';
+  console.debug('[admin/index] Cookies received:', cookieNames);
+}
+
 // Check auth
 const auth = await checkAdminAuth(Astro.request);
 if (!auth.valid) {
-  return Astro.redirect('/admin/login');
+  const reason = auth.debug || 'unknown';
+  if (import.meta.env.DEV) {
+    console.debug('[admin/index] Auth failed, redirecting to login with reason:', reason);
+  }
+  return Astro.redirect(`/admin/login?session=expired&reason=${encodeURIComponent(reason)}`);
+}
+
+if (import.meta.env.DEV) {
+  console.debug('[admin/index] Auth successful for user:', auth.userId);
 }
 
 // Get recent media

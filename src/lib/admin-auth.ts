@@ -11,6 +11,7 @@ import bcrypt from 'bcryptjs';
 
 const COOKIE_NAME = 'admin_session';
 const SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24h
+const DEBUG_AUTH = true; // Temporary debugging
 
 // Admin secret from env for signing cookies
 function getAdminSecret(): string {
@@ -35,34 +36,63 @@ export function createSessionCookie(userId: string): { name: string; value: stri
   return { name: COOKIE_NAME, value, options };
 }
 
-export function verifySessionCookie(cookieHeader: string | null): { valid: boolean; userId?: string } {
-  if (!cookieHeader) return { valid: false };
+export function verifySessionCookie(cookieHeader: string | null): { valid: boolean; userId?: string; debug?: string } {
+  if (!cookieHeader) {
+    if (DEBUG_AUTH) console.debug('[verifySessionCookie] No cookie header');
+    return { valid: false, debug: 'no_cookie_header' };
+  }
+  
+  if (DEBUG_AUTH) {
+    console.debug('[verifySessionCookie] Cookie header present, length:', cookieHeader.length);
+    // Log first 200 chars to see cookie names without exposing values
+    const cookieNames = cookieHeader.split(';').map(c => c.split('=')[0].trim()).join(', ');
+    console.debug('[verifySessionCookie] Cookie names:', cookieNames);
+  }
+  
   const match = cookieHeader.match(new RegExp(`${COOKIE_NAME}=([^;]+)`));
   let raw = match?.[1]?.trim();
-  if (!raw) return { valid: false };
+  
+  if (DEBUG_AUTH) {
+    console.debug('[verifySessionCookie] Cookie match:', match ? 'found' : 'not found', 'raw length:', raw?.length ?? 0);
+  }
+  
+  if (!raw) return { valid: false, debug: 'cookie_not_found' };
+  
   try {
     if (raw.includes('%')) raw = decodeURIComponent(raw);
   } catch {
     /* leave raw as-is */
   }
+  
   const parts = raw.split('.');
-  if (parts.length !== 3) return { valid: false };
+  if (parts.length !== 3) {
+    if (DEBUG_AUTH) console.debug('[verifySessionCookie] Invalid format, expected 3 parts got:', parts.length);
+    return { valid: false, debug: 'invalid_format' };
+  }
   
   const [userId, timestamp, signature] = parts;
-  if (!userId || !timestamp || !signature) return { valid: false };
+  if (!userId || !timestamp || !signature) {
+    if (DEBUG_AUTH) console.debug('[verifySessionCookie] Missing parts');
+    return { valid: false, debug: 'missing_parts' };
+  }
   
   // Check age
   const age = Date.now() - parseInt(timestamp, 10);
-  if (age < 0 || age > SESSION_MAX_AGE_MS) return { valid: false };
+  if (age < 0 || age > SESSION_MAX_AGE_MS) {
+    if (DEBUG_AUTH) console.debug('[verifySessionCookie] Session expired, age:', age);
+    return { valid: false, debug: 'session_expired' };
+  }
   
   // Verify signature
   const data = `${userId}.${timestamp}`;
   const expected = sign(data);
   try {
     const valid = timingSafeEqual(Buffer.from(signature, 'base64url'), Buffer.from(expected, 'base64url'));
-    return valid ? { valid: true, userId } : { valid: false };
+    if (DEBUG_AUTH) console.debug('[verifySessionCookie] Signature valid:', valid);
+    return valid ? { valid: true, userId } : { valid: false, debug: 'invalid_signature' };
   } catch {
-    return { valid: false };
+    if (DEBUG_AUTH) console.debug('[verifySessionCookie] Signature verification error');
+    return { valid: false, debug: 'signature_error' };
   }
 }
 
@@ -76,7 +106,9 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
   return bcrypt.compare(password, hash);
 }
 
-const DEBUG_AUTH = process.env.DEBUG_ADMIN_LOGIN === '1' || process.env.NODE_ENV === 'development';
+// Support both Node.js and Astro environments
+// In Astro, use import.meta.env.DEV; in Node.js, use process.env
+const DEBUG_AUTH = process.env.DEBUG_ADMIN_LOGIN === '1';
 
 /** Verify admin credentials against database */
 export async function verifyAdminCredentials(username: string, password: string): Promise<{ valid: boolean; userId?: string }> {
@@ -124,12 +156,16 @@ export async function verifyAdminCredentials(username: string, password: string)
 }
 
 /** Check if user is authenticated via cookie */
-export async function checkAdminAuth(request: Request): Promise<{ valid: boolean; userId?: string; user?: typeof users.$inferSelect }> {
+export async function checkAdminAuth(request: Request): Promise<{ valid: boolean; userId?: string; user?: typeof users.$inferSelect; debug?: string }> {
   const cookieHeader = request.headers.get('cookie');
   const session = verifySessionCookie(cookieHeader);
   
+  if (DEBUG_AUTH && session.debug) {
+    console.debug('[checkAdminAuth] Session check failed:', session.debug);
+  }
+  
   if (!session.valid || !session.userId) {
-    return { valid: false };
+    return { valid: false, debug: session.debug };
   }
 
   // Verify user still exists and is active
@@ -139,13 +175,14 @@ export async function checkAdminAuth(request: Request): Promise<{ valid: boolean
     });
 
     if (!user || !user.isActive) {
-      return { valid: false };
+      if (DEBUG_AUTH) console.debug('[checkAdminAuth] User not found or inactive');
+      return { valid: false, debug: 'user_not_found_or_inactive' };
     }
 
     return { valid: true, userId: user.id, user };
   } catch (error) {
     console.error('Auth check error:', error);
-    return { valid: false };
+    return { valid: false, debug: 'database_error' };
   }
 }
 

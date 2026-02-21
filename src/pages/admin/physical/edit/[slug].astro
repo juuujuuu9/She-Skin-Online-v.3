@@ -186,7 +186,7 @@ if (!isNew && !work) {
               const formData = new FormData();
               formData.append('file', this.form.imageFile);
               formData.append('folder', 'physical');
-              const res = await fetch('/api/admin/upload', { method: 'POST', body: formData });
+              const res = await fetch('/api/admin/media/upload', { method: 'POST', body: formData });
               if (!res.ok) throw new Error('Upload failed');
               const data = await res.json();
               imageUrl = data.url;

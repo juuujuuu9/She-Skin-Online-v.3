@@ -1,23 +1,28 @@
 import type { APIRoute } from 'astro';
-import { checkAdminAuth, getAdminAuthFailureReason } from '@lib/admin-auth';
+import { checkAdminAuth } from '@lib/admin-auth';
 import { 
   loadManifest, 
   saveManifest,
   MEDIA_CONFIG,
   type PendingFile 
 } from '@lib/media-process';
+import { uploadToBunny } from '@lib/bunny';
 import { writeFile, mkdir } from 'fs/promises';
 import { join, basename, extname } from 'path';
 
 export const POST: APIRoute = async ({ request }) => {
+  console.log('[upload] Starting upload request');
+  console.log('[upload] Cookie header:', request.headers.get('cookie')?.substring(0, 200));
+  
   const auth = await checkAdminAuth(request);
+  console.log('[upload] Auth result:', { valid: auth.valid, userId: auth.userId });
+  
   if (!auth.valid) {
-    const reason = getAdminAuthFailureReason(request);
-    const body = reason
-      ? { error: 'Unauthorized', reason }
-      : { error: 'Unauthorized' };
     return new Response(
-      JSON.stringify(body),
+      JSON.stringify({ 
+        error: 'Unauthorized', 
+        debug: 'Auth failed - try clearing cookies and logging in again'
+      }),
       { status: 401, headers: { 'Content-Type': 'application/json' } }
     );
   }
@@ -25,6 +30,9 @@ export const POST: APIRoute = async ({ request }) => {
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
+    // Support both 'folder' (legacy) and 'folder' param names
+    const folder = (formData.get('folder') as string) || 'uploads';
+    const direct = formData.get('direct') === 'true' || folder !== 'uploads';
     
     if (!file) {
       return new Response(
@@ -37,11 +45,14 @@ export const POST: APIRoute = async ({ request }) => {
     if (file.size > MEDIA_CONFIG.maxFileSize) {
       return new Response(
         JSON.stringify({ 
-          error: `File too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum is 100MB. Consider compressing to FLAC or reducing sample rate.`
+          error: `File too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum is 100MB.`
         }), 
         { status: 413, headers: { 'Content-Type': 'application/json' } }
       );
     }
+    
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const ext = extname(file.name).toLowerCase();
     
     // Determine media type
     const isImage = file.type.startsWith('image/');
@@ -55,7 +66,6 @@ export const POST: APIRoute = async ({ request }) => {
     }
     
     const type = isImage ? 'images' : 'audio';
-    const ext = extname(file.name).toLowerCase();
     const allowedImageExts = ['.jpg', '.jpeg', '.png', '.tiff', '.webp'];
     const allowedAudioExts = ['.wav', '.aiff', '.flac', '.m4a'];
     
@@ -73,6 +83,32 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
     
+    // DIRECT UPLOAD MODE: Upload immediately to CDN (for work editors)
+    if (direct) {
+      const timestamp = Date.now();
+      const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '-').toLowerCase();
+      const filename = `${folder}/${timestamp}-${safeName}`;
+      
+      const url = await uploadToBunny(buffer, filename, {
+        contentType: file.type,
+      });
+      
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          url,
+          filename: safeName,
+          size: buffer.length,
+          mode: 'direct',
+        }), 
+        { 
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    }
+    
+    // QUEUE MODE: Save to disk and add to manifest for background processing
     // Sanitize filename
     const sanitizedName = file.name
       .replace(/[^a-zA-Z0-9._-]/g, '-')
@@ -86,7 +122,6 @@ export const POST: APIRoute = async ({ request }) => {
     await mkdir(originalsDir, { recursive: true });
     const originalPath = join(originalsDir, sanitizedName);
     
-    const buffer = Buffer.from(await file.arrayBuffer());
     await writeFile(originalPath, buffer);
     
     // Add to pending queue
@@ -113,6 +148,7 @@ export const POST: APIRoute = async ({ request }) => {
         id,
         type: pending.type,
         status: 'pending',
+        mode: 'queued',
         message: 'File uploaded and queued for processing',
       }), 
       { status: 200, headers: { 'Content-Type': 'application/json' } }
