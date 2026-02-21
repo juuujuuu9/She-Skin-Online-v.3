@@ -73,12 +73,14 @@ const toFullUrl = (path: string) => {
 
 const currentPath = Astro.url.pathname;
 const adminNavItems = [
-  { href: '/admin', label: 'Dashboard', icon: 'dashboard' },
+  { href: '/admin', label: 'Uploads', icon: 'dashboard' },
+  { href: '/admin/audio', label: 'ICT★SNU SOUND', icon: 'audio' },
   { href: '/admin/works', label: 'Works', icon: 'works' },
   { href: '/admin/products', label: 'Inventory', icon: 'products' },
 ];
 const iconPaths: Record<string, string> = {
   dashboard: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />`,
+  audio: `<path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M21.6464 2.23699C21.8707 2.42699 22 2.70606 22 3.00001V16C22 18.2091 20.2091 20 18 20C15.7909 20 14 18.2091 14 16C14 13.7909 15.7909 12 18 12C18.7286 12 19.4117 12.1948 20 12.5351V4.18047L10 5.84713V18L9.99999 18.0032C9.99824 20.2109 8.20806 22 6 22C3.79086 22 2 20.2091 2 18C2 15.7909 3.79086 14 6 14C6.72857 14 7.41165 14.1948 8 14.5351V5.00001C8 4.51117 8.35341 4.09398 8.8356 4.01361L20.8356 2.01361C21.1256 1.96529 21.4221 2.04698 21.6464 2.23699ZM20 16C20 14.8954 19.1046 14 18 14C16.8954 14 16 14.8954 16 16C16 17.1046 16.8954 18 18 18C19.1046 18 20 17.1046 20 16ZM6 16C7.10457 16 8 16.8954 8 18C8 19.1046 7.10457 20 6 20C4.89543 20 4 19.1046 4 18C4 16.8954 4.89543 16 6 16Z" />`,
   works: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />`,
   products: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />`,
 };
@@ -88,7 +90,7 @@ const isActive = (href: string) => {
 };
 ---
 
-<Layout title="Dashboard - she_skin Admin">
+<Layout title="Uploads - she_skin Admin">
   <div class="h-dvh bg-gray-50 flex flex-col overflow-hidden">
     <div class="flex flex-row flex-1 min-h-0 items-stretch">
       {/* Admin sidebar - in-page */}
@@ -144,7 +146,7 @@ const isActive = (href: string) => {
         </nav>
       </aside>
       <div class="px-4 sm:px-6 lg:px-8 py-4 flex-1 flex flex-col min-h-0 overflow-hidden">
-        <h1 class="text-2xl font-bold text-gray-900 mb-4 shrink-0">Dashboard</h1>
+        <h1 class="text-2xl font-bold text-gray-900 mb-4 shrink-0">Uploads</h1>
 
         <div class="flex-1 flex gap-6 min-h-0">
           {/* Media Library - takes 2/3 of space */}
@@ -156,45 +158,56 @@ const isActive = (href: string) => {
                   {processedImages.length + processedAudio.length + processedVideo.length} items
                 </span>
               </div>
-              <div class="flex items-center gap-2 text-sm text-gray-500">
+              <div class="flex items-center gap-2 text-sm">
                 {processedImages.length > 0 && (
-                  <span class="flex items-center gap-1">
+                  <button
+                    type="button"
+                    class="gallery-filter-btn flex items-center gap-1 px-2 py-1 rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-all"
+                    data-filter="images"
+                    title="Show only images"
+                  >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                     {processedImages.length}
-                  </span>
+                  </button>
                 )}
-                {((processedImages.length > 0 && processedAudio.length > 0) || 
-                  (processedImages.length > 0 && processedVideo.length > 0)) && <span>•</span>}
                 {processedAudio.length > 0 && (
-                  <span class="flex items-center gap-1">
+                  <button
+                    type="button"
+                    class="gallery-filter-btn flex items-center gap-1 px-2 py-1 rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-all"
+                    data-filter="audio"
+                    title="Show only audio"
+                  >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                     </svg>
                     {processedAudio.length}
-                  </span>
+                  </button>
                 )}
-                {((processedAudio.length > 0 && processedVideo.length > 0) || 
-                  (processedImages.length > 0 && processedVideo.length > 0)) && <span>•</span>}
                 {processedVideo.length > 0 && (
-                  <span class="flex items-center gap-1">
+                  <button
+                    type="button"
+                    class="gallery-filter-btn flex items-center gap-1 px-2 py-1 rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-all"
+                    data-filter="video"
+                    title="Show only video"
+                  >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                     </svg>
                     {processedVideo.length}
-                  </span>
+                  </button>
                 )}
               </div>
             </div>
             <div class="p-6 flex-1 min-h-0 overflow-auto">
               {/* Images Section */}
               {processedImages.length > 0 && (
-                <div class="mb-6">
+                <div class="gallery-section mb-6" data-section="images">
                   <h3 class="text-sm font-medium text-gray-700 mb-3 uppercase tracking-wide">Images</h3>
                   <div class="grid grid-cols-4 gap-4">
-                    {processedImages.slice(0, 8).map((img) => (
-                      <div class="group relative bg-gray-100 rounded-lg overflow-hidden border border-gray-200 hover:border-gray-400 transition-all hover:shadow-md">
+                    {processedImages.map((img, index) => (
+                      <div class={`group relative bg-gray-100 rounded-lg overflow-hidden border border-gray-200 hover:border-gray-400 transition-all hover:shadow-md ${index >= 8 ? 'gallery-item-extra hidden' : ''}`}>
                         {/* Delete button - top left */}
                         <button
                           class="delete-media-btn absolute top-2 left-2 z-10 p-1.5 bg-red-500/80 hover:bg-red-600 text-white rounded opacity-0 group-hover:opacity-100 transition-all"
@@ -253,10 +266,14 @@ const isActive = (href: string) => {
                     ))}
                   </div>
                   {processedImages.length > 8 && (
-                    <div class="mt-3 text-center">
-                      <span class="text-sm text-gray-500">
+                    <div class="mt-3 text-center show-more-container" data-for="images">
+                      <button
+                        type="button"
+                        class="show-more-btn text-sm text-gray-500 hover:text-yellow-600 hover:underline transition-all"
+                        data-show="images"
+                      >
                         +{processedImages.length - 8} more images
-                      </span>
+                      </button>
                     </div>
                   )}
                 </div>
@@ -264,11 +281,11 @@ const isActive = (href: string) => {
 
               {/* Audio Section */}
               {processedAudio.length > 0 && (
-                <div>
+                <div class="gallery-section" data-section="audio">
                   <h3 class="text-sm font-medium text-gray-700 mb-3 uppercase tracking-wide">Audio</h3>
                   <div class="grid grid-cols-2 gap-3">
-                    {processedAudio.slice(0, 4).map((track) => (
-                      <div class="group relative bg-linear-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-200 hover:border-blue-300 transition-all p-4">
+                    {processedAudio.map((track, index) => (
+                      <div class={`group relative bg-linear-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-200 hover:border-blue-300 transition-all p-4 ${index >= 4 ? 'gallery-item-extra hidden' : ''}`}>
                         {/* Delete button - top left */}
                         <button
                           class="delete-media-btn absolute top-2 left-2 z-10 p-1.5 bg-red-500/80 hover:bg-red-600 text-white rounded opacity-0 group-hover:opacity-100 transition-all"
@@ -334,10 +351,14 @@ const isActive = (href: string) => {
                     ))}
                   </div>
                   {processedAudio.length > 4 && (
-                    <div class="mt-3 text-center">
-                      <span class="text-sm text-gray-500">
+                    <div class="mt-3 text-center show-more-container" data-for="audio">
+                      <button
+                        type="button"
+                        class="show-more-btn text-sm text-gray-500 hover:text-yellow-600 hover:underline transition-all"
+                        data-show="audio"
+                      >
                         +{processedAudio.length - 4} more audio files
-                      </span>
+                      </button>
                     </div>
                   )}
                 </div>
@@ -345,11 +366,11 @@ const isActive = (href: string) => {
 
               {/* Video Section */}
               {processedVideo.length > 0 && (
-                <div class="mb-6">
+                <div class="gallery-section mb-6" data-section="video">
                   <h3 class="text-sm font-medium text-gray-700 mb-3 uppercase tracking-wide">Video</h3>
                   <div class="grid grid-cols-2 gap-4">
-                    {processedVideo.slice(0, 4).map((vid) => (
-                      <div class="group relative bg-gray-900 rounded-lg overflow-hidden border border-gray-200 hover:border-gray-400 transition-all hover:shadow-md">
+                    {processedVideo.map((vid, index) => (
+                      <div class={`group relative bg-gray-900 rounded-lg overflow-hidden border border-gray-200 hover:border-gray-400 transition-all hover:shadow-md ${index >= 4 ? 'gallery-item-extra hidden' : ''}`}>
                         {/* Delete button - top left */}
                         <button
                           class="delete-media-btn absolute top-2 left-2 z-20 p-1.5 bg-red-500/80 hover:bg-red-600 text-white rounded opacity-0 group-hover:opacity-100 transition-all"
@@ -425,10 +446,14 @@ const isActive = (href: string) => {
                     ))}
                   </div>
                   {processedVideo.length > 4 && (
-                    <div class="mt-3 text-center">
-                      <span class="text-sm text-gray-500">
+                    <div class="mt-3 text-center show-more-container" data-for="video">
+                      <button
+                        type="button"
+                        class="show-more-btn text-sm text-gray-500 hover:text-yellow-600 hover:underline transition-all"
+                        data-show="video"
+                      >
                         +{processedVideo.length - 4} more videos
-                      </span>
+                      </button>
                     </div>
                   )}
                 </div>
@@ -809,6 +834,77 @@ const isActive = (href: string) => {
       });
     });
 
+    // Gallery filter functionality
+    const filterBtns = document.querySelectorAll('.gallery-filter-btn');
+    const gallerySections = document.querySelectorAll('.gallery-section');
+    let activeFilter: string | null = null;
+
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const filter = btn.getAttribute('data-filter');
+        if (!filter) return;
+
+        // Toggle off if already active
+        if (activeFilter === filter) {
+          activeFilter = null;
+          // Show all sections
+          gallerySections.forEach(section => {
+            section.classList.remove('hidden');
+            // Re-hide extra items in all sections
+            const extraItems = section.querySelectorAll('.gallery-item-extra');
+            extraItems.forEach(item => item.classList.add('hidden'));
+            // Show the +more button for this section
+            const showMoreContainer = section.querySelector('.show-more-container');
+            if (showMoreContainer) showMoreContainer.classList.remove('hidden');
+          });
+          // Remove active styling from all buttons
+          filterBtns.forEach(b => {
+            b.classList.remove('active-filter');
+          });
+          return;
+        }
+
+        // Set new active filter
+        activeFilter = filter;
+
+        // Show only matching section, hide others
+        gallerySections.forEach(section => {
+          const sectionType = section.getAttribute('data-section');
+          if (sectionType === filter) {
+            section.classList.remove('hidden');
+            // Show all items including extra ones
+            const extraItems = section.querySelectorAll('.gallery-item-extra');
+            extraItems.forEach(item => item.classList.remove('hidden'));
+            // Hide the +more button for this active section
+            const showMoreContainer = section.querySelector('.show-more-container');
+            if (showMoreContainer) showMoreContainer.classList.add('hidden');
+          } else {
+            section.classList.add('hidden');
+          }
+        });
+
+        // Update button styling - remove active from all, add to clicked
+        filterBtns.forEach(b => {
+          b.classList.remove('active-filter');
+        });
+        btn.classList.add('active-filter');
+      });
+    });
+
+    // Show more buttons (trigger filter and show all items)
+    document.querySelectorAll('.show-more-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const showType = btn.getAttribute('data-show');
+        if (!showType) return;
+
+        // Trigger the corresponding filter button click
+        const filterBtn = document.querySelector(`.gallery-filter-btn[data-filter="${showType}"]`);
+        if (filterBtn) {
+          filterBtn.click();
+        }
+      });
+    });
+
     // Delete media
     document.querySelectorAll('.delete-media-btn').forEach(btn => {
       btn.addEventListener('click', async (e) => {
@@ -854,4 +950,16 @@ const isActive = (href: string) => {
       });
     });
   </script>
+  <style>
+    .gallery-filter-btn.active-filter {
+      color: #eab308;
+      background-color: rgba(234, 179, 8, 0.15);
+      box-shadow: 0 0 12px rgba(234, 179, 8, 0.5), 0 0 20px rgba(234, 179, 8, 0.3);
+      font-weight: 600;
+    }
+    .gallery-filter-btn.active-filter:hover {
+      background-color: rgba(234, 179, 8, 0.2);
+      box-shadow: 0 0 16px rgba(234, 179, 8, 0.6), 0 0 28px rgba(234, 179, 8, 0.4);
+    }
+  </style>
 </Layout>

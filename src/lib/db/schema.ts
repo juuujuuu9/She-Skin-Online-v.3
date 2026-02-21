@@ -312,6 +312,7 @@ export type PostMeta = typeof postMeta.$inferSelect;
 export type Media = typeof media.$inferSelect;
 export type PostMedia = typeof postMedia.$inferSelect;
 export type Revision = typeof revisions.$inferSelect;
+export type AudioPost = typeof audioPosts.$inferSelect;
 
 // ============================================================================
 // RELATIONS
@@ -378,6 +379,31 @@ export const audioTracksRelations = relations(audioTracks, ({ one }) => ({
     references: [works.id],
   }),
 }));
+
+// ============================================================================
+// AUDIO POSTS TABLE - ICT★SNU SOUND posts
+// ============================================================================
+
+export const audioPosts = pgTable('audio_posts', {
+  id: text('id').primaryKey(),
+  title: text('title').notNull(),
+  slug: text('slug').notNull().unique(),
+  audioFile: text('audio_file'), // URL to audio file
+  artwork: text('artwork'), // URL to artwork image
+  youtubeLink: text('youtube_link'), // YouTube video URL
+  soundcloudLink: text('soundcloud_link'), // SoundCloud track URL
+  status: text('status').notNull().default('draft'), // 'draft', 'published', 'archived'
+  publishedAt: timestamp('published_at'),
+  deletedAt: timestamp('deleted_at'), // Soft delete
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+export const audioPostsRelations = relations(audioPosts, ({ many }) => ({
+  media: many(postMedia),
+}));
+
+export type AudioPost = typeof audioPosts.$inferSelect;
 
 // ============================================================================
 // USERS TABLE - Admin authentication
