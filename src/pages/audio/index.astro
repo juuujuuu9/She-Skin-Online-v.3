@@ -47,12 +47,12 @@ const releases = [
           </p>
         </div>
         <div class="w-12 shrink-0" aria-hidden="true" />
-        <AudioGridControls client:load />
+        <AudioGridControls client:only="react" />
       </div>
     </header>
 
-    <section class="px-4 sm:px-6 pt-6 pb-12">
-      <AudioGrid client:load releases={releases} />
+    <section class="px-4 sm:px-6 pt-6 pb-12" id="audio-grid-section">
+      <AudioGrid client:only="react" releases={releases} />
     </section>
   </main>
 </Layout>

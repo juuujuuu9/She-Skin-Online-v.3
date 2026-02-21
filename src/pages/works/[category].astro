@@ -1,164 +1,95 @@
 ---
 /**
  * Works Archive — Category-based portfolio grid
- * 
- * Routes:
- *   /works/audio          → Audio works archive
- *   /works/physical       → Physical works archive (from public/media/physical)
- *   /works/digital        → Digital works archive (from public/media/digital)
- *   /works/collaborations → Collaboration archive
+ *
+ * All categories (audio, physical, digital, collaborations) are served from the database.
+ * Routes: /works/audio | /works/physical | /works/digital | /works/collaborations
  */
 
-import { getCollection } from 'astro:content';
-import { readdirSync } from 'fs';
-import { join } from 'path';
-import OptimizedImage from '@components/ui/OptimizedImage.astro';
+export const prerender = false;
+
+import LightningImage from '@components/ui/LightningImage.astro';
 import Layout from '@layouts/Layout.astro';
 import { WorksGrid } from '@components/WorksGrid';
 import { WorksGridControls } from '@components/WorksGridControls';
-import { collaborationsGridItems } from '../../data/collaborations';
-
-export async function getStaticPaths() {
-  const categories = ['audio', 'physical', 'digital', 'collaborations'] as const;
-
-  function getDigitalGridItems() {
-    const digitalDir = join(process.cwd(), 'public', 'media', 'digital');
-    try {
-      const files = readdirSync(digitalDir)
-        .filter((f) => f.endsWith('.webp'))
-        .sort()
-        .reverse();
-      const items = files.map((file) => {
-        const slug = file.replace(/\.webp$/i, '');
-        return {
-          slug,
-          forSale: false,
-          image: { src: `/media/digital/${file}`, alt: slug },
-          href: '#',
-        };
-      });
-      // Put 3 random images (not the current first 3) at the front — seeded for deterministic build
-      if (items.length > 3) {
-        let seed = 97;
-        const next = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
-        const pickFrom = (min: number, max: number) => Math.floor(next() * (max - min + 1)) + min;
-        const indices = new Set<number>();
-        while (indices.size < 3) indices.add(pickFrom(3, items.length - 1));
-        const [i0, i1, i2] = [...indices];
-        const first3 = [items[i0], items[i1], items[i2]];
-        const rest = items.filter((_, i) => i !== i0 && i !== i1 && i !== i2);
-        const result = [...first3, ...rest];
-        // Pin third slot to kray-shyne-2018
-        const thirdIdx = 2;
-        const krayIdx = result.findIndex((x) => x.image.src.includes('kray-shyne-2018'));
-        if (krayIdx >= 0 && krayIdx !== thirdIdx) {
-          [result[thirdIdx], result[krayIdx]] = [result[krayIdx], result[thirdIdx]];
-        }
-        return result;
-      }
-      return items;
-    } catch {
-      return [];
-    }
-  }
-
-  function getPhysicalGridItems() {
-    const physicalDir = join(process.cwd(), 'public', 'media', 'physical');
-    try {
-      const files = readdirSync(physicalDir)
-        .filter((f) => f.endsWith('.webp'))
-        .sort()
-        .reverse();
-      return files.map((file) => {
-        const slug = file.replace(/\.webp$/i, '');
-        return {
-          slug,
-          forSale: false,
-          image: { src: `/media/physical/${file}`, alt: slug },
-          href: '#',
-        };
-      });
-    } catch {
-      return [];
-    }
-  }
-
-  const gridItemType = { slug: '', forSale: false, image: null as { src: string; alt: string } | null, href: '#' as string | undefined };
-  type GridItem = typeof gridItemType & { title?: string; year?: number };
-
-  return categories.map((category) => {
-    const props: { category: (typeof categories)[number]; digitalGridItems?: GridItem[]; physicalGridItems?: GridItem[] } = { category };
-    if (category === 'digital') {
-      props.digitalGridItems = getDigitalGridItems();
-    }
-    if (category === 'physical') {
-      props.physicalGridItems = getPhysicalGridItems();
-    }
-    return { params: { category }, props };
-  });
-}
+import { getWorksForGrid, type WorkCategory } from '@lib/db/queries';
 
 const { category } = Astro.params;
-const { category: categoryProp, digitalGridItems, physicalGridItems } = Astro.props;
 
-// Digital and physical: use images from public/media; others use content collection
-const isDigital = categoryProp === 'digital';
-const isPhysical = categoryProp === 'physical';
-const allWorks = isDigital || isPhysical ? [] : await getCollection('works', (entry) => entry.data.category === categoryProp);
+const validCategories = ['audio', 'physical', 'digital', 'collaborations'] as const;
+if (!category || !validCategories.includes(category as (typeof validCategories)[number])) {
+  return Astro.redirect('/404');
+}
 
-// Sort by date (newest first)
-const works = allWorks.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+const categoryProp = category as WorkCategory;
 
-// Get featured works first
-const featuredWorks = works.filter((w) => w.data.featured);
-const regularWorks = works.filter((w) => !w.data.featured);
+// Single source: database for all categories
+const gridItems = await getWorksForGrid(categoryProp);
 
 // Category display config
 const categoryConfig = {
   audio: {
     title: 'ICT★SNU SOUND',
     subtitle: 'Audio works and music productions',
-    layout: 'list', // List view for audio (shows waveform)
+    layout: 'list' as const,
   },
   physical: {
     title: 'Physical Works',
     subtitle: 'Paintings, sculptures, and physical artifacts',
-    layout: 'grid', // Grid view for visual art
+    layout: 'grid' as const,
   },
   digital: {
     title: 'Digital',
     subtitle: 'Digital art and new media',
-    layout: 'grid',
+    layout: 'grid' as const,
   },
   collaborations: {
     title: 'Collaborations',
     subtitle: 'Projects with other artists and collectives',
-    layout: 'grid',
+    layout: 'grid' as const,
   },
 };
 
 const config = categoryConfig[categoryProp];
 
-// Digital, physical, and collaborations use the adjustable grid with +/- controls
-const useWorksGrid = categoryProp === 'digital' || categoryProp === 'physical' || categoryProp === 'collaborations';
-const worksGridItems = useWorksGrid
-  ? isDigital
-    ? (digitalGridItems ?? [])
-    : isPhysical
-      ? (physicalGridItems ?? [])
-      : categoryProp === 'collaborations'
-        ? collaborationsGridItems
-        : regularWorks.map((w) => ({
-          slug: w.data.slug,
-          title: w.data.title,
-          year: w.data.date.getFullYear(),
-          forSale: w.data.forSale ?? false,
-          image:
-            w.data.coverImage && w.data.media?.[0]?.type === 'image'
-              ? { src: w.data.media[0].src, alt: w.data.media[0].alt }
-              : null,
-        }))
-  : [];
+// All categories use the adjustable grid; audio uses list layout in the template below
+const useWorksGrid = true;
+
+// Map to WorksGrid shape (slug, title, forSale, image, href). Variants from DB may be { url, width } or URL strings; normalize to grid shape.
+function toGridItem(item: typeof gridItems[number]) {
+  const img = item.image;
+  let variants: { sm?: { url: string; width: number }; md?: { url: string; width: number }; lg?: { url: string; width: number } } | undefined;
+  if (img?.variants && typeof img.variants === 'object') {
+    const v = img.variants as Record<string, unknown>;
+    if (v.sm && typeof v.sm === 'object' && v.sm !== null && 'url' in v.sm) {
+      variants = {
+        sm: (v.sm as { url: string; width: number }),
+        md: (v.md as { url: string; width: number }) ?? undefined,
+        lg: (v.lg as { url: string; width: number }) ?? undefined,
+      };
+    }
+  }
+  return {
+    slug: item.slug,
+    title: item.title,
+    forSale: item.forSale,
+    image: img
+      ? {
+          src: img.src,
+          alt: img.alt,
+          width: img.width ?? undefined,
+          height: img.height ?? undefined,
+          variants,
+          dominantColor: img.dominantColor ?? undefined,
+        }
+      : null,
+    href: item.externalUrl ?? undefined,
+  };
+}
+const worksGridItems = gridItems.map(toGridItem);
+
+// Featured flag not in DB yet; when added we can filter gridItems
+const featuredWorks: typeof gridItems = [];
 ---
 
 <Layout title={`${config.title} - she_skin`}>
@@ -177,7 +108,7 @@ const worksGridItems = useWorksGrid
         {useWorksGrid ? <div class="w-12 shrink-0" aria-hidden="true" /> : null}
         {useWorksGrid && (
           <WorksGridControls
-            client:load
+            client:only="react"
             defaultColsDesktop={
               categoryProp === 'digital' ? 3
               : categoryProp === 'physical' ? 5
@@ -190,7 +121,7 @@ const worksGridItems = useWorksGrid
       </div>
     </header>
 
-    {/* Featured Works */}
+    {/* Featured Works (when featured flag exists in DB) */}
     {featuredWorks.length > 0 && (
       <section class="px-6 pt-6 pb-12 bg-gray-50">
         <div class="w-full">
@@ -199,41 +130,32 @@ const worksGridItems = useWorksGrid
           </h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
             {featuredWorks.map((work) => (
-              <a 
-                href={`/works/${work.data.slug}`}
+              <a
+                href={work.externalUrl || `/works/${categoryProp}/${work.slug}`}
                 class="group block bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
               >
-                {work.data.coverImage && work.data.media?.[0]?.type === 'image' && (
-                  <div class="aspect-[4/3] overflow-hidden">
-                    <OptimizedImage
-                      src={work.data.media[0].src}
-                      alt={work.data.media[0].alt}
-                      variants={work.data.media[0].variants}
-                      blurhash={work.data.media[0].blurhash}
-                      dominantColor={work.data.media[0].dominantColor}
-                      width={work.data.media[0].width}
-                      height={work.data.media[0].height}
-                      aspectRatio={work.data.media[0].width / work.data.media[0].height}
+                {work.image && (
+                  <div class="overflow-hidden">
+                    <LightningImage
+                      src={work.image.src}
+                      alt={work.image.alt}
+                      variants={work.image.variants as unknown}
+                      blurhash={work.image.blurhash ?? undefined}
+                      dominantColor={work.image.dominantColor ?? undefined}
+                      width={work.image.width ?? undefined}
+                      height={work.image.height ?? undefined}
+                      aspectRatio={work.image.width && work.image.height ? work.image.width / work.image.height : undefined}
+                      objectFit="contain"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      priority={true}
                       class="group-hover:scale-105 transition-transform duration-500"
                     />
                   </div>
                 )}
                 <div class="p-6">
                   <h3 class="text-xl font-semibold text-gray-900 group-hover:text-gray-700">
-                    {work.data.title}
+                    {work.title}
                   </h3>
-                  <time class="text-sm text-gray-500 mt-2 block">
-                    {work.data.date.getFullYear()}
-                  </time>
-                  {work.data.tags.length > 0 && (
-                    <div class="flex flex-wrap gap-2 mt-3">
-                      {work.data.tags.slice(0, 3).map((tag) => (
-                        <span class="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </a>
             ))}
@@ -242,126 +164,27 @@ const worksGridItems = useWorksGrid
       </section>
     )}
 
-    {/* Main Grid/List */}
+    {/* Main Grid */}
     <section class="px-6 pt-6 pb-12">
       <div class="w-full">
-        {useWorksGrid ? (
-          <WorksGrid
-            client:load
-            works={worksGridItems}
-            titleClassName={categoryProp === 'collaborations' ? 'text-[13px] font-medium text-gray-900 group-hover:text-gray-700 line-clamp-2' : undefined}
-            defaultColsDesktop={
-              categoryProp === 'digital' ? 3
-              : categoryProp === 'physical' ? 5
-              : categoryProp === 'collaborations' ? 3
-              : undefined
-            }
-            defaultColsMobile={categoryProp === 'collaborations' ? 1 : categoryProp === 'digital' || categoryProp === 'physical' ? 3 : undefined}
-            alignRowsCenter={categoryProp === 'digital' || categoryProp === 'physical' || categoryProp === 'collaborations'}
-          />
-        ) : config.layout === 'grid' ? (
-          /* Grid Layout for physical (fixed grid) */
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {regularWorks.map((work) => (
-              <a 
-                href={`/works/${work.data.slug}`}
-                class="group block"
-              >
-                <div class="aspect-square overflow-hidden rounded-lg bg-gray-100 mb-4">
-                  {work.data.coverImage && work.data.media?.[0]?.type === 'image' ? (
-                    <OptimizedImage
-                      src={work.data.media[0].src}
-                      alt={work.data.media[0].alt}
-                      variants={work.data.media[0].variants}
-                      blurhash={work.data.media[0].blurhash}
-                      dominantColor={work.data.media[0].dominantColor}
-                      width={work.data.media[0].width}
-                      height={work.data.media[0].height}
-                      aspectRatio={1}
-                      objectFit="cover"
-                      class="group-hover:scale-105 transition-transform duration-500"
-                    />
-                  ) : (
-                    <div class="w-full h-full flex items-center justify-center text-gray-400">
-                      <span class="text-sm">No image</span>
-                    </div>
-                  )}
-                </div>
-                <h3 class="font-medium text-gray-900 group-hover:text-gray-700 line-clamp-2">
-                  {work.data.title}
-                </h3>
-                <time class="text-sm text-gray-500">
-                  {work.data.date.getFullYear()}
-                </time>
-                {work.data.forSale && (
-                  <span class="inline-block mt-2 text-xs px-2 py-1 bg-green-100 text-green-700 rounded">
-                    For Sale
-                  </span>
-                )}
-              </a>
-            ))}
-          </div>
-        ) : (
-          /* List Layout for audio */
-          <div class="space-y-4">
-            {regularWorks.map((work) => (
-              <a 
-                href={`/works/${work.data.slug}`}
-                class="group flex items-center gap-4 p-4 bg-white border border-gray-100 rounded-lg hover:border-gray-200 hover:bg-gray-50 transition-colors"
-              >
-                {/* Cover or placeholder */}
-                <div class="w-20 h-20 flex-shrink-0 rounded bg-gray-100 overflow-hidden">
-                  {work.data.coverImage && work.data.media?.[0]?.type === 'image' ? (
-                    <OptimizedImage
-                      src={work.data.media[0].src}
-                      alt={work.data.media[0].alt}
-                      variants={work.data.media[0].variants}
-                      blurhash={work.data.media[0].blurhash}
-                      width={work.data.media[0].width}
-                      height={work.data.media[0].height}
-                      aspectRatio={1}
-                      objectFit="cover"
-                    />
-                  ) : (
-                    <div class="w-full h-full flex items-center justify-center">
-                      <svg class="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M18 3a1 1 0 00-1.447-.894L8.763 6H5a3 3 0 000 6h.28l1.771 5.316A1 1 0 008 18h1a1 1 0 001-1v-4.382l6.553 3.276A1 1 0 0018 15V3z" />
-                      </svg>
-                    </div>
-                  )}
-                </div>
-                
-                {/* Info */}
-                <div class="flex-1 min-w-0">
-                  <h3 class="font-medium text-gray-900 group-hover:text-gray-700 truncate">
-                    {work.data.title}
-                  </h3>
-                  <time class="text-sm text-gray-500">
-                    {work.data.date.getFullYear()}
-                  </time>
-                  
-                  {/* Mini waveform visualization */}
-                  {work.data.media?.[0]?.type === 'audio' && work.data.media[0].waveform && (
-                    <div class="mt-2 h-6 flex items-center gap-px opacity-50 group-hover:opacity-100 transition-opacity">
-                      {/* Waveform bars would be rendered here using the waveform JSON */}
-                      <span class="text-xs text-gray-400">Audio track</span>
-                    </div>
-                  )}
-                </div>
-                
-                {/* Arrow */}
-                <svg class="w-5 h-5 text-gray-400 group-hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-              </a>
-            ))}
-          </div>
-        )}
+        <WorksGrid
+          client:only="react"
+          works={worksGridItems}
+          titleClassName={categoryProp === 'collaborations' ? 'text-[13px] font-medium text-gray-900 group-hover:text-gray-700 line-clamp-2' : undefined}
+          defaultColsDesktop={
+            categoryProp === 'digital' ? 3
+            : categoryProp === 'physical' ? 5
+            : categoryProp === 'collaborations' ? 3
+            : undefined
+          }
+          defaultColsMobile={categoryProp === 'collaborations' ? 1 : categoryProp === 'digital' || categoryProp === 'physical' ? 3 : undefined}
+          alignRowsCenter={categoryProp === 'digital' || categoryProp === 'physical' || categoryProp === 'collaborations'}
+        />
       </div>
     </section>
 
     {/* Empty State */}
-    {works.length === 0 && !(isDigital && (digitalGridItems?.length ?? 0) > 0) && !(isPhysical && (physicalGridItems?.length ?? 0) > 0) && (
+    {worksGridItems.length === 0 && (
       <div class="px-6 py-20 text-center">
         <p class="text-gray-500">No works in this category yet.</p>
       </div>

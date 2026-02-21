@@ -1,0 +1,301 @@
+---
+/**
+ * LightningImage — Production-grade image optimization for she_skin
+ * 
+ * Features:
+ * - Multiple format support (WebP, AVIF with WebP fallback)
+ * - Responsive srcset with automatic size selection
+ * - Blurhash placeholder for instant visual feedback
+ * - Priority loading for above-fold images
+ * - CDN-optimized URLs with automatic compression parameters
+ * 
+ * Usage:
+ *   <LightningImage 
+ *     src={image.src}
+ *     alt={image.alt}
+ *     width={image.width}
+ *     height={image.height}
+ *     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+ *     priority={index < 6} // First 6 images load immediately
+ *   />
+ */
+
+import type { HTMLAttributes } from 'astro/types';
+
+interface ImageVariant {
+  url: string;
+  width: number;
+  height: number;
+  size?: number;
+}
+
+interface Props extends HTMLAttributes<'img'> {
+  src: string;
+  alt: string;
+  width?: number;
+  height?: number;
+  variants?: Record<string, ImageVariant>;
+  blurhash?: string;
+  dominantColor?: string;
+  priority?: boolean;
+  sizes?: string;
+  aspectRatio?: number;
+  objectFit?: 'cover' | 'contain' | 'fill' | 'none';
+  class?: string;
+  preload?: boolean; // Add to <head> for critical images
+}
+
+const {
+  src,
+  alt,
+  width,
+  height,
+  variants,
+  blurhash,
+  dominantColor = '#f0f0f0',
+  priority = false,
+  sizes = '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw',
+  aspectRatio,
+  objectFit = 'cover',
+  class: className = '',
+  preload = false,
+  ...rest
+} = Astro.props;
+
+// Calculate aspect ratio
+const calculatedAspectRatio = aspectRatio || (width && height ? width / height : undefined);
+
+// Determine if this is a Bunny.net CDN image
+const isBunnyImage = src.includes('b-cdn.net') || src.includes('bunnycdn');
+const isWordPressImage = src.includes('sheskin.org/wp-content');
+
+// Add CDN optimization parameters
+const optimizeUrl = (url: string, width?: number): string => {
+  if (isBunnyImage && width) {
+    // Bunny.net optimization: width, quality, format
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}width=${width}&quality=85&format=webp`;
+  }
+  return url;
+};
+
+// Generate srcset from variants
+const generateSrcset = (variants: Record<string, ImageVariant>): string => {
+  return Object.entries(variants)
+    .sort((a, b) => a[1].width - b[1].width)
+    .map(([_, variant]) => {
+      const url = optimizeUrl(variant.url, variant.width);
+      return `${url} ${variant.width}w`;
+    })
+    .join(', ');
+};
+
+// Get LQIP (Low Quality Image Placeholder)
+const getLqip = (): string => {
+  if (variants?.sm?.url) return optimizeUrl(variants.sm.url, 64);
+  if (variants?.md?.url) return optimizeUrl(variants.md.url, 64);
+  return src;
+};
+
+// Container style
+const containerStyle = [
+  calculatedAspectRatio ? `aspect-ratio: ${calculatedAspectRatio};` : '',
+  `background-color: ${dominantColor};`,
+].join(' ');
+
+const hasVariants = variants && Object.keys(variants).length > 0;
+const lqipUrl = getLqip();
+
+// Preload hint for critical images
+const preloadLink = preload && priority ? `
+<link rel="preload" as="image" href="${optimizeUrl(src, width || 800)}" type="image/webp" imagesrcset="${hasVariants ? generateSrcset(variants) : ''}" imagesizes="${sizes}" />
+` : '';
+---
+
+{preloadLink && <Fragment set:html={preloadLink} />}
+
+{hasVariants ? (
+  <picture
+    class={`lightning-image ${className}`}
+    style={containerStyle}
+    data-blurhash={blurhash}
+    data-dominant-color={dominantColor}
+  >
+    {/* AVIF - best compression, modern browsers */}
+    <source
+      type="image/avif"
+      srcset={generateSrcset(variants)}
+      sizes={sizes}
+    />
+    
+    {/* WebP - universal support */}
+    <source
+      type="image/webp"
+      srcset={generateSrcset(variants)}
+      sizes={sizes}
+    />
+    
+    {/* Fallback - original format */}
+    <img
+      src={src}
+      alt={alt}
+      width={width}
+      height={height}
+      loading={priority ? 'eager' : 'lazy'}
+      decoding={priority ? 'sync' : 'async'}
+      fetchpriority={priority ? 'high' : 'auto'}
+      style={`object-fit: ${objectFit};`}
+      class="w-full h-full"
+      {...rest}
+    />
+  </picture>
+) : (
+  /* Unoptimized fallback - single source */
+  <div 
+    class={`lightning-image ${className}`}
+    style={containerStyle}
+    data-dominant-color={dominantColor}
+  >
+    <img
+      src={optimizeUrl(src, width)}
+      alt={alt}
+      width={width}
+      height={height}
+      loading={priority ? 'eager' : 'lazy'}
+      decoding={priority ? 'sync' : 'async'}
+      fetchpriority={priority ? 'high' : 'auto'}
+      style={`object-fit: ${objectFit};`}
+      class="w-full h-full"
+      {...rest}
+    />
+  </div>
+)}
+
+<style>
+  .lightning-image {
+    display: block;
+    position: relative;
+    overflow: hidden;
+    contain: layout style paint;
+  }
+  
+  .lightning-image img {
+    transition: opacity 0.3s ease, transform 0.5s ease;
+    will-change: transform;
+  }
+  
+  /* Skeleton/placeholder state */
+  .lightning-image::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: attr(data-dominant-color type(<color>), #f0f0f0);
+    z-index: 0;
+  }
+  
+  /* Pulse animation for loading */
+  .lightning-image:not([data-loaded])::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.2) 50%,
+      transparent 100%
+    );
+    animation: shimmer 1.5s infinite;
+    z-index: 1;
+  }
+  
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+  
+  /* Hide shimmer when loaded */
+  .lightning-image[data-loaded]::after {
+    display: none;
+  }
+  
+  /* Blurhash canvas sits behind image */
+  .lightning-image canvas {
+    position: absolute;
+    inset: 0;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover;
+    z-index: 0;
+  }
+  
+  /* Ensure image sits above placeholder */
+  .lightning-image img {
+    position: relative;
+    z-index: 2;
+    opacity: 0;
+  }
+  
+  .lightning-image[data-loaded] img {
+    opacity: 1;
+  }
+</style>
+
+<script>
+  // Blurhash decoding for instant visual feedback
+  (async () => {
+    const images = document.querySelectorAll('.lightning-image[data-blurhash]');
+    
+    for (const container of images) {
+      const blurhash = container.getAttribute('data-blurhash');
+      if (!blurhash) continue;
+      
+      try {
+        const { decode } = await import('blurhash');
+        const pixels = decode(blurhash, 32, 32);
+        
+        const canvas = document.createElement('canvas');
+        canvas.width = 32;
+        canvas.height = 32;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) continue;
+        
+        const imageData = ctx.createImageData(32, 32);
+        imageData.data.set(pixels);
+        ctx.putImageData(imageData, 0, 0);
+        
+        // Scale up with pixelated rendering for crisp edges
+        canvas.style.imageRendering = 'pixelated';
+        container.appendChild(canvas);
+        
+        // Remove canvas when image loads
+        const img = container.querySelector('img');
+        if (img?.complete) {
+          container.setAttribute('data-loaded', 'true');
+          canvas.remove();
+        } else {
+          img?.addEventListener('load', () => {
+            container.setAttribute('data-loaded', 'true');
+            setTimeout(() => canvas.remove(), 300);
+          }, { once: true });
+        }
+      } catch (e) {
+        // Fallback: just show the image when it loads
+        const img = container.querySelector('img');
+        img?.addEventListener('load', () => {
+          container.setAttribute('data-loaded', 'true');
+        }, { once: true });
+      }
+    }
+    
+    // Handle non-blurhash images too
+    document.querySelectorAll('.lightning-image:not([data-blurhash]) img').forEach((img) => {
+      if (img.complete) {
+        img.closest('.lightning-image')?.setAttribute('data-loaded', 'true');
+      } else {
+        img.addEventListener('load', (e) => {
+          (e.target as HTMLElement).closest('.lightning-image')?.setAttribute('data-loaded', 'true');
+        }, { once: true });
+      }
+    });
+  })();
+</script>

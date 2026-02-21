@@ -4,8 +4,24 @@
     "title": "harto falion --- Best ofthe Worst --- {Official MV} ---",
     "forSale": false,
     "image": {
-      "src": "https://www.sheskin.org/wp-content/uploads/2025/11/Screenshot-2025-11-04-at-1.06.25-PM-1024x570.png",
-      "alt": "harto falion --- Best ofthe Worst --- {Official MV} ---"
+      "src": "https://sheskin.b-cdn.net/collaborations/screenshot-2025-11-04-at-1.06.25-pm-md.webp",
+      "alt": "harto falion --- Best ofthe Worst --- {Official MV} ---",
+      "variants": {
+        "sm": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screenshot-2025-11-04-at-1.06.25-pm-sm.webp",
+          "width": 640
+        },
+        "md": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screenshot-2025-11-04-at-1.06.25-pm-md.webp",
+          "width": 1024
+        },
+        "lg": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screenshot-2025-11-04-at-1.06.25-pm-lg.webp",
+          "width": 1920
+        }
+      },
+      "blurhash": "UBBy{I03y19H.jDls*S0D%V[-;oficWU%gt7",
+      "dominantColor": "#080808"
     },
     "href": "https://youtu.be/U6cmvuACo2I?si=DYBiYi0iT87fgk4y"
   },
@@ -14,8 +30,24 @@
     "title": "\"As For The Love\" Presented by Thank You Gallery @ Virginia MOCA",
     "forSale": false,
     "image": {
-      "src": "https://www.sheskin.org/wp-content/uploads/2025/10/she_skin-x-TYG-flyer-819x1024.jpg",
-      "alt": "\"As For The Love\" Presented by Thank You Gallery @ Virginia MOCA"
+      "src": "https://sheskin.b-cdn.net/collaborations/she-skin-x-tyg-flyer-md.webp",
+      "alt": "\"As For The Love\" Presented by Thank You Gallery @ Virginia MOCA",
+      "variants": {
+        "sm": {
+          "url": "https://sheskin.b-cdn.net/collaborations/she-skin-x-tyg-flyer-sm.webp",
+          "width": 640
+        },
+        "md": {
+          "url": "https://sheskin.b-cdn.net/collaborations/she-skin-x-tyg-flyer-md.webp",
+          "width": 1024
+        },
+        "lg": {
+          "url": "https://sheskin.b-cdn.net/collaborations/she-skin-x-tyg-flyer-lg.webp",
+          "width": 1920
+        }
+      },
+      "blurhash": "UYN^C~%M_NxuxHt7jZWB?bj[NFfQ-CayR*f6",
+      "dominantColor": "#f8f8f8"
     },
     "href": "https://youtu.be/OFfoULBthv4?si=RAHWZ3DaINK5lgm2"
   },
@@ -24,8 +56,24 @@
     "title": "HAUNTED MOUND VIRGINIA 8.3.2K99",
     "forSale": false,
     "image": {
-      "src": "https://www.sheskin.org/wp-content/uploads/2025/08/Screenshot-2025-08-05-at-8.09.49-PM-min-1024x569.png",
-      "alt": "HAUNTED MOUND VIRGINIA 8.3.2K99"
+      "src": "https://sheskin.b-cdn.net/collaborations/screenshot-2025-08-05-at-8.09.49-pm-min-md.webp",
+      "alt": "HAUNTED MOUND VIRGINIA 8.3.2K99",
+      "variants": {
+        "sm": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screenshot-2025-08-05-at-8.09.49-pm-min-sm.webp",
+          "width": 640
+        },
+        "md": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screenshot-2025-08-05-at-8.09.49-pm-min-md.webp",
+          "width": 1024
+        },
+        "lg": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screenshot-2025-08-05-at-8.09.49-pm-min-lg.webp",
+          "width": 1920
+        }
+      },
+      "blurhash": "U5C7T^004y00rnD*%g%M00.Ax_?atoxTIVV?",
+      "dominantColor": "#080808"
     },
     "href": "https://www.youtube.com/watch?v=GEqUoLUc3GA"
   },
@@ -34,8 +82,24 @@
     "title": "she_skin x Snack Skateboards",
     "forSale": false,
     "image": {
-      "src": "https://www.sheskin.org/wp-content/uploads/2025/05/snack-collab-pic-min-1024x1024.jpg",
-      "alt": "she_skin x Snack Skateboards"
+      "src": "https://sheskin.b-cdn.net/collaborations/snack-collab-pic-min-md.webp",
+      "alt": "she_skin x Snack Skateboards",
+      "variants": {
+        "sm": {
+          "url": "https://sheskin.b-cdn.net/collaborations/snack-collab-pic-min-sm.webp",
+          "width": 640
+        },
+        "md": {
+          "url": "https://sheskin.b-cdn.net/collaborations/snack-collab-pic-min-md.webp",
+          "width": 1024
+        },
+        "lg": {
+          "url": "https://sheskin.b-cdn.net/collaborations/snack-collab-pic-min-lg.webp",
+          "width": 1920
+        }
+      },
+      "blurhash": "UeMQ0L~VLMXTNaWBsVn%xYkER%WUt7ofofkB",
+      "dominantColor": "#f8f8f8"
     },
     "href": "#"
   },
@@ -44,8 +108,24 @@
     "title": "HUF \"FERRELL TEE\"",
     "forSale": false,
     "image": {
-      "src": "https://www.sheskin.org/wp-content/uploads/2025/05/huf-1-819x1024.jpg",
-      "alt": "HUF \"FERRELL TEE\""
+      "src": "https://sheskin.b-cdn.net/collaborations/huf-1-md.webp",
+      "alt": "HUF \"FERRELL TEE\"",
+      "variants": {
+        "sm": {
+          "url": "https://sheskin.b-cdn.net/collaborations/huf-1-sm.webp",
+          "width": 640
+        },
+        "md": {
+          "url": "https://sheskin.b-cdn.net/collaborations/huf-1-md.webp",
+          "width": 1024
+        },
+        "lg": {
+          "url": "https://sheskin.b-cdn.net/collaborations/huf-1-lg.webp",
+          "width": 1920
+        }
+      },
+      "blurhash": "UtP6?Yxuxuxu%Mfkayof~qWVWBofNGjtayRj",
+      "dominantColor": "#f8f8f8"
     },
     "href": "#"
   },
@@ -54,8 +134,24 @@
     "title": "CANDY X VARG2TM X EUROHEAD X SPOKE COVER",
     "forSale": false,
     "image": {
-      "src": "https://www.sheskin.org/wp-content/uploads/2025/05/candy-cover-new-copy-1024x1024.jpg",
-      "alt": "CANDY X VARG2TM X EUROHEAD X SPOKE COVER"
+      "src": "https://sheskin.b-cdn.net/collaborations/candy-cover-new-copy-md.webp",
+      "alt": "CANDY X VARG2TM X EUROHEAD X SPOKE COVER",
+      "variants": {
+        "sm": {
+          "url": "https://sheskin.b-cdn.net/collaborations/candy-cover-new-copy-sm.webp",
+          "width": 640
+        },
+        "md": {
+          "url": "https://sheskin.b-cdn.net/collaborations/candy-cover-new-copy-md.webp",
+          "width": 1024
+        },
+        "lg": {
+          "url": "https://sheskin.b-cdn.net/collaborations/candy-cover-new-copy-lg.webp",
+          "width": 1920
+        }
+      },
+      "blurhash": "UHHnsP~10eO@^~%FRkM~D%n~NGRls+t5V@Rk",
+      "dominantColor": "#f8f8f8"
     },
     "href": "#"
   },
@@ -64,8 +160,24 @@
     "title": "Carpet Company Deck Design",
     "forSale": false,
     "image": {
-      "src": "https://www.sheskin.org/wp-content/uploads/2024/12/carpet_she-819x1024.jpg",
-      "alt": "Carpet Company Deck Design"
+      "src": "https://sheskin.b-cdn.net/collaborations/carpet-she-md.webp",
+      "alt": "Carpet Company Deck Design",
+      "variants": {
+        "sm": {
+          "url": "https://sheskin.b-cdn.net/collaborations/carpet-she-sm.webp",
+          "width": 640
+        },
+        "md": {
+          "url": "https://sheskin.b-cdn.net/collaborations/carpet-she-md.webp",
+          "width": 1024
+        },
+        "lg": {
+          "url": "https://sheskin.b-cdn.net/collaborations/carpet-she-lg.webp",
+          "width": 1920
+        }
+      },
+      "blurhash": "UCFF53I-p]-q~CDjO=%z9vnPMeOm-;x[rrr_",
+      "dominantColor": "#080808"
     },
     "href": "#"
   },
@@ -74,8 +186,24 @@
     "title": "Nettspend 12.10 Show Edit (shot: @brickprod + analog: @phibs.xyz)",
     "forSale": false,
     "image": {
-      "src": "https://www.sheskin.org/wp-content/uploads/2024/12/Screen-Shot-2024-12-23-at-9.17.33-PM-1024x671.jpg",
-      "alt": "Nettspend 12.10 Show Edit (shot: @brickprod + analog: @phibs.xyz)"
+      "src": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-12-23-at-9.17.33-pm-md.webp",
+      "alt": "Nettspend 12.10 Show Edit (shot: @brickprod + analog: @phibs.xyz)",
+      "variants": {
+        "sm": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-12-23-at-9.17.33-pm-sm.webp",
+          "width": 640
+        },
+        "md": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-12-23-at-9.17.33-pm-md.webp",
+          "width": 1024
+        },
+        "lg": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-12-23-at-9.17.33-pm-lg.webp",
+          "width": 1920
+        }
+      },
+      "blurhash": "UsACw+*GR.M#pHpHf6aLH^R7t6t3j]flf+k9",
+      "dominantColor": "#080808"
     },
     "href": "https://youtu.be/eEPS8lN1MSo"
   },
@@ -84,8 +212,24 @@
     "title": "$ilkmoney - \"WWTGTOTLDUAFNLB?\" Album Promo",
     "forSale": false,
     "image": {
-      "src": "https://www.sheskin.org/wp-content/uploads/2024/12/Screen-Shot-2024-12-13-at-4.17.36-PM-min-574x1024.png",
-      "alt": "$ilkmoney - \"WWTGTOTLDUAFNLB?\" Album Promo"
+      "src": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-12-13-at-4.17.36-pm-min-md.webp",
+      "alt": "$ilkmoney - \"WWTGTOTLDUAFNLB?\" Album Promo",
+      "variants": {
+        "sm": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-12-13-at-4.17.36-pm-min-sm.webp",
+          "width": 640
+        },
+        "md": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-12-13-at-4.17.36-pm-min-md.webp",
+          "width": 1024
+        },
+        "lg": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-12-13-at-4.17.36-pm-min-lg.webp",
+          "width": 1920
+        }
+      },
+      "blurhash": "UPCPfwECRK}@ohazfNj[9FoHnhM|akj[oIoe",
+      "dominantColor": "#080808"
     },
     "href": "#"
   },
@@ -94,8 +238,24 @@
     "title": "Candy (Supporting Flyer + Illustration)",
     "forSale": false,
     "image": {
-      "src": "https://www.sheskin.org/wp-content/uploads/2024/12/Screen-Shot-2024-12-23-at-9.40.46-PM-815x1024.png",
-      "alt": "Candy (Supporting Flyer + Illustration)"
+      "src": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-12-23-at-9.40.46-pm-md.webp",
+      "alt": "Candy (Supporting Flyer + Illustration)",
+      "variants": {
+        "sm": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-12-23-at-9.40.46-pm-sm.webp",
+          "width": 640
+        },
+        "md": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-12-23-at-9.40.46-pm-md.webp",
+          "width": 1024
+        },
+        "lg": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-12-23-at-9.40.46-pm-lg.webp",
+          "width": 1920
+        }
+      },
+      "blurhash": "UIF;+rJR6*=|u6WC%1xacE$%V@NaklW=R5R%",
+      "dominantColor": "#080808"
     },
     "href": "#"
   },
@@ -104,8 +264,24 @@
     "title": "Candy Merch Logo",
     "forSale": false,
     "image": {
-      "src": "https://www.sheskin.org/wp-content/uploads/2024/10/Untitled-2-min-1024x683.jpg",
-      "alt": "Candy Merch Logo"
+      "src": "https://sheskin.b-cdn.net/collaborations/untitled-2-min-md.webp",
+      "alt": "Candy Merch Logo",
+      "variants": {
+        "sm": {
+          "url": "https://sheskin.b-cdn.net/collaborations/untitled-2-min-sm.webp",
+          "width": 640
+        },
+        "md": {
+          "url": "https://sheskin.b-cdn.net/collaborations/untitled-2-min-md.webp",
+          "width": 1024
+        },
+        "lg": {
+          "url": "https://sheskin.b-cdn.net/collaborations/untitled-2-min-lg.webp",
+          "width": 1920
+        }
+      },
+      "blurhash": "UZHV0a~qV@D$t7M_Rjaz?bxuxuxu%Mt7kCt7",
+      "dominantColor": "#080808"
     },
     "href": "#"
   },
@@ -114,8 +290,24 @@
     "title": "Tommy",
     "forSale": false,
     "image": {
-      "src": "https://www.sheskin.org/wp-content/uploads/2024/09/Screen-Shot-2024-09-29-at-11.47.38-AM-min-1024x577.png",
-      "alt": "Tommy"
+      "src": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-09-29-at-11.47.38-am-min-md.webp",
+      "alt": "Tommy",
+      "variants": {
+        "sm": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-09-29-at-11.47.38-am-min-sm.webp",
+          "width": 640
+        },
+        "md": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-09-29-at-11.47.38-am-min-md.webp",
+          "width": 1024
+        },
+        "lg": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-09-29-at-11.47.38-am-min-lg.webp",
+          "width": 1920
+        }
+      },
+      "blurhash": "U_LXf7RkRjNG~qRjRjayWBj[WCofRjofofj[",
+      "dominantColor": "#f8f8f8"
     },
     "href": "https://www.youtube.com/watch?v=PbTdTm4tPoA&feature=youtu.be"
   },
@@ -124,8 +316,24 @@
     "title": "CANDY TOUR FLYER",
     "forSale": false,
     "image": {
-      "src": "https://www.sheskin.org/wp-content/uploads/2024/06/CANDY-FLYER-FINAL-copy-min-819x1024.jpg",
-      "alt": "CANDY TOUR FLYER"
+      "src": "https://sheskin.b-cdn.net/collaborations/candy-flyer-final-copy-min-md.webp",
+      "alt": "CANDY TOUR FLYER",
+      "variants": {
+        "sm": {
+          "url": "https://sheskin.b-cdn.net/collaborations/candy-flyer-final-copy-min-sm.webp",
+          "width": 640
+        },
+        "md": {
+          "url": "https://sheskin.b-cdn.net/collaborations/candy-flyer-final-copy-min-md.webp",
+          "width": 1024
+        },
+        "lg": {
+          "url": "https://sheskin.b-cdn.net/collaborations/candy-flyer-final-copy-min-lg.webp",
+          "width": 1920
+        }
+      },
+      "blurhash": "UVD]6yt7WBt6~CozRkjZ=|j]Rjf6-VkCt7of",
+      "dominantColor": "#080808"
     },
     "href": "#"
   },
@@ -134,8 +342,24 @@
     "title": "CANDY FT. JUSTICE TRIPP- YOU WILL NEVER GET ME (OFFICIAL VISUALIZER)",
     "forSale": false,
     "image": {
-      "src": "https://www.sheskin.org/wp-content/uploads/2024/05/Screen-Shot-2024-05-14-at-1.19.09-PM-1024x570.png",
-      "alt": "CANDY FT. JUSTICE TRIPP- YOU WILL NEVER GET ME (OFFICIAL VISUALIZER)"
+      "src": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-05-14-at-1.19.09-pm-md.webp",
+      "alt": "CANDY FT. JUSTICE TRIPP- YOU WILL NEVER GET ME (OFFICIAL VISUALIZER)",
+      "variants": {
+        "sm": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-05-14-at-1.19.09-pm-sm.webp",
+          "width": 640
+        },
+        "md": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-05-14-at-1.19.09-pm-md.webp",
+          "width": 1024
+        },
+        "lg": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-05-14-at-1.19.09-pm-lg.webp",
+          "width": 1920
+        }
+      },
+      "blurhash": "UCIX,Gx]00-:~qIURjxu00WB?Ht7-;%MRjR*",
+      "dominantColor": "#080808"
     },
     "href": "https://youtu.be/QfUjo2Q_BAc?si=E6UKBzlYbMAxeEVJ"
   },
@@ -851,8 +1075,24 @@
     "title": "Utmost Co./ Los Angeles 2017",
     "forSale": false,
     "image": {
-      "src": "https://www.sheskin.org/wp-content/uploads/2017/06/Screen-Shot-2024-05-14-at-2.34.08-PM-1024x558.png",
-      "alt": "Utmost Co./ Los Angeles 2017"
+      "src": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-05-14-at-2.34.08-pm-md.webp",
+      "alt": "Utmost Co./ Los Angeles 2017",
+      "variants": {
+        "sm": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-05-14-at-2.34.08-pm-sm.webp",
+          "width": 640
+        },
+        "md": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-05-14-at-2.34.08-pm-md.webp",
+          "width": 1024
+        },
+        "lg": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-05-14-at-2.34.08-pm-lg.webp",
+          "width": 1920
+        }
+      },
+      "blurhash": "U8A]W,^Q0LM{}@%2W.n$VXs:-;s:~As.EMWC",
+      "dominantColor": "#281818"
     },
     "href": "https://www.youtube.com/watch?v=Rwg6N_l0AHg"
   },
@@ -881,8 +1121,24 @@
     "title": "Warp Records/Danny Brown/ Atrocity Exhibition 2016",
     "forSale": false,
     "image": {
-      "src": "https://www.sheskin.org/wp-content/uploads/2016/11/Screen-Shot-2024-05-14-at-2.35.43-PM-1024x475.png",
-      "alt": "Warp Records/Danny Brown/ Atrocity Exhibition 2016"
+      "src": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-05-14-at-2.35.43-pm-md.webp",
+      "alt": "Warp Records/Danny Brown/ Atrocity Exhibition 2016",
+      "variants": {
+        "sm": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-05-14-at-2.35.43-pm-sm.webp",
+          "width": 640
+        },
+        "md": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-05-14-at-2.35.43-pm-md.webp",
+          "width": 1024
+        },
+        "lg": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-05-14-at-2.35.43-pm-lg.webp",
+          "width": 1920
+        }
+      },
+      "blurhash": "UJCZP3pLDNz,T#p0Z#Vp1JbJe.R$%4XTRiiv",
+      "dominantColor": "#080808"
     },
     "href": "https://www.youtube.com/watch?v=FR_yo8wAgJ4"
   },
@@ -911,8 +1167,24 @@
     "title": "Divine Council/ Wedidit / Richmond 2015",
     "forSale": false,
     "image": {
-      "src": "https://www.sheskin.org/wp-content/uploads/2016/04/Screen-Shot-2024-05-14-at-2.37.03-PM-1024x506.png",
-      "alt": "Divine Council/ Wedidit / Richmond 2015"
+      "src": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-05-14-at-2.37.03-pm-md.webp",
+      "alt": "Divine Council/ Wedidit / Richmond 2015",
+      "variants": {
+        "sm": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-05-14-at-2.37.03-pm-sm.webp",
+          "width": 640
+        },
+        "md": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-05-14-at-2.37.03-pm-md.webp",
+          "width": 1024
+        },
+        "lg": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-05-14-at-2.37.03-pm-lg.webp",
+          "width": 1920
+        }
+      },
+      "blurhash": "U58|S2D%9Z?b00-;~qD%.mMxMx%M9F%M-;M{",
+      "dominantColor": "#080808"
     },
     "href": "https://www.youtube.com/watch?v=Jc84-len35E"
   },
@@ -931,8 +1203,24 @@
     "title": "Divine Council/ P. Sherman Edit 2015 US",
     "forSale": false,
     "image": {
-      "src": "https://www.sheskin.org/wp-content/uploads/2015/06/Screen-Shot-2024-05-14-at-2.38.32-PM-1024x795.png",
-      "alt": "Divine Council/ P. Sherman Edit 2015 US"
+      "src": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-05-14-at-2.38.32-pm-md.webp",
+      "alt": "Divine Council/ P. Sherman Edit 2015 US",
+      "variants": {
+        "sm": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-05-14-at-2.38.32-pm-sm.webp",
+          "width": 640
+        },
+        "md": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-05-14-at-2.38.32-pm-md.webp",
+          "width": 1024
+        },
+        "lg": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-05-14-at-2.38.32-pm-lg.webp",
+          "width": 1920
+        }
+      },
+      "blurhash": "UrK_E|Dj~q?b_3R*j[xut7xuM{WBxufQWBWB",
+      "dominantColor": "#f8f8f8"
     },
     "href": "https://www.youtube.com/watch?v=W81kjiFGtqE"
   },
@@ -941,8 +1229,24 @@
     "title": "Divine Council/ CYRAX- TRUE Edit 2015 US",
     "forSale": false,
     "image": {
-      "src": "https://www.sheskin.org/wp-content/uploads/2015/06/Screen-Shot-2024-05-14-at-2.43.36-PM-1024x586.png",
-      "alt": "Divine Council/ CYRAX- TRUE Edit 2015 US"
+      "src": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-05-14-at-2.43.36-pm-md.webp",
+      "alt": "Divine Council/ CYRAX- TRUE Edit 2015 US",
+      "variants": {
+        "sm": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-05-14-at-2.43.36-pm-sm.webp",
+          "width": 640
+        },
+        "md": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-05-14-at-2.43.36-pm-md.webp",
+          "width": 1024
+        },
+        "lg": {
+          "url": "https://sheskin.b-cdn.net/collaborations/screen-shot-2024-05-14-at-2.43.36-pm-lg.webp",
+          "width": 1920
+        }
+      },
+      "blurhash": "UlK,:Mo~-pt6~WozNGniWBbHNGW;t7bbj[oz",
+      "dominantColor": "#d8d8d8"
     },
     "href": "https://www.youtube.com/watch?v=s2zfu4Ydnxg"
   },

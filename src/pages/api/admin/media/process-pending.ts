@@ -9,8 +9,9 @@ import {
 } from '@lib/media-process';
 import { readFile } from 'fs/promises';
 
-export const POST: APIRoute = async ({ request }) => {
-  const auth = isAdminAuthenticated(request);
+export const POST: APIRoute = async ({ request, cookies }) => {
+  const sessionValue = cookies.get('admin_session')?.value;
+  const auth = isAdminAuthenticated(request, sessionValue);
   if (auth === false) {
     return new Response(
       JSON.stringify({ error: 'Unauthorized' }), 
@@ -117,8 +118,9 @@ export const POST: APIRoute = async ({ request }) => {
 };
 
 // GET status of pending files
-export const GET: APIRoute = async ({ request }) => {
-  const auth = isAdminAuthenticated(request);
+export const GET: APIRoute = async ({ request, cookies }) => {
+  const sessionValue = cookies.get('admin_session')?.value;
+  const auth = isAdminAuthenticated(request, sessionValue);
   if (auth === false) {
     return new Response(
       JSON.stringify({ error: 'Unauthorized' }), 

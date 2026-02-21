@@ -34,3 +34,4 @@ media/processed/*
 # Logs
 *.log
 npm-debug.log*
+tmp/

@@ -3,32 +3,79 @@
  * Used by /admin page and /api/admin/* routes.
  */
 
-import { config } from 'dotenv';
 import { createHmac, timingSafeEqual } from 'node:crypto';
-
-config({ path: '.env' });
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 const COOKIE_NAME = 'admin_session';
 const SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24h
 
-function getSecret(): string {
-  const secret = process.env.ADMIN_SECRET;
-  if (!secret || secret.length < 16) {
-    throw new Error('ADMIN_SECRET must be set and at least 16 characters');
+// Cache for env values
+let cachedPassword: string | undefined;
+let cachedSecret: string | undefined;
+
+function loadEnvFromFile(): void {
+  if (cachedPassword !== undefined) return;
+  
+  try {
+    const envPath = resolve(process.cwd(), '.env');
+    const envContent = readFileSync(envPath, 'utf-8');
+    
+    for (const line of envContent.split('\n')) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      
+      const eqIndex = trimmed.indexOf('=');
+      if (eqIndex === -1) continue;
+      
+      const key = trimmed.slice(0, eqIndex).trim();
+      const value = trimmed.slice(eqIndex + 1).trim().replace(/^["']|["']$/g, '');
+      
+      if (key === 'ADMIN_PASSWORD') cachedPassword = value;
+      if (key === 'ADMIN_SECRET') cachedSecret = value;
+    }
+  } catch {
+    // Fallback to process.env if .env file can't be read
   }
-  return secret;
+  
+  // Fallback to process.env
+  if (!cachedPassword) cachedPassword = process.env.ADMIN_PASSWORD;
+  if (!cachedSecret) cachedSecret = process.env.ADMIN_SECRET;
 }
 
-function getPassword(): string {
-  const password = process.env.ADMIN_PASSWORD;
-  if (!password) {
+function getAdminSecret(): string {
+  loadEnvFromFile();
+  if (!cachedSecret || cachedSecret.length < 16) {
+    throw new Error('ADMIN_SECRET must be set and at least 16 characters');
+  }
+  return cachedSecret;
+}
+
+function getAdminPassword(): string {
+  loadEnvFromFile();
+  if (!cachedPassword) {
     throw new Error('ADMIN_PASSWORD must be set');
   }
-  return password;
+  return cachedPassword;
+}
+
+/** Verify a plain password against ADMIN_PASSWORD (timing-safe). For use by login form. */
+export function verifyAdminPassword(plain: string): boolean {
+  loadEnvFromFile();
+  const expected = cachedPassword;
+  if (!expected?.trim()) return false;
+  const a = Buffer.from(plain, 'utf8');
+  const b = Buffer.from(expected, 'utf8');
+  if (a.length !== b.length) return false;
+  try {
+    return timingSafeEqual(a, b);
+  } catch {
+    return false;
+  }
 }
 
 function sign(value: string): string {
-  const secret = getSecret();
+  const secret = getAdminSecret();
   return createHmac('sha256', secret).update(value).digest('base64url');
 }
 
@@ -44,8 +91,13 @@ export function verifySessionCookie(cookieHeader: string | null): boolean {
   if (!cookieHeader) return false;
   const match = cookieHeader.match(new RegExp(`${COOKIE_NAME}=([^;]+)`));
   const raw = match?.[1];
-  if (!raw) return false;
-  const [timestamp, signature] = raw.split('.');
+  return verifySessionCookieValue(raw ?? null);
+}
+
+/** Verify using the cookie value only (e.g. from Astro cookies.get('admin_session')?.value). */
+export function verifySessionCookieValue(value: string | null | undefined): boolean {
+  if (!value || !value.trim()) return false;
+  const [timestamp, signature] = value.trim().split('.');
   if (!timestamp || !signature) return false;
   const age = Date.now() - parseInt(timestamp, 10);
   if (age < 0 || age > SESSION_MAX_AGE_MS) return false;
@@ -72,19 +124,29 @@ function parseBasicAuth(authHeader: string | null): { user: string; pass: string
 
 /**
  * Returns true if request is authenticated, or { setCookie: true } if Basic Auth succeeded.
+ * Pass sessionCookieValue when using Astro context.cookies (e.g. cookies.get('admin_session')?.value)
+ * so the session is read the same way Astro set it.
  */
-export function isAdminAuthenticated(request: Request): boolean | { setCookie: true } {
-  if (!process.env.ADMIN_PASSWORD?.trim()) {
+export function isAdminAuthenticated(
+  request: Request,
+  sessionCookieValue?: string | null
+): boolean | { setCookie: true } {
+  loadEnvFromFile();
+  if (!cachedPassword?.trim()) {
     console.warn('Admin auth: ADMIN_PASSWORD not set, denying access');
     return false;
   }
 
-  const cookieHeader = request.headers.get('cookie');
-  if (verifySessionCookie(cookieHeader)) return true;
+  if (sessionCookieValue !== undefined) {
+    if (verifySessionCookieValue(sessionCookieValue)) return true;
+  } else {
+    const cookieHeader = request.headers.get('cookie');
+    if (verifySessionCookie(cookieHeader)) return true;
+  }
 
   const auth = parseBasicAuth(request.headers.get('authorization'));
   if (!auth) return false;
-  const expected = getPassword();
+  const expected = getAdminPassword();
   const a = Buffer.from(auth.pass, 'utf8');
   const b = Buffer.from(expected, 'utf8');
   if (a.length !== b.length) return false;
@@ -100,4 +162,37 @@ export function requireAdminAuth(request: Request): Response | null {
     return new Response('Unauthorized', { status: 401, headers: { 'WWW-Authenticate': 'Basic realm="Admin"' } });
   }
   return null;
+}
+
+/**
+ * Check admin auth and return result object
+ * Used by Astro pages for simpler auth checking
+ */
+export function checkAdminAuth(request: Request): { valid: boolean; setCookie?: boolean } {
+  loadEnvFromFile();
+  if (!cachedPassword?.trim()) {
+    console.warn('Admin auth: ADMIN_PASSWORD not set, denying access');
+    return { valid: false };
+  }
+
+  const cookieHeader = request.headers.get('cookie');
+  if (verifySessionCookie(cookieHeader)) {
+    return { valid: true };
+  }
+
+  const auth = parseBasicAuth(request.headers.get('authorization'));
+  if (!auth) return { valid: false };
+  
+  const expected = getAdminPassword();
+  const a = Buffer.from(auth.pass, 'utf8');
+  const b = Buffer.from(expected, 'utf8');
+  if (a.length !== b.length) return { valid: false };
+  
+  try {
+    if (timingSafeEqual(a, b)) {
+      return { valid: true, setCookie: true };
+    }
+  } catch {}
+  
+  return { valid: false };
 }

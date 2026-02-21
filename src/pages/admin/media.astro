@@ -798,11 +798,16 @@ const formatDuration = (seconds: number) => {
     const response = await fetch('/api/admin/media/upload', {
       method: 'POST',
       body: formData,
+      credentials: 'include',
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Upload failed');
+      const error = await response.json().catch(() => ({}));
+      const msg = error?.error || 'Upload failed';
+      if (response.status === 401) {
+        throw new Error('Session expired or not logged in. Please log in again at /admin/login and try again.');
+      }
+      throw new Error(msg);
     }
 
     return response.json();
@@ -817,6 +822,7 @@ const formatDuration = (seconds: number) => {
     try {
       const response = await fetch('/api/admin/media/process-pending', {
         method: 'POST',
+        credentials: 'include',
       });
       
       const result = await response.json();
@@ -882,7 +888,7 @@ const formatDuration = (seconds: number) => {
   // Refresh status display
   async function refreshStatus() {
     try {
-      const response = await fetch('/api/admin/media/process-pending');
+      const response = await fetch('/api/admin/media/process-pending', { credentials: 'include' });
       if (!response.ok) return;
       
       const status = await response.json();

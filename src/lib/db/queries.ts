@@ -471,3 +471,247 @@ export async function updateCartItemByKey(
   }
   await db.update(carts).set({ updatedAt: new Date() }).where(eq(carts.id, cartId));
 }
+
+// ============================================================
+// WORKS (Portfolio) QUERIES
+// ============================================================
+
+import { works, workMedia, audioTracks, type Work, type WorkMedia, type AudioTrack } from './schema';
+
+export interface WorkWithMedia extends Work {
+  media: WorkMedia[];
+}
+
+export type WorkWithMediaAndAudio = WorkWithMedia & { audioTrack: AudioTrack[] };
+
+export interface CollaborationItem {
+  id: string;
+  slug: string;
+  title: string;
+  forSale: boolean;
+  externalUrl: string | null;
+  image: {
+    src: string;
+    alt: string;
+    variants: { sm: string; md: string; lg: string } | null;
+    blurhash: string | null;
+    dominantColor: string | null;
+    width: number | null;
+    height: number | null;
+  } | null;
+}
+
+/** Get all works by category */
+export async function getWorksByCategory(category: string): Promise<WorkWithMedia[]> {
+  const results = await db.query.works.findMany({
+    where: and(eq(works.category, category), eq(works.published, true)),
+    orderBy: [asc(works.sortOrder), desc(works.createdAt)],
+    with: {
+      media: {
+        orderBy: [asc(workMedia.sortOrder)],
+      },
+    },
+  });
+  return results;
+}
+
+/** Get single work by slug */
+export async function getWorkBySlug(slug: string): Promise<WorkWithMedia | null> {
+  const result = await db.query.works.findFirst({
+    where: eq(works.slug, slug),
+    with: {
+      media: {
+        orderBy: [asc(workMedia.sortOrder)],
+      },
+    },
+  });
+  return result || null;
+}
+
+/** Get single work by id */
+export async function getWorkById(id: string): Promise<WorkWithMedia | null> {
+  const result = await db.query.works.findFirst({
+    where: eq(works.id, id),
+    with: {
+      media: {
+        orderBy: [asc(workMedia.sortOrder)],
+      },
+    },
+  });
+  return result || null;
+}
+
+/** Get audio works with media and audioTrack (for admin audio list) */
+export async function getAudioWorks(): Promise<WorkWithMediaAndAudio[]> {
+  const results = await db.query.works.findMany({
+    where: and(eq(works.category, 'audio'), eq(works.published, true)),
+    orderBy: [desc(works.createdAt)],
+    with: {
+      media: { orderBy: [asc(workMedia.sortOrder)] },
+      audioTrack: true,
+    },
+  });
+  return results as WorkWithMediaAndAudio[];
+}
+
+/** Insert audio track metadata for a work */
+export async function insertAudioTrack(
+  workId: string,
+  data: { duration?: number; trackNumber?: number; fileSize?: number }
+): Promise<string> {
+  const id = crypto.randomUUID();
+  await db.insert(audioTracks).values({
+    id,
+    workId,
+    duration: data.duration ?? null,
+    trackNumber: data.trackNumber ?? null,
+    fileSize: data.fileSize ?? null,
+  });
+  return id;
+}
+
+const WORK_CATEGORIES = ['audio', 'physical', 'digital', 'collaborations'] as const;
+export type WorkCategory = (typeof WORK_CATEGORIES)[number];
+
+/** Map works with media to grid item shape (shared by all categories) */
+function workToGridItem(work: WorkWithMedia): CollaborationItem {
+  const primaryImage = work.media.find(m => m.isPrimary || m.type === 'image' || m.type === 'cover') || work.media[0];
+  return {
+    id: work.id,
+    slug: work.slug,
+    title: work.title,
+    forSale: work.forSale ?? false,
+    externalUrl: work.externalUrl,
+    image: primaryImage ? {
+      src: primaryImage.url,
+      alt: work.title,
+      variants: primaryImage.variants as { sm: string; md: string; lg: string } | null,
+      blurhash: primaryImage.blurhash,
+      dominantColor: primaryImage.dominantColor,
+      width: primaryImage.width,
+      height: primaryImage.height,
+    } : null,
+  };
+}
+
+/** Get all collaborations formatted for grid display */
+export async function getCollaborations(): Promise<CollaborationItem[]> {
+  const results = await getWorksByCategory('collaborations');
+  return results.map(workToGridItem);
+}
+
+/** Get all works for a category in grid display format (audio, physical, digital, collaborations) */
+export async function getWorksForGrid(category: WorkCategory): Promise<CollaborationItem[]> {
+  const results = await getWorksByCategory(category);
+  return results.map(workToGridItem);
+}
+
+/** Create a new work */
+export async function createWork(data: {
+  slug: string;
+  title: string;
+  category: string;
+  description?: string;
+  year?: number;
+  forSale?: boolean;
+  price?: string;
+  externalUrl?: string;
+  published?: boolean;
+  sortOrder?: number;
+}): Promise<string> {
+  const id = crypto.randomUUID();
+  await db.insert(works).values({
+    id,
+    slug: data.slug,
+    title: data.title,
+    category: data.category,
+    description: data.description || null,
+    year: data.year || null,
+    forSale: data.forSale ?? false,
+    price: data.price || null,
+    externalUrl: data.externalUrl || null,
+    published: data.published ?? true,
+    sortOrder: data.sortOrder ?? 0,
+  });
+  return id;
+}
+
+/** Update a work */
+export async function updateWork(
+  id: string,
+  data: Partial<{
+    slug: string;
+    title: string;
+    description: string;
+    year: number;
+    forSale: boolean;
+    price: string;
+    externalUrl: string;
+    published: boolean;
+    sortOrder: number;
+  }>
+): Promise<void> {
+  await db.update(works).set({
+    ...data,
+    updatedAt: new Date(),
+  }).where(eq(works.id, id));
+}
+
+/** Delete a work and its media */
+export async function deleteWork(id: string): Promise<void> {
+  await db.delete(works).where(eq(works.id, id));
+}
+
+/** Add media to a work */
+export async function addWorkMedia(
+  workId: string,
+  data: {
+    type: string;
+    url: string;
+    variants?: { sm: string; md: string; lg: string };
+    blurhash?: string;
+    dominantColor?: string;
+    width?: number;
+    height?: number;
+    isPrimary?: boolean;
+    sortOrder?: number;
+  }
+): Promise<string> {
+  const id = crypto.randomUUID();
+  await db.insert(workMedia).values({
+    id,
+    workId,
+    type: data.type,
+    url: data.url,
+    variants: data.variants || null,
+    blurhash: data.blurhash || null,
+    dominantColor: data.dominantColor || null,
+    width: data.width || null,
+    height: data.height || null,
+    isPrimary: data.isPrimary ?? false,
+    sortOrder: data.sortOrder ?? 0,
+  });
+  return id;
+}
+
+/** Update work media */
+export async function updateWorkMedia(
+  id: string,
+  data: Partial<{
+    url: string;
+    variants: { sm: string; md: string; lg: string };
+    blurhash: string;
+    dominantColor: string;
+    width: number;
+    height: number;
+    isPrimary: boolean;
+    sortOrder: number;
+  }>
+): Promise<void> {
+  await db.update(workMedia).set(data).where(eq(workMedia.id, id));
+}
+
+/** Delete work media */
+export async function deleteWorkMedia(id: string): Promise<void> {
+  await db.delete(workMedia).where(eq(workMedia.id, id));
+}

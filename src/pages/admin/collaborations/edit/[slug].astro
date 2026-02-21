@@ -1,0 +1,368 @@
+---
+/**
+ * Edit Collaboration — Full-featured editing interface
+ * 
+ * Features:
+ * - Image upload with drag-and-drop
+ * - Live preview
+ * - URL validation
+ * - Auto-save
+ */
+
+export const prerender = false;
+
+import Layout from '@layouts/Layout.astro';
+import { checkAdminAuth } from '@lib/admin-auth';
+
+// Check auth
+const auth = checkAdminAuth(Astro.request);
+if (!auth.valid) {
+  return Astro.redirect('/admin/login');
+}
+
+const { slug } = Astro.params;
+const isNew = slug === 'new';
+
+import { getWorkBySlug } from '@lib/db/queries';
+
+let collaboration: { slug: string; title: string; href: string; image: { src: string; alt: string } } | null = null;
+if (!isNew && slug) {
+  const w = await getWorkBySlug(slug);
+  if (w && w.category === 'collaborations') {
+    const primaryImage = w.media.find((m) => m.isPrimary || m.type === 'image') || w.media[0];
+    collaboration = {
+      slug: w.slug,
+      title: w.title,
+      href: w.externalUrl ?? '',
+      image: { src: primaryImage?.url ?? '', alt: w.title },
+    };
+  }
+}
+if (!isNew && !collaboration) {
+  return Astro.redirect('/admin/collaborations');
+}
+if (isNew) {
+  collaboration = { slug: '', title: '', href: '', image: { src: '', alt: '' } };
+}
+---
+
+<Layout title={`${isNew ? 'New' : 'Edit'} Collaboration - she_skin Admin`}>
+  <div class="min-h-screen bg-gray-50" x-data="collaborationEditor()">
+    {/* Header */}
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+      <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <div class="flex items-center gap-4">
+            <a href="/admin/collaborations" class="text-gray-600 hover:text-gray-900">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+            </a>
+            <h1 class="text-xl font-bold text-gray-900">{isNew ? 'New Collaboration' : 'Edit Collaboration'}</h1>
+          </div>
+          <div class="flex items-center gap-3">
+            <button 
+              @click="save()"
+              :disabled="saving"
+              class="px-4 py-2 text-sm font-medium text-white bg-black hover:bg-gray-800 rounded-md transition-colors disabled:opacity-50"
+            >
+              <span x-show="!saving">Save</span>
+              <span x-show="saving">Saving...</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Form */}
+        <div class="space-y-6">
+          {/* Title */}
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Title</label>
+            <input 
+              type="text" 
+              x-model="form.title"
+              placeholder={'e.g., HUF "FERRELL TEE"'}
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+            />
+          </div>
+
+          {/* Slug */}
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Slug (URL)</label>
+            <input 
+              type="text" 
+              x-model="form.slug"
+              placeholder="e.g., huf-ferrell-tee"
+              :disabled="!isNew"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black disabled:bg-gray-100"
+            />
+            <p class="mt-1 text-xs text-gray-500">Used in the URL: /works/collaborations/<span x-text="form.slug || 'slug'"></span></p>
+          </div>
+
+          {/* Link */}
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Link URL</label>
+            <div class="flex gap-2">
+              <input 
+                type="url" 
+                x-model="form.href"
+                placeholder="https://youtube.com/watch?v=..."
+                class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+              />
+              <button 
+                @click="testLink()"
+                class="px-3 py-2 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Test
+              </button>
+            </div>
+            <p class="mt-1 text-xs text-gray-500">YouTube, SoundCloud, or any external link</p>
+          </div>
+
+          {/* Image Upload */}
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Cover Image</label>
+            
+            {/* Drop Zone */}
+            <div 
+              x-show="!form.image.src"
+              @dragover.prevent="dragover = true"
+              @dragleave.prevent="dragover = false"
+              @drop.prevent="handleDrop($event)"
+              :class="dragover ? 'border-blue-500 bg-blue-50' : 'border-gray-300'"
+              class="border-2 border-dashed rounded-lg p-8 text-center transition-colors"
+            >
+              <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <p class="mt-2 text-sm text-gray-600">
+                <span class="font-medium text-blue-600">Click to upload</span> or drag and drop
+              </p>
+              <p class="text-xs text-gray-500">PNG, JPG, WebP up to 10MB</p>
+              <input 
+                type="file" 
+                @change="handleFileSelect($event)"
+                accept="image/*"
+                class="hidden"
+                x-ref="fileInput"
+              />
+              <button 
+                @click="$refs.fileInput.click()"
+                class="mt-4 px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Select File
+              </button>
+            </div>
+
+            {/* Preview */}
+            <div x-show="form.image.src" class="relative">
+              <img 
+                :src="form.image.src" 
+                :alt="form.image.alt"
+                class="w-full aspect-video object-cover rounded-lg"
+              />
+              <button 
+                @click="removeImage()"
+                class="absolute top-2 right-2 p-2 bg-red-600 text-white rounded-md hover:bg-red-700 shadow-sm"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+              <div x-show="uploading" class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg">
+                <div class="text-white text-center">
+                  <svg class="animate-spin h-8 w-8 mx-auto mb-2" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <p class="text-sm">Uploading...</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Alt Text */}
+            <div x-show="form.image.src" class="mt-2">
+              <input 
+                type="text" 
+                x-model="form.image.alt"
+                placeholder="Image description (alt text)"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-black"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Preview */}
+        <div class="lg:sticky lg:top-24 lg:h-fit">
+          <h2 class="text-sm font-medium text-gray-700 mb-4">Preview</h2>
+          <div class="bg-white rounded-lg shadow p-6">
+            <a 
+              :href="form.href || '#"
+              class="group block"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-4">
+                <img 
+                  x-show="form.image.src"
+                  :src="form.image.src" 
+                  :alt="form.image.alt"
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                />
+                <div x-show="!form.image.src" class="w-full h-full flex items-center justify-center text-gray-400">
+                  <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+              </div>
+              <h3 class="font-medium text-gray-900 group-hover:text-gray-700 line-clamp-2" x-text="form.title || 'Untitled Collaboration'"></h3>
+              <p class="text-sm text-gray-500 mt-1 truncate" x-text="form.href || 'No link set'"></p>
+            </a>
+          </div>
+
+          {/* Tips */}
+          <div class="mt-6 bg-blue-50 rounded-lg p-4">
+            <h3 class="text-sm font-medium text-blue-900 mb-2">Tips</h3>
+            <ul class="text-xs text-blue-700 space-y-1">
+              <li>• Use high-quality images (at least 1024px wide)</li>
+              <li>• Keep titles concise but descriptive</li>
+              <li>• YouTube links will show a play button overlay</li>
+              <li>• Changes are saved to the database</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    {/* Toast */}
+    <div 
+      x-show="toast.visible"
+      x-transition
+      class="fixed bottom-4 right-4 px-6 py-3 rounded-md shadow-lg text-white"
+      :class="toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'"
+    >
+      <span x-text="toast.message"></span>
+    </div>
+  </div>
+
+  <script is:inline define:vars={{ initialData: collaboration, isNew }}>
+    function collaborationEditor() {
+      return {
+        isNew,
+        form: {
+          slug: initialData?.slug || '',
+          title: initialData?.title || '',
+          href: initialData?.href || '',
+          image: {
+            src: initialData?.image?.src || '',
+            alt: initialData?.image?.alt || '',
+          },
+        },
+        dragover: false,
+        uploading: false,
+        saving: false,
+        toast: { visible: false, message: '', type: 'success' },
+        
+        handleDrop(e) {
+          this.dragover = false;
+          const file = e.dataTransfer.files[0];
+          if (file && file.type.startsWith('image/')) {
+            this.uploadFile(file);
+          }
+        },
+        
+        handleFileSelect(e) {
+          const file = e.target.files[0];
+          if (file) {
+            this.uploadFile(file);
+          }
+        },
+        
+        async uploadFile(file) {
+          if (file.size > 10 * 1024 * 1024) {
+            this.showToast('File too large (max 10MB)', 'error');
+            return;
+          }
+          
+          this.uploading = true;
+          
+          try {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('folder', 'collaborations');
+            
+            const response = await fetch('/api/admin/upload', {
+              method: 'POST',
+              body: formData,
+            });
+            
+            if (response.ok) {
+              const data = await response.json();
+              this.form.image.src = data.url;
+              this.form.image.alt = this.form.title || file.name;
+              this.showToast('Image uploaded!', 'success');
+            } else {
+              throw new Error('Upload failed');
+            }
+          } catch (err) {
+            this.showToast('Upload failed: ' + err.message, 'error');
+          } finally {
+            this.uploading = false;
+          }
+        },
+        
+        removeImage() {
+          this.form.image.src = '';
+          this.form.image.alt = '';
+        },
+        
+        testLink() {
+          if (this.form.href) {
+            window.open(this.form.href, '_blank');
+          }
+        },
+        
+        async save() {
+          if (!this.form.slug || !this.form.title) {
+            this.showToast('Slug and title are required', 'error');
+            return;
+          }
+          
+          this.saving = true;
+          
+          try {
+            const response = await fetch('/api/admin/collaborations/save', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                item: this.form,
+                isNew: this.isNew,
+              }),
+            });
+            
+            if (response.ok) {
+              this.showToast('Saved successfully!', 'success');
+              if (this.isNew) {
+                setTimeout(() => window.location.href = '/admin/collaborations', 500);
+              }
+            } else {
+              throw new Error('Save failed');
+            }
+          } catch (err) {
+            this.showToast('Save failed: ' + err.message, 'error');
+          } finally {
+            this.saving = false;
+          }
+        },
+        
+        showToast(message, type = 'success') {
+          this.toast = { visible: true, message, type };
+          setTimeout(() => this.toast.visible = false, 3000);
+        },
+      };
+    }
+  </script>
+</Layout>

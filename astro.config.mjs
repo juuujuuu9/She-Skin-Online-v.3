@@ -16,6 +16,10 @@ export default defineConfig({
         '@lib': '/src/lib',
         '@layouts': '/src/layouts',
       },
+      dedupe: ['react', 'react-dom'],
+    },
+    optimizeDeps: {
+      include: ['react', 'react-dom'],
     },
   },
 });

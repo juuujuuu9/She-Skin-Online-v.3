@@ -1,0 +1,283 @@
+---
+/**
+ * Audio Track — New or Edit. Data from database.
+ */
+
+export const prerender = false;
+
+import Layout from '@layouts/Layout.astro';
+import { checkAdminAuth } from '@lib/admin-auth';
+import { getWorkById } from '@lib/db/queries';
+
+const auth = checkAdminAuth(Astro.request);
+if (!auth.valid) {
+  return Astro.redirect('/admin/login');
+}
+
+const { id } = Astro.params;
+const isNew = id === 'new';
+
+let track: { id: string; title: string; artist: string; album: string; year: number; audioSrc?: string; coverArt?: string; duration?: number } | null = null;
+if (!isNew && id) {
+  const w = await getWorkById(id);
+  if (w && w.category === 'audio') {
+    let artist = '';
+    let album = '';
+    let audioSrc = '';
+    try {
+      if (w.description) {
+        const meta = JSON.parse(w.description) as { artist?: string; album?: string; audioSrc?: string };
+        artist = meta.artist ?? '';
+        album = meta.album ?? '';
+        audioSrc = meta.audioSrc ?? '';
+      }
+    } catch {
+      // ignore
+    }
+    const coverMedia = w.media.find((m) => m.type === 'image' || m.type === 'cover');
+    const audioMedia = w.media.find((m) => m.type === 'audio');
+    track = {
+      id: w.id,
+      title: w.title,
+      artist,
+      album,
+      year: w.year ?? new Date().getFullYear(),
+      audioSrc: audioMedia?.url ?? audioSrc,
+      coverArt: coverMedia?.url ?? '',
+    };
+  }
+}
+if (!isNew && !track) {
+  return Astro.redirect('/admin/audio');
+}
+
+const albums = ['ICT★SNU SOUND Vol. 1', 'Unreleased', 'Collaborations'];
+---
+
+<Layout title={isNew ? 'New Track - she_skin Admin' : 'Edit Track - she_skin Admin'}>
+  <div class="min-h-screen bg-gray-50" x-data="audioTrackForm()">
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+      <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <div class="flex items-center gap-4">
+            <a href="/admin/audio" class="text-gray-600 hover:text-gray-900">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+            </a>
+            <h1 class="text-xl font-bold text-gray-900">{isNew ? 'New Track' : 'Edit Track'}</h1>
+          </div>
+          <div class="flex items-center gap-3">
+            <a href="/admin/audio" class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors">Cancel</a>
+            <button
+              @click="submit()"
+              :disabled="!canSubmit || uploading"
+              :class="canSubmit && !uploading ? 'bg-black hover:bg-gray-800' : 'bg-gray-400 cursor-not-allowed'"
+              class="px-4 py-2 text-sm font-medium text-white rounded-md transition-colors"
+            >
+              <span x-show="!uploading">{isNew ? 'Upload Track' : 'Save'}</span>
+              <span x-show="uploading">Uploading...</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="space-y-6">
+        {!isNew && (
+          <p class="text-sm text-gray-500">Updating metadata only. To replace the audio file, add a new track from the list.</p>
+        )}
+
+        {/* Audio File (new only) */}
+        <div x-show="isNew">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Audio File (MP3/WAV)</label>
+          <div
+            x-show="!form.audioFile"
+            @dragover.prevent="audioDragover = true"
+            @dragleave.prevent="audioDragover = false"
+            @drop.prevent="handleAudioDrop($event)"
+            :class="audioDragover ? 'border-blue-500 bg-blue-50' : 'border-gray-300'"
+            class="border-2 border-dashed rounded-lg p-8 text-center transition-colors"
+          >
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+            </svg>
+            <p class="mt-2 text-sm text-gray-600"><span class="font-medium text-blue-600">Click to upload</span> or drag and drop</p>
+            <p class="text-xs text-gray-500">MP3 or WAV, up to 50MB</p>
+            <input type="file" @change="handleAudioSelect($event)" accept="audio/mpeg,audio/wav,audio/mp3" class="hidden" x-ref="audioInput" />
+            <button @click="$refs.audioInput.click()" class="mt-4 px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50">Select Audio File</button>
+          </div>
+          <div x-show="form.audioFile" class="bg-gray-50 rounded-lg p-4 flex items-center justify-between">
+            <span class="text-sm font-medium text-gray-900" x-text="form.audioFile?.name"></span>
+            <button @click="form.audioFile = null" class="p-2 text-gray-400 hover:text-red-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Cover Art */}
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Cover Art (optional)</label>
+          <div
+            x-show="!form.coverArt && !form.coverFile"
+            @dragover.prevent="coverDragover = true"
+            @dragleave.prevent="coverDragover = false"
+            @drop.prevent="handleCoverDrop($event)"
+            :class="coverDragover ? 'border-blue-500 bg-blue-50' : 'border-gray-300'"
+            class="border-2 border-dashed rounded-lg p-6 text-center transition-colors"
+          >
+            <svg class="mx-auto h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <p class="mt-2 text-xs text-gray-600"><span class="font-medium text-blue-600">Click</span> or drag image</p>
+            <input type="file" @change="handleCoverSelect($event)" accept="image/*" class="hidden" x-ref="coverInput" />
+            <button @click="$refs.coverInput.click()" class="mt-2 px-3 py-1 text-xs text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50">Select Image</button>
+          </div>
+          <div x-show="form.coverArt" class="relative inline-block">
+            <img :src="form.coverArt" class="w-32 h-32 object-cover rounded-lg" />
+            <button @click="form.coverArt = null; form.coverFile = null" class="absolute -top-2 -right-2 p-1 bg-red-600 text-white rounded-full hover:bg-red-700">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Metadata */}
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+            <input type="text" x-model="form.title" placeholder="Track title" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Artist</label>
+            <input type="text" x-model="form.artist" placeholder="Artist name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Album</label>
+            <input type="text" x-model="form.album" placeholder="Album name" list="albums-list" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black" />
+            <datalist id="albums-list">
+              {albums.map((a) => <option value={a} />)}
+            </datalist>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Year</label>
+            <input type="number" x-model="form.year" placeholder="2024" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black" />
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div
+      x-show="toast.visible"
+      x-transition
+      class="fixed bottom-4 right-4 px-6 py-3 rounded-md shadow-lg text-white"
+      :class="toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'"
+    >
+      <span x-text="toast.message"></span>
+    </div>
+  </div>
+
+  <script is:inline define:vars={{ isNew, initialTrack: track, albums }}>
+    function audioTrackForm() {
+      return {
+        isNew,
+        form: {
+          title: initialTrack?.title || '',
+          artist: initialTrack?.artist || '',
+          album: initialTrack?.album || '',
+          year: initialTrack?.year || new Date().getFullYear(),
+          audioFile: null,
+          coverArt: initialTrack?.coverArt || '',
+          coverFile: null,
+        },
+        audioDragover: false,
+        coverDragover: false,
+        uploading: false,
+        toast: { visible: false, message: '', type: 'success' },
+
+        get canSubmit() {
+          if (this.isNew) return this.form.audioFile && this.form.title && this.form.artist;
+          return this.form.title && this.form.artist;
+        },
+
+        handleAudioDrop(e) {
+          this.audioDragover = false;
+          const file = e.dataTransfer.files[0];
+          if (file && file.type.startsWith('audio/')) {
+            this.form.audioFile = file;
+            if (!this.form.title) this.form.title = file.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ');
+          }
+        },
+        handleAudioSelect(e) {
+          const file = e.target.files[0];
+          if (file) {
+            this.form.audioFile = file;
+            if (!this.form.title) this.form.title = file.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ');
+          }
+        },
+        handleCoverDrop(e) {
+          this.coverDragover = false;
+          const file = e.dataTransfer.files[0];
+          if (file && file.type.startsWith('image/')) this.previewCover(file);
+        },
+        handleCoverSelect(e) {
+          const file = e.target.files[0];
+          if (file) this.previewCover(file);
+        },
+        previewCover(file) {
+          this.form.coverFile = file;
+          const reader = new FileReader();
+          reader.onload = (e) => { this.form.coverArt = e.target.result; };
+          reader.readAsDataURL(file);
+        },
+
+        async submit() {
+          if (!this.canSubmit) return;
+          this.uploading = true;
+          try {
+            if (this.isNew) {
+              const formData = new FormData();
+              formData.append('audio', this.form.audioFile);
+              formData.append('title', this.form.title);
+              formData.append('artist', this.form.artist);
+              formData.append('album', this.form.album);
+              formData.append('year', this.form.year);
+              if (this.form.coverArt && this.form.coverFile) {
+                const r = await fetch(this.form.coverArt);
+                const blob = await r.blob();
+                formData.append('cover', blob, 'cover.jpg');
+              }
+              const res = await fetch('/api/admin/audio/upload', { method: 'POST', body: formData });
+              if (!res.ok) throw new Error('Upload failed');
+              this.showToast('Track uploaded!', 'success');
+              setTimeout(() => window.location.href = '/admin/audio', 800);
+            } else {
+              const res = await fetch('/api/admin/audio/track', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  id: initialTrack?.id,
+                  title: this.form.title,
+                  artist: this.form.artist,
+                  album: this.form.album,
+                  year: parseInt(this.form.year) || new Date().getFullYear(),
+                }),
+              });
+              if (!res.ok) throw new Error('Update failed');
+              this.showToast('Saved!', 'success');
+              setTimeout(() => window.location.href = '/admin/audio', 800);
+            }
+          } catch (err) {
+            this.showToast(err.message || 'Failed', 'error');
+          } finally {
+            this.uploading = false;
+          }
+        },
+        showToast(message, type) {
+          this.toast = { visible: true, message, type };
+          setTimeout(() => this.toast.visible = false, 3000);
+        },
+      };
+    }
+  </script>
+</Layout>

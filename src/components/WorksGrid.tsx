@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { LightningImg } from './ui/LightningImg';
 
 export const DEFAULT_COLS_DESKTOP = 4;
 export const DEFAULT_COLS_MOBILE = 3;
@@ -10,7 +11,14 @@ export interface WorkGridItem {
   title?: string;
   year?: number;
   forSale?: boolean;
-  image: { src: string; alt: string } | null;
+  image: {
+    src: string;
+    alt: string;
+    width?: number;
+    height?: number;
+    variants?: { sm?: { url: string; width: number }; md?: { url: string; width: number }; lg?: { url: string; width: number } };
+    dominantColor?: string;
+  } | null;
   /** When set (e.g. for digital grid with no detail pages), used instead of /works/{slug} */
   href?: string;
 }
@@ -92,14 +100,20 @@ export function WorksGrid({
         >
           <div className="overflow-hidden bg-gray-100 mb-4">
             {work.image ? (
-              <img
+              <LightningImg
                 src={work.image.src}
                 alt={work.image.alt}
-                className="w-full h-auto block object-cover group-hover:scale-105 transition-transform duration-500"
-                loading="lazy"
+                variants={work.image.variants}
+                width={work.image.width}
+                height={work.image.height}
+                dominantColor={work.image.dominantColor}
+                className="w-full block group-hover:scale-105 transition-transform duration-500"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                priority={false}
+                naturalAspect
               />
             ) : (
-              <div className="w-full aspect-square flex items-center justify-center text-gray-400">
+              <div className="w-full min-h-[200px] flex items-center justify-center text-gray-400">
                 <span className="text-sm">No image</span>
               </div>
             )}

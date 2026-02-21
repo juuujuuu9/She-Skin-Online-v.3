@@ -1,0 +1,145 @@
+---
+/**
+ * Admin Login — Secure access to media management
+ */
+
+export const prerender = false;
+
+import Layout from '@layouts/Layout.astro';
+import { checkAdminAuth, createSessionCookie, verifyAdminPassword } from '@lib/admin-auth';
+
+// Check if already logged in (uses same cookie as admin pages).
+// Skip redirect when ?logged_out=1 so we don't get a redirect loop after logout
+// (browser may still send the old cookie on the first request after clear).
+const auth = checkAdminAuth(Astro.request);
+const justLoggedOut = Astro.url.searchParams.get('logged_out') === '1';
+if (auth.valid && !justLoggedOut) {
+  return Astro.redirect('/admin');
+}
+
+let error = '';
+
+// Handle POST
+if (Astro.request.method === 'POST') {
+  try {
+    let password = '';
+    const contentType = Astro.request.headers.get('content-type') ?? '';
+
+    if (contentType.includes('application/x-www-form-urlencoded') || contentType.includes('multipart/form-data')) {
+      const formData = await Astro.request.formData();
+      password = (formData.get('password')?.toString() ?? '').trim();
+    } else {
+      // ClientRouter may send as JSON; otherwise try urlencoded
+      const text = await Astro.request.text();
+      const trimmed = text.trim();
+      if (trimmed.startsWith('{')) {
+        try {
+          const obj = JSON.parse(text) as { password?: string };
+          password = (obj.password ?? '').trim();
+        } catch {
+          /* fallback below */
+        }
+      }
+      if (!password) {
+        const params = new URLSearchParams(text);
+        password = (params.get('password') ?? '').trim();
+      }
+    }
+
+    if (verifyAdminPassword(password)) {
+      // Set signed session cookie (same name/format admin-auth expects)
+      const { name, value } = createSessionCookie();
+      const cookieOpts = [
+        'HttpOnly',
+        'Path=/',
+        'Max-Age=86400',
+        'SameSite=Strict',
+        ...(import.meta.env.PROD ? ['Secure'] : []),
+      ].join('; ');
+      // Return 200 with Set-Cookie so the cookie is stored (some browsers drop cookies on 302)
+      const setCookie = `${name}=${value}; ${cookieOpts}`;
+      return new Response(
+        `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=/admin" /></head><body>Redirecting...</body></html>`,
+        {
+          status: 200,
+          headers: {
+            'Content-Type': 'text/html; charset=utf-8',
+            'Set-Cookie': setCookie,
+          },
+        }
+      );
+    } else {
+      error = 'Invalid password';
+    }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Unknown error';
+    if (import.meta.env.DEV) {
+      error = `Error: ${msg}`;
+    } else {
+      error = 'An error occurred. Please try again.';
+    }
+  }
+}
+---
+
+<Layout title="Admin Login - she_skin">
+  <div class="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+      <div>
+        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          she_skin Admin
+        </h2>
+        <p class="mt-2 text-center text-sm text-gray-600">
+          Media Management Dashboard
+        </p>
+      </div>
+      
+      <form class="mt-8 space-y-6" method="POST" enctype="application/x-www-form-urlencoded" data-astro-reload>
+        <div class="rounded-md shadow-sm -space-y-px">
+          <div>
+            <label for="password" class="sr-only">Password</label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              required
+              class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-black focus:border-black focus:z-10 sm:text-sm"
+              placeholder="Admin password"
+            />
+          </div>
+        </div>
+
+        {error && (
+          <div class="rounded-md bg-red-50 p-4">
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div class="ml-3">
+                <h3 class="text-sm font-medium text-red-800">{error}</h3>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div>
+          <button
+            type="submit"
+            class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition-colors"
+          >
+            Sign in
+          </button>
+        </div>
+      </form>
+      
+      <div class="text-center">
+        <a href="/" class="text-sm text-gray-600 hover:text-gray-900">
+          ← Back to site
+        </a>
+      </div>
+    </div>
+  </div>
+</Layout>

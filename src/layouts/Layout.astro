@@ -4,6 +4,8 @@ import 'lenis/dist/lenis.css';
 import { ClientRouter } from 'astro:transitions';
 import { AudioPlayer } from '@components/AudioPlayer';
 import { LenisSmoothScroll } from '@components/Lenis';
+import AdminSidebar from '@components/AdminSidebar.astro';
+import { checkAdminAuth } from '@lib/admin-auth';
 
 interface Props {
   title: string;
@@ -11,9 +13,14 @@ interface Props {
   hideHeader?: boolean;
   transparentHeader?: boolean;
   neonGreenMenu?: boolean;
+  hideAdminSidebar?: boolean; // Option to hide sidebar on specific pages
 }
 
-const { title, description = 'SheSkin — Artist Portfolio & Shop', hideHeader = false, transparentHeader = false, neonGreenMenu = false } = Astro.props;
+const { title, description = 'SheSkin — Artist Portfolio & Shop', hideHeader = false, transparentHeader = false, neonGreenMenu = false, hideAdminSidebar = false } = Astro.props;
+
+const auth = checkAdminAuth(Astro.request);
+const isAdmin = auth.valid && !hideAdminSidebar;
+const showAdminSidebar = isAdmin && Astro.url.pathname.startsWith('/admin');
 
 const navItems = [
   { href: '/shop', label: 'Shop' },
@@ -34,98 +41,108 @@ const navItems = [
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet" />
     <meta name="generator" content={Astro.generator} />
-    <ClientRouter />
     <title>{title}</title>
+    <ClientRouter />
   </head>
   <body class="min-h-screen bg-white font-sans uppercase">
-    {!hideHeader && (
-      <>
-        <header class={`fixed top-0 left-0 right-0 z-[75] py-0 px-0 sm:px-6 sm:py-6 flex items-center justify-between ${transparentHeader ? '' : 'bg-white'}`}>
-          {/* Desktop nav - hidden on sm and below */}
-          <nav class={`hidden sm:flex items-center justify-between w-full text-sm tracking-wide font-medium ${transparentHeader ? 'text-vcr-blue' : 'text-black'}`}>
-            {navItems.map((item) => (
-              <a href={item.href} class={transparentHeader ? 'hover:text-vcr-blue transition-colors' : 'hover:text-gray-600 transition-colors'}>{item.label}</a>
-            ))}
-          </nav>
-          {/* Mobile menu toggle - visible only on sm and below */}
-          <button
-            type="button"
-            id="menu-toggle"
-            class={`sm:hidden flex items-center justify-center w-16 h-16 text-xl font-light transition-colors touch-manipulation ${neonGreenMenu ? 'text-vcr-blue hover:text-vcr-blue' : transparentHeader ? 'text-vcr-blue hover:text-vcr-blue' : 'text-black hover:text-gray-600'}`}
-            aria-label="Open menu"
-          >
-            <svg class="w-[1em] h-[1em]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <rect x="3" y="6" width="18" height="2" rx="1" />
-              <rect x="3" y="11" width="18" height="2" rx="1" />
-              <rect x="3" y="16" width="18" height="2" rx="1" />
-            </svg>
-          </button>
-        </header>
+    {/* Admin Sidebar - only on admin pages when authenticated */}
+    {showAdminSidebar && <AdminSidebar currentPath={Astro.url.pathname} />}
+    
+    {/* Main content wrapper - left margin on admin pages when sidebar is shown */}
+    <div class={`flex min-h-screen ${showAdminSidebar ? 'ml-64' : ''}`}>
+      <div class="flex-1 flex flex-col">
+        {!hideHeader && !showAdminSidebar && (
+          <>
+            <header class={`fixed top-0 left-0 right-0 z-[75] py-0 px-0 sm:px-6 sm:py-6 flex items-center justify-between ${showAdminSidebar ? 'left-64' : ''} ${transparentHeader ? '' : 'bg-white'}`}>
+              {/* Desktop nav - hidden on sm and below */}
+              <nav class={`hidden sm:flex items-center justify-between w-full text-sm tracking-wide font-medium ${transparentHeader ? 'text-vcr-blue' : 'text-black'}`}>
+                {navItems.map((item) => (
+                  <a href={item.href} class={transparentHeader ? 'hover:text-vcr-blue transition-colors' : 'hover:text-gray-600 transition-colors'}>{item.label}</a>
+                ))}
+              </nav>
+              {/* Mobile menu toggle - visible only on sm and below */}
+              <button
+                type="button"
+                id="menu-toggle"
+                class={`sm:hidden flex items-center justify-center w-16 h-16 text-xl font-light transition-colors touch-manipulation ${neonGreenMenu ? 'text-vcr-blue hover:text-vcr-blue' : transparentHeader ? 'text-vcr-blue hover:text-vcr-blue' : 'text-black hover:text-gray-600'}`}
+                aria-label="Open menu"
+              >
+                <svg class="w-[1em] h-[1em]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <rect x="3" y="6" width="18" height="2" rx="1" />
+                  <rect x="3" y="11" width="18" height="2" rx="1" />
+                  <rect x="3" y="16" width="18" height="2" rx="1" />
+                </svg>
+              </button>
+            </header>
 
-        {/* Mobile tray - slides in from left, full height, menu aligned below header */}
-        <div
-          id="menu-tray"
-          class={`fixed left-0 top-0 z-[70] w-full h-screen transform -translate-x-full transition-transform duration-300 ease-out ${neonGreenMenu ? 'bg-transparent' : 'bg-white'}`}
-        >
-          <nav class={`flex flex-col gap-4 pt-[5.5rem] px-6 pb-6 text-sm tracking-wide text-left ${neonGreenMenu ? 'font-bold' : 'font-medium'} ${transparentHeader ? 'text-vcr-blue' : 'text-black'}`}>
-            {navItems.map((item) => (
-              <a href={item.href} class={transparentHeader ? 'hover:text-vcr-blue transition-colors' : 'hover:text-gray-600 transition-colors'}>{item.label}</a>
-            ))}
-          </nav>
-        </div>
+            {/* Mobile tray - slides in from left, full height, menu aligned below header */}
+            <div
+              id="menu-tray"
+              class={`fixed left-0 top-0 z-[70] w-full h-screen transform -translate-x-full transition-transform duration-300 ease-out ${neonGreenMenu ? 'bg-transparent' : 'bg-white'}`}
+            >
+              <nav class={`flex flex-col gap-4 pt-[5.5rem] px-6 pb-6 text-sm tracking-wide text-left ${neonGreenMenu ? 'font-bold' : 'font-medium'} ${transparentHeader ? 'text-vcr-blue' : 'text-black'}`}>
+                {navItems.map((item) => (
+                  <a href={item.href} class={transparentHeader ? 'hover:text-vcr-blue transition-colors' : 'hover:text-gray-600 transition-colors'}>{item.label}</a>
+                ))}
+              </nav>
+            </div>
 
-        {/* Backdrop when tray is open */}
-        <div
-          id="menu-backdrop"
-          class="fixed inset-0 top-0 z-[65] bg-white/60 opacity-0 pointer-events-none transition-opacity duration-300 sm:hidden"
-        />
+            {/* Backdrop when tray is open */}
+            <div
+              id="menu-backdrop"
+              class="fixed inset-0 top-0 z-[65] bg-white/60 opacity-0 pointer-events-none transition-opacity duration-300 sm:hidden"
+            />
 
-        <script is:inline>
-          (function() {
-            function handleMenuClick(e) {
-              const toggle = document.getElementById('menu-toggle');
-              const tray = document.getElementById('menu-tray');
-              const backdrop = document.getElementById('menu-backdrop');
-              if (!toggle || !tray || !backdrop) return;
+            <script is:inline>
+              (function() {
+                function handleMenuClick(e) {
+                  const toggle = document.getElementById('menu-toggle');
+                  const tray = document.getElementById('menu-tray');
+                  const backdrop = document.getElementById('menu-backdrop');
+                  if (!toggle || !tray || !backdrop) return;
 
-              function openTray() {
-                tray.classList.remove('-translate-x-full');
-                backdrop.classList.remove('opacity-0', 'pointer-events-none');
-                backdrop.classList.add('opacity-100', 'pointer-events-auto');
-                window.dispatchEvent(new CustomEvent('menu-opened'));
-              }
+                  function openTray() {
+                    tray.classList.remove('-translate-x-full');
+                    backdrop.classList.remove('opacity-0', 'pointer-events-none');
+                    backdrop.classList.add('opacity-100', 'pointer-events-auto');
+                    window.dispatchEvent(new CustomEvent('menu-opened'));
+                  }
 
-              function closeTray() {
-                tray.classList.add('-translate-x-full');
-                backdrop.classList.remove('opacity-100', 'pointer-events-auto');
-                backdrop.classList.add('opacity-0', 'pointer-events-none');
-              }
+                  function closeTray() {
+                    tray.classList.add('-translate-x-full');
+                    backdrop.classList.remove('opacity-100', 'pointer-events-auto');
+                    backdrop.classList.add('opacity-0', 'pointer-events-none');
+                  }
 
-              if (e.target.closest('#menu-toggle')) {
-                e.preventDefault();
-                if (tray.classList.contains('-translate-x-full')) {
-                  openTray();
-                } else {
-                  closeTray();
+                  if (e.target.closest('#menu-toggle')) {
+                    e.preventDefault();
+                    if (tray.classList.contains('-translate-x-full')) {
+                      openTray();
+                    } else {
+                      closeTray();
+                    }
+                  } else if (e.target.closest('#menu-backdrop')) {
+                    closeTray();
+                  }
                 }
-              } else if (e.target.closest('#menu-backdrop')) {
-                closeTray();
-              }
-            }
 
-            document.addEventListener('click', handleMenuClick);
-          })();
-        </script>
-      </>
-    )}
-    <div class="pb-16" id="page-content">
-      <slot />
+                document.addEventListener('click', handleMenuClick);
+              })();
+            </script>
+          </>
+        )}
+        <div class={!Astro.url.pathname.startsWith('/admin') ? 'pb-16' : ''} id="page-content">
+          <slot />
+        </div>
+      </div>
     </div>
     
-    {/* Persistent Audio Player - stays mounted and keeps playing across page navigations */}
-    <AudioPlayer client:load transition:persist="audio-player" />
+    {/* Persistent Audio Player - persists across client-side nav so playback continues */}
+    {!Astro.url.pathname.startsWith('/admin') && (
+      <AudioPlayer client:only="react" transition:persist="audio-player" />
+    )}
 
-    {/* Lenis smooth scroll: non-admin pages only, screens > md */}
-    <LenisSmoothScroll client:load />
+    {/* Lenis smooth scroll - client-only to avoid SSR/React dedupe issues */}
+    <LenisSmoothScroll client:only="react" />
   </body>
 </html>
