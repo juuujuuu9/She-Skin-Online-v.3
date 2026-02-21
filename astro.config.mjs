@@ -7,6 +7,9 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   adapter: vercel(),
   integrations: [react()],
+  security: {
+    checkOrigin: false, // Allow admin login from any origin
+  },
   vite: {
     plugins: [tailwindcss()],
     resolve: {
