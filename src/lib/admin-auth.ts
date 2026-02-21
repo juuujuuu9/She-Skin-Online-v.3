@@ -38,9 +38,13 @@ export function createSessionCookie(userId: string): { name: string; value: stri
 export function verifySessionCookie(cookieHeader: string | null): { valid: boolean; userId?: string } {
   if (!cookieHeader) return { valid: false };
   const match = cookieHeader.match(new RegExp(`${COOKIE_NAME}=([^;]+)`));
-  const raw = match?.[1];
+  let raw = match?.[1]?.trim();
   if (!raw) return { valid: false };
-  
+  try {
+    if (raw.includes('%')) raw = decodeURIComponent(raw);
+  } catch {
+    /* leave raw as-is */
+  }
   const parts = raw.split('.');
   if (parts.length !== 3) return { valid: false };
   
@@ -72,31 +76,49 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
   return bcrypt.compare(password, hash);
 }
 
+const DEBUG_AUTH = process.env.DEBUG_ADMIN_LOGIN === '1' || process.env.NODE_ENV === 'development';
+
 /** Verify admin credentials against database */
 export async function verifyAdminCredentials(username: string, password: string): Promise<{ valid: boolean; userId?: string }> {
   try {
+    if (DEBUG_AUTH) {
+      console.debug('[admin-auth] verifyAdminCredentials: username=', username ? `${username.slice(0, 2)}***` : '(empty)', 'passwordLength=', password?.length ?? 0);
+    }
+
     const user = await db.query.users.findFirst({
       where: eq(users.username, username),
     });
+
+    if (DEBUG_AUTH) {
+      console.debug('[admin-auth] User lookup:', user ? `found id=${user.id} isActive=${user.isActive}` : 'not found');
+    }
 
     if (!user || !user.isActive) {
       return { valid: false };
     }
 
     const valid = await verifyPassword(password, user.passwordHash);
-    
+
+    if (DEBUG_AUTH) {
+      console.debug('[admin-auth] Password check:', valid ? 'match' : 'no match');
+    }
+
     if (valid) {
       // Update last login
       await db.update(users)
         .set({ lastLoginAt: new Date() })
         .where(eq(users.id, user.id));
-      
+
+      if (DEBUG_AUTH) {
+        console.debug('[admin-auth] Login success: userId=', user.id);
+      }
+
       return { valid: true, userId: user.id };
     }
 
     return { valid: false };
   } catch (error) {
-    console.error('Auth error:', error);
+    console.error('[admin-auth] Auth error:', error);
     return { valid: false };
   }
 }

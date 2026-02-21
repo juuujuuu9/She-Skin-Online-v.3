@@ -28,13 +28,12 @@ const iconPaths: Record<string, string> = {
   pages: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />`,
 };
 
-// Admin navigation items
+// Admin navigation items: Dashboard, Media, Works, Inventory
 const adminNavItems = [
   { href: '/admin', label: 'Dashboard', icon: 'dashboard' },
   { href: '/admin/media', label: 'Media', icon: 'media' },
   { href: '/admin/works', label: 'Works', icon: 'works' },
-  { href: '/admin/pages', label: 'Pages', icon: 'pages' },
-  { href: '/admin/products', label: 'Shop', icon: 'products' },
+  { href: '/admin/products', label: 'Inventory', icon: 'products' },
 ];
 
 // Check if current path matches nav item
@@ -48,35 +47,45 @@ const isActive = (href: string) => {
 
 {isAuthenticated && (
   <>
-    {/* Admin Sidebar */}
-    <aside 
+    {/* Admin Sidebar - black */}
+    <aside
       id="admin-sidebar"
-      class="fixed left-0 top-0 h-screen w-64 bg-black text-white z-[100]"
+      class="fixed left-0 top-0 h-screen w-64 z-[100] flex flex-col bg-[#0a0a0a] text-white"
+      style="background-color: #0a0a0a;"
     >
       {/* Header */}
-      <div class="flex items-center justify-between p-4 border-b border-gray-800">
-        <a href="/admin" class="text-lg font-bold tracking-tight">
+      <div class="flex items-center justify-between p-4 border-b border-white/10">
+        <a href="/admin" class="text-lg font-bold tracking-tight text-white hover:text-white/90">
           she_skin
         </a>
-        <span class="text-xs text-gray-500 uppercase tracking-wider">Admin</span>
+        <button
+          type="button"
+          id="admin-logout-btn"
+          class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium text-white/70 hover:bg-red-500/20 hover:text-red-400 transition-colors uppercase tracking-wider"
+        >
+          <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          Logout
+        </button>
       </div>
 
       {/* Navigation */}
-      <nav class="p-2">
-        <ul class="space-y-1">
+      <nav class="flex-1 p-3">
+        <ul class="space-y-0.5">
           {adminNavItems.map((item) => (
             <li>
               <a
                 href={item.href}
                 class={`
-                  flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors
-                  ${isActive(item.href) 
-                    ? 'bg-white text-black' 
-                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                  flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors
+                  ${isActive(item.href)
+                    ? 'bg-white text-black'
+                    : 'text-white/80 hover:bg-white/10 hover:text-white'
                   }
                 `}
               >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" set:html={iconPaths[item.icon] ?? ''} />
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" set:html={iconPaths[item.icon] ?? ''} />
                 <span>{item.label}</span>
               </a>
             </li>
@@ -85,36 +94,24 @@ const isActive = (href: string) => {
       </nav>
 
       {/* Divider */}
-      <div class="mx-4 my-4 border-t border-gray-800" />
+      <div class="mx-3 border-t border-white/10" />
 
       {/* Secondary Actions */}
-      <nav class="px-2">
-        <ul class="space-y-1">
+      <nav class="p-3">
+        <ul class="space-y-0.5">
           <li>
             <a
               href="/"
-              class="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"
+              class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm text-white/60 hover:bg-white/10 hover:text-white transition-colors"
             >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
               </svg>
               <span>View Site</span>
             </a>
           </li>
-          <li>
-            <button
-              id="admin-logout-btn"
-              class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-gray-400 hover:bg-red-900/50 hover:text-red-400 transition-colors text-left"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-              <span>Logout</span>
-            </button>
-          </li>
         </ul>
       </nav>
-
     </aside>
 
     {/* Scripts */}

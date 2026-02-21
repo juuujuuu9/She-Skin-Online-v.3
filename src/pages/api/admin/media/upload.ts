@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { isAdminAuthenticated, createSessionCookie } from '@lib/admin-auth';
+import { checkAdminAuth } from '@lib/admin-auth';
 import { 
   loadManifest, 
   saveManifest,
@@ -9,11 +9,9 @@ import {
 import { writeFile, mkdir } from 'fs/promises';
 import { join, basename, extname } from 'path';
 
-export const POST: APIRoute = async ({ request, cookies }) => {
-  // Check admin auth (use Astro cookies so session is read the same way login set it)
-  const sessionValue = cookies.get('admin_session')?.value;
-  const auth = isAdminAuthenticated(request, sessionValue);
-  if (auth === false) {
+export const POST: APIRoute = async ({ request }) => {
+  const auth = await checkAdminAuth(request);
+  if (!auth.valid) {
     return new Response(
       JSON.stringify({ error: 'Unauthorized' }), 
       { status: 401, headers: { 'Content-Type': 'application/json' } }
@@ -105,11 +103,6 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     manifest.pending.push(pending);
     await saveManifest(manifest);
     
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    if (auth && typeof auth === 'object' && auth.setCookie) {
-      const { name, value, options } = createSessionCookie();
-      headers['Set-Cookie'] = `${name}=${value}; ${options}`;
-    }
     return new Response(
       JSON.stringify({
         success: true,
@@ -118,7 +111,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
         status: 'pending',
         message: 'File uploaded and queued for processing',
       }), 
-      { status: 200, headers }
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
     );
     
   } catch (error) {

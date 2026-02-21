@@ -1,0 +1,42 @@
+---
+/**
+ * Works — Hub for Audio, Physical, Digital, Collaborations
+ */
+
+export const prerender = false;
+
+import Layout from '@layouts/Layout.astro';
+import { checkAdminAuth } from '@lib/admin-auth';
+
+const auth = checkAdminAuth(Astro.request);
+if (!auth.valid) {
+  return Astro.redirect('/admin/login');
+}
+
+const workSections = [
+  { href: '/admin/audio', label: 'Audio', description: 'Tracks and albums' },
+  { href: '/admin/physical', label: 'Physical Works', description: 'Physical pieces' },
+  { href: '/admin/digital', label: 'Digital', description: 'Digital works' },
+  { href: '/admin/collaborations', label: 'Collaborations', description: 'Collaborative works' },
+];
+---
+
+<Layout title="Works - she_skin Admin">
+  <div class="min-h-screen bg-gray-50">
+    <div class="px-4 sm:px-6 lg:px-8 py-8">
+      <h1 class="text-3xl font-bold text-gray-900">Works</h1>
+      <p class="mt-2 text-gray-600">Manage audio, physical, digital, and collaboration works.</p>
+      <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {workSections.map((section) => (
+          <a
+            href={section.href}
+            class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-gray-300 transition-all"
+          >
+            <h2 class="text-lg font-semibold text-gray-900">{section.label}</h2>
+            <p class="mt-1 text-sm text-gray-500">{section.description}</p>
+          </a>
+        ))}
+      </div>
+    </div>
+  </div>
+</Layout>

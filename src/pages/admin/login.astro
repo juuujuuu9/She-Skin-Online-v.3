@@ -20,35 +20,67 @@ let error = '';
 
 // Handle POST
 if (Astro.request.method === 'POST') {
+  const debugLogin = import.meta.env.DEV;
+  if (debugLogin) {
+    console.debug('[admin/login] POST received');
+  }
+
   try {
     const formData = await Astro.request.formData();
     const username = (formData.get('username')?.toString() ?? '').trim();
     const password = (formData.get('password')?.toString() ?? '').trim();
 
+    if (debugLogin) {
+      console.debug('[admin/login] Form: username present=', !!username, 'password length=', password.length);
+    }
+
     if (!username || !password) {
+      if (debugLogin) console.debug('[admin/login] Rejected: missing username or password');
       error = 'Username and password are required';
     } else {
       const result = await verifyAdminCredentials(username, password);
-      
-      if (result.valid && result.userId) {
-        // Set session cookie
-        const { name, value } = createSessionCookie(result.userId);
-        Astro.cookies.set(name, value, {
-          httpOnly: true,
-          secure: import.meta.env.PROD,
-          sameSite: 'strict',
-          maxAge: 60 * 60 * 24,
-          path: '/',
-        });
 
-        return Astro.redirect('/admin');
+      if (debugLogin) {
+        console.debug('[admin/login] verifyAdminCredentials result: valid=', result.valid, 'userId=', result.userId ?? '(none)');
+      }
+
+      if (result.valid && result.userId) {
+        // Set session cookie and redirect in one response so the cookie is never dropped
+        const { name, value } = createSessionCookie(result.userId);
+        const maxAge = 60 * 60 * 24;
+        const secure = import.meta.env.PROD;
+        const cookieParts = [
+          `${name}=${value}`,
+          'Path=/',
+          'Max-Age=' + maxAge,
+          'HttpOnly',
+          'SameSite=Strict',
+        ];
+        if (secure) cookieParts.push('Secure');
+        const setCookie = cookieParts.join('; ');
+
+        if (debugLogin) {
+          console.debug('[admin/login] Session cookie set, redirecting to /admin');
+        }
+
+        return new Response(null, {
+          status: 302,
+          headers: {
+            Location: '/admin',
+            'Set-Cookie': setCookie,
+          },
+        });
       } else {
+        if (debugLogin) console.debug('[admin/login] Rejected: invalid credentials');
         error = 'Invalid username or password';
       }
     }
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Unknown error';
-    console.error('Login error:', e);
+    console.error('[admin/login] Login error:', e);
+    if (debugLogin) {
+      console.debug('[admin/login] Caught error:', msg);
+    }
     if (import.meta.env.DEV) {
       error = `Error: ${msg}`;
     } else {

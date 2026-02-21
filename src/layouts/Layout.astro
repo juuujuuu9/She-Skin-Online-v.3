@@ -4,7 +4,6 @@ import 'lenis/dist/lenis.css';
 import { ClientRouter } from 'astro:transitions';
 import { AudioPlayer } from '@components/AudioPlayer';
 import { LenisSmoothScroll } from '@components/Lenis';
-import AdminSidebar from '@components/AdminSidebar.astro';
 import { checkAdminAuth } from '@lib/admin-auth';
 
 interface Props {
@@ -13,14 +12,12 @@ interface Props {
   hideHeader?: boolean;
   transparentHeader?: boolean;
   neonGreenMenu?: boolean;
-  hideAdminSidebar?: boolean; // Option to hide sidebar on specific pages
 }
 
-const { title, description = 'SheSkin — Artist Portfolio & Shop', hideHeader = false, transparentHeader = false, neonGreenMenu = false, hideAdminSidebar = false } = Astro.props;
+const { title, description = 'SheSkin — Artist Portfolio & Shop', hideHeader = false, transparentHeader = false, neonGreenMenu = false } = Astro.props;
 
 const auth = await checkAdminAuth(Astro.request);
-const isAdmin = auth.valid && !hideAdminSidebar;
-const showAdminSidebar = isAdmin && Astro.url.pathname.startsWith('/admin');
+const isAdminPage = auth.valid && Astro.url.pathname.startsWith('/admin');
 
 const navItems = [
   { href: '/shop', label: 'Shop' },
@@ -45,15 +42,11 @@ const navItems = [
     <ClientRouter />
   </head>
   <body class="min-h-screen bg-white font-sans uppercase">
-    {/* Admin Sidebar - only on admin pages when authenticated */}
-    {showAdminSidebar && <AdminSidebar currentPath={Astro.url.pathname} />}
-    
-    {/* Main content wrapper - left margin on admin pages when sidebar is shown */}
-    <div class={`flex min-h-screen ${showAdminSidebar ? 'ml-64' : ''}`}>
+    <div class="flex min-h-screen">
       <div class="flex-1 flex flex-col">
-        {!hideHeader && !showAdminSidebar && (
+        {!hideHeader && !isAdminPage && (
           <>
-            <header class={`fixed top-0 left-0 right-0 z-[75] py-0 px-0 sm:px-6 sm:py-6 flex items-center justify-between ${showAdminSidebar ? 'left-64' : ''} ${transparentHeader ? '' : 'bg-white'}`}>
+            <header class={`fixed top-0 left-0 right-0 z-[75] py-0 px-0 sm:px-6 sm:py-6 flex items-center justify-between ${transparentHeader ? '' : 'bg-white'}`}>
               {/* Desktop nav - hidden on sm and below */}
               <nav class={`hidden sm:flex items-center justify-between w-full text-sm tracking-wide font-medium ${transparentHeader ? 'text-vcr-blue' : 'text-black'}`}>
                 {navItems.map((item) => (

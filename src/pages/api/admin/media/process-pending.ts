@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { isAdminAuthenticated } from '@lib/admin-auth';
+import { checkAdminAuth } from '@lib/admin-auth';
 import { 
   processMediaFile, 
   loadManifest, 
@@ -9,10 +9,9 @@ import {
 } from '@lib/media-process';
 import { readFile } from 'fs/promises';
 
-export const POST: APIRoute = async ({ request, cookies }) => {
-  const sessionValue = cookies.get('admin_session')?.value;
-  const auth = isAdminAuthenticated(request, sessionValue);
-  if (auth === false) {
+export const POST: APIRoute = async ({ request }) => {
+  const auth = await checkAdminAuth(request);
+  if (!auth.valid) {
     return new Response(
       JSON.stringify({ error: 'Unauthorized' }), 
       { status: 401, headers: { 'Content-Type': 'application/json' } }
@@ -118,10 +117,9 @@ export const POST: APIRoute = async ({ request, cookies }) => {
 };
 
 // GET status of pending files
-export const GET: APIRoute = async ({ request, cookies }) => {
-  const sessionValue = cookies.get('admin_session')?.value;
-  const auth = isAdminAuthenticated(request, sessionValue);
-  if (auth === false) {
+export const GET: APIRoute = async ({ request }) => {
+  const auth = await checkAdminAuth(request);
+  if (!auth.valid) {
     return new Response(
       JSON.stringify({ error: 'Unauthorized' }), 
       { status: 401, headers: { 'Content-Type': 'application/json' } }
