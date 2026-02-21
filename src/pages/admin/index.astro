@@ -7,29 +7,20 @@ export const prerender = false;
 
 import Layout from '@layouts/Layout.astro';
 import { checkAdminAuth } from '@lib/admin-auth';
+import { generateCsrfToken } from '@lib/csrf';
 import { db } from '@lib/db';
 import { media } from '@lib/db/schema';
 import { isNull, desc } from 'drizzle-orm';
 
-// Debug: log cookies received
-if (import.meta.env.DEV) {
-  const cookieHeader = Astro.request.headers.get('cookie');
-  const cookieNames = cookieHeader ? cookieHeader.split(';').map(c => c.split('=')[0].trim()).join(', ') : 'none';
-  console.debug('[admin/index] Cookies received:', cookieNames);
-}
+// Generate and set CSRF token
+const csrf = generateCsrfToken();
+Astro.response.headers.set('Set-Cookie', csrf.cookie);
 
 // Check auth
 const auth = await checkAdminAuth(Astro.request);
 if (!auth.valid) {
   const reason = auth.debug || 'unknown';
-  if (import.meta.env.DEV) {
-    console.debug('[admin/index] Auth failed, redirecting to login with reason:', reason);
-  }
   return Astro.redirect(`/admin/login?session=expired&reason=${encodeURIComponent(reason)}`);
-}
-
-if (import.meta.env.DEV) {
-  console.debug('[admin/index] Auth successful for user:', auth.userId);
 }
 
 // Get recent media
@@ -177,6 +168,9 @@ const isActive = (href: string) => {
       </div>
     </div>
   </div>
+  <script is:inline define:vars={{ csrfToken: csrf.token }}>
+    window.CSRF_TOKEN = csrfToken;
+  </script>
   <script>
     document.getElementById('admin-logout-btn')?.addEventListener('click', async () => {
       if (!confirm('Are you sure you want to logout?')) return;
@@ -227,6 +221,9 @@ const isActive = (href: string) => {
           method: 'POST',
           body: formData,
           credentials: 'include',
+          headers: {
+            'X-CSRF-Token': (window as any).CSRF_TOKEN || ''
+          }
         });
         if (res.status === 401) {
           const err = await res.json().catch(() => ({}));

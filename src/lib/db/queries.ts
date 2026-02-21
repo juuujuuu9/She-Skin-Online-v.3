@@ -715,3 +715,64 @@ export async function updateWorkMedia(
 export async function deleteWorkMedia(id: string): Promise<void> {
   await db.delete(workMedia).where(eq(workMedia.id, id));
 }
+
+/**
+ * Soft delete a work (safe delete with recovery option)
+ */
+export async function softDeleteWork(
+  id: string,
+  deletedBy?: string
+): Promise<boolean> {
+  const result = await db
+    .update(works)
+    .set({
+      deletedAt: new Date(),
+      published: false,
+      updatedAt: new Date(),
+    })
+    .where(eq(works.id, id))
+    .returning({ id: works.id });
+
+  return result.length > 0;
+}
+
+/**
+ * Restore a soft-deleted work
+ */
+export async function restoreWork(id: string): Promise<boolean> {
+  const result = await db
+    .update(works)
+    .set({
+      deletedAt: null,
+      published: true,
+      updatedAt: new Date(),
+    })
+    .where(eq(works.id, id))
+    .returning({ id: works.id });
+
+  return result.length > 0;
+}
+
+/**
+ * Get all works including deleted (for admin)
+ */
+export async function getAllWorks(includeDeleted = false) {
+  if (includeDeleted) {
+    return db
+      .select()
+      .from(works)
+      .orderBy(works.createdAt);
+  }
+  return db
+    .select()
+    .from(works)
+    .where(isNull(works.deletedAt))
+    .orderBy(works.createdAt);
+}
+
+/**
+ * Permanently delete a work (use with caution!)
+ */
+export async function hardDeleteWork(id: string): Promise<void> {
+  await db.delete(works).where(eq(works.id, id));
+}

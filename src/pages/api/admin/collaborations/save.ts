@@ -9,6 +9,7 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { checkAdminAuth } from '@lib/admin-auth';
+import { validateCsrfToken } from '@lib/csrf';
 import { createWork, updateWork, getWorkBySlug, addWorkMedia, updateWorkMedia } from '@lib/db/queries';
 
 export const POST: APIRoute = async ({ request }) => {
@@ -19,6 +20,14 @@ export const POST: APIRoute = async ({ request }) => {
       status: 401,
       headers: { 'Content-Type': 'application/json' },
     });
+  }
+
+  // Check CSRF
+  if (!validateCsrfToken(request)) {
+    return new Response(
+      JSON.stringify({ error: 'Invalid CSRF token' }),
+      { status: 403, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 
   try {

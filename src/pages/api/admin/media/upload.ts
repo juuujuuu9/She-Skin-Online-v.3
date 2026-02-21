@@ -11,19 +11,21 @@ import { writeFile, mkdir } from 'fs/promises';
 import { join, basename, extname } from 'path';
 
 export const POST: APIRoute = async ({ request }) => {
-  console.log('[upload] Starting upload request');
-  console.log('[upload] Cookie header:', request.headers.get('cookie')?.substring(0, 200));
-  
   const auth = await checkAdminAuth(request);
-  console.log('[upload] Auth result:', { valid: auth.valid, userId: auth.userId });
   
   if (!auth.valid) {
     return new Response(
-      JSON.stringify({ 
-        error: 'Unauthorized', 
-        debug: 'Auth failed - try clearing cookies and logging in again'
-      }),
+      JSON.stringify({ error: 'Unauthorized' }),
       { status: 401, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
+  // Check CSRF
+  const { validateCsrfToken } = await import('@lib/csrf');
+  if (!validateCsrfToken(request)) {
+    return new Response(
+      JSON.stringify({ error: 'Invalid CSRF token' }),
+      { status: 403, headers: { 'Content-Type': 'application/json' } }
     );
   }
   
