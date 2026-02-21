@@ -380,12 +380,30 @@ export const audioTracksRelations = relations(audioTracks, ({ one }) => ({
 }));
 
 // ============================================================================
+// USERS TABLE - Admin authentication
+// ============================================================================
+
+export const users = pgTable('users', {
+  id: text('id').primaryKey(),
+  username: text('username').notNull().unique(),
+  email: text('email').notNull().unique(),
+  passwordHash: text('password_hash').notNull(), // bcrypt hash
+  role: text('role').notNull().default('admin'), // 'admin', 'editor', etc.
+  isActive: boolean('is_active').default(true),
+  lastLoginAt: timestamp('last_login_at'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+export type User = typeof users.$inferSelect;
+
+// ============================================================================
 // PASSWORD RESET TOKENS
 // ============================================================================
 
 export const passwordResetTokens = pgTable('password_reset_tokens', {
   id: text('id').primaryKey(),
-  email: text('email').notNull(), // admin email
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   token: text('token').notNull().unique(), // secure random token
   expiresAt: timestamp('expires_at').notNull(), // 1 hour expiry
   used: boolean('used').default(false),

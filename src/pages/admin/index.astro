@@ -12,7 +12,7 @@ import { media, works, products } from '@lib/db/schema';
 import { isNull, sql, desc } from 'drizzle-orm';
 
 // Check auth
-const auth = checkAdminAuth(Astro.request);
+const auth = await checkAdminAuth(Astro.request);
 if (!auth.valid) {
   return Astro.redirect('/admin/login');
 }

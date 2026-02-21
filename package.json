@@ -30,6 +30,7 @@
     "@tailwindcss/vite": "^4.1.18",
     "@types/xml2js": "^0.4.14",
     "astro": "^5.16.12",
+    "bcryptjs": "^3.0.3",
     "blurhash": "^2.0.5",
     "dotenv": "^17.2.3",
     "drizzle-kit": "^0.31.8",
@@ -47,6 +48,7 @@
     "xml2js": "^0.6.2"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/fluent-ffmpeg": "^2.1.27",
     "@types/node": "^22.13.4",
     "chokidar-cli": "^3.0.0",

@@ -18,7 +18,7 @@ interface Props {
 
 const { title, description = 'SheSkin — Artist Portfolio & Shop', hideHeader = false, transparentHeader = false, neonGreenMenu = false, hideAdminSidebar = false } = Astro.props;
 
-const auth = checkAdminAuth(Astro.request);
+const auth = await checkAdminAuth(Astro.request);
 const isAdmin = auth.valid && !hideAdminSidebar;
 const showAdminSidebar = isAdmin && Astro.url.pathname.startsWith('/admin');
 

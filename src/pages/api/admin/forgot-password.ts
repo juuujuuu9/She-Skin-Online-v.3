@@ -5,28 +5,33 @@
 
 import type { APIRoute } from 'astro';
 import { db } from '../../../lib/db';
-import { passwordResetTokens } from '../../../lib/db/schema';
+import { passwordResetTokens, users } from '../../../lib/db/schema';
 import { nanoid } from '../../../lib/nanoid';
+import { eq } from 'drizzle-orm';
 import crypto from 'node:crypto';
-
-// Admin email(s) - in production, store in env
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@she-skin.com';
 
 export const POST: APIRoute = async ({ request }) => {
   try {
     const body = await request.json();
     const { email } = body;
 
-    // Validate email
-    if (!email || email !== ADMIN_EMAIL) {
-      // Don't reveal if email exists or not
-      return new Response(
-        JSON.stringify({ 
-          success: true,
-          message: 'If an account exists, a reset link has been sent.' 
-        }), 
-        { status: 200 }
-      );
+    // Always return success to prevent email enumeration
+    const successResponse = {
+      success: true,
+      message: 'If an account exists with this email, a reset link has been sent.'
+    };
+
+    if (!email) {
+      return new Response(JSON.stringify(successResponse), { status: 200 });
+    }
+
+    // Find user by email
+    const user = await db.query.users.findFirst({
+      where: eq(users.email, email),
+    });
+
+    if (!user || !user.isActive) {
+      return new Response(JSON.stringify(successResponse), { status: 200 });
     }
 
     // Generate secure token
@@ -36,19 +41,21 @@ export const POST: APIRoute = async ({ request }) => {
     // Store token in database
     await db.insert(passwordResetTokens).values({
       id: nanoid(),
-      email,
+      userId: user.id,
       token,
       expiresAt,
       used: false,
     });
 
     // Generate reset URL
-    const resetUrl = `${request.headers.get('origin') || 'http://localhost:4321'}/admin/reset-password?token=${token}`;
+    const origin = request.headers.get('origin') || 'http://localhost:4321';
+    const resetUrl = `${origin}/admin/reset-password?token=${token}`;
 
     // TODO: Send actual email here
     // For now, log to console (in production, use Resend, SendGrid, etc.)
     console.log('\n🔐 PASSWORD RESET REQUESTED');
     console.log('================================');
+    console.log('Email:', email);
     console.log('Reset URL:', resetUrl);
     console.log('Token:', token);
     console.log('Expires:', expiresAt.toISOString());
@@ -57,8 +64,7 @@ export const POST: APIRoute = async ({ request }) => {
     // Return success (don't leak token in response)
     return new Response(
       JSON.stringify({ 
-        success: true,
-        message: 'If an account exists, a reset link has been sent.',
+        ...successResponse,
         // In dev mode, return the URL so you can see it
         ...(import.meta.env.DEV && { debugUrl: resetUrl })
       }), 
@@ -68,8 +74,11 @@ export const POST: APIRoute = async ({ request }) => {
   } catch (error) {
     console.error('Password reset error:', error);
     return new Response(
-      JSON.stringify({ error: 'Failed to process request' }), 
-      { status: 500 }
+      JSON.stringify({ 
+        success: true,
+        message: 'If an account exists with this email, a reset link has been sent.'
+      }), 
+      { status: 200 }
     );
   }
 };

@@ -5,12 +5,9 @@
 
 import type { APIRoute } from 'astro';
 import { db } from '../../../lib/db';
-import { passwordResetTokens } from '../../../lib/db/schema';
+import { passwordResetTokens, users } from '../../../lib/db/schema';
 import { eq, and, gt } from 'drizzle-orm';
-
-// In production, use bcrypt. For now, simple comparison
-import { writeFileSync, readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { hashPassword } from '../../../lib/admin-auth';
 
 export const POST: APIRoute = async ({ request }) => {
   try {
@@ -53,29 +50,15 @@ export const POST: APIRoute = async ({ request }) => {
       .set({ used: true })
       .where(eq(passwordResetTokens.id, resetToken.id));
 
-    // Update password in .env file (simple approach)
-    const envPath = resolve(process.cwd(), '.env');
-    try {
-      let envContent = readFileSync(envPath, 'utf-8');
-      
-      // Replace existing password or add new one
-      if (envContent.includes('ADMIN_PASSWORD=')) {
-        envContent = envContent.replace(
-          /ADMIN_PASSWORD=.*/,
-          `ADMIN_PASSWORD=${newPassword}`
-        );
-      } else {
-        envContent += `\nADMIN_PASSWORD=${newPassword}\n`;
-      }
-      
-      writeFileSync(envPath, envContent);
-    } catch (err) {
-      console.error('Failed to update .env:', err);
-      return new Response(
-        JSON.stringify({ error: 'Failed to update password' }), 
-        { status: 500 }
-      );
-    }
+    // Hash new password and update user
+    const passwordHash = await hashPassword(newPassword);
+    
+    await db.update(users)
+      .set({ 
+        passwordHash,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, resetToken.userId));
 
     return new Response(
       JSON.stringify({ 

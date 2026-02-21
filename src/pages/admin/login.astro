@@ -1,19 +1,18 @@
 ---
 /**
- * Admin Login — Secure access to media management
+ * Admin Login — Database-backed authentication
  */
 
 export const prerender = false;
 
 import Layout from '@layouts/Layout.astro';
-import { checkAdminAuth, createSessionCookie, verifyAdminPassword } from '@lib/admin-auth';
+import { checkAdminAuth, verifyAdminCredentials, createSessionCookie, hashPassword } from '@lib/admin-auth';
+import { db } from '@lib/db';
+import { users } from '@lib/db/schema';
 
-// Check if already logged in (uses same cookie as admin pages).
-// Skip redirect when ?logged_out=1 so we don't get a redirect loop after logout
-// (browser may still send the old cookie on the first request after clear).
-const auth = checkAdminAuth(Astro.request);
-const justLoggedOut = Astro.url.searchParams.get('logged_out') === '1';
-if (auth.valid && !justLoggedOut) {
+// Check if already logged in
+const auth = await checkAdminAuth(Astro.request);
+if (auth.valid) {
   return Astro.redirect('/admin');
 }
 
@@ -22,57 +21,34 @@ let error = '';
 // Handle POST
 if (Astro.request.method === 'POST') {
   try {
-    let password = '';
-    const contentType = Astro.request.headers.get('content-type') ?? '';
+    const formData = await Astro.request.formData();
+    const username = (formData.get('username')?.toString() ?? '').trim();
+    const password = (formData.get('password')?.toString() ?? '').trim();
 
-    if (contentType.includes('application/x-www-form-urlencoded') || contentType.includes('multipart/form-data')) {
-      const formData = await Astro.request.formData();
-      password = (formData.get('password')?.toString() ?? '').trim();
+    if (!username || !password) {
+      error = 'Username and password are required';
     } else {
-      // ClientRouter may send as JSON; otherwise try urlencoded
-      const text = await Astro.request.text();
-      const trimmed = text.trim();
-      if (trimmed.startsWith('{')) {
-        try {
-          const obj = JSON.parse(text) as { password?: string };
-          password = (obj.password ?? '').trim();
-        } catch {
-          /* fallback below */
-        }
-      }
-      if (!password) {
-        const params = new URLSearchParams(text);
-        password = (params.get('password') ?? '').trim();
-      }
-    }
+      const result = await verifyAdminCredentials(username, password);
+      
+      if (result.valid && result.userId) {
+        // Set session cookie
+        const { name, value } = createSessionCookie(result.userId);
+        Astro.cookies.set(name, value, {
+          httpOnly: true,
+          secure: import.meta.env.PROD,
+          sameSite: 'strict',
+          maxAge: 60 * 60 * 24,
+          path: '/',
+        });
 
-    if (verifyAdminPassword(password)) {
-      // Set signed session cookie (same name/format admin-auth expects)
-      const { name, value } = createSessionCookie();
-      const cookieOpts = [
-        'HttpOnly',
-        'Path=/',
-        'Max-Age=86400',
-        'SameSite=Strict',
-        ...(import.meta.env.PROD ? ['Secure'] : []),
-      ].join('; ');
-      // Return 200 with Set-Cookie so the cookie is stored (some browsers drop cookies on 302)
-      const setCookie = `${name}=${value}; ${cookieOpts}`;
-      return new Response(
-        `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=/admin" /></head><body>Redirecting...</body></html>`,
-        {
-          status: 200,
-          headers: {
-            'Content-Type': 'text/html; charset=utf-8',
-            'Set-Cookie': setCookie,
-          },
-        }
-      );
-    } else {
-      error = 'Invalid password';
+        return Astro.redirect('/admin');
+      } else {
+        error = 'Invalid username or password';
+      }
     }
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Unknown error';
+    console.error('Login error:', e);
     if (import.meta.env.DEV) {
       error = `Error: ${msg}`;
     } else {
@@ -94,8 +70,20 @@ if (Astro.request.method === 'POST') {
         </p>
       </div>
       
-      <form class="mt-8 space-y-6" method="POST" enctype="application/x-www-form-urlencoded" data-astro-reload>
+      <form class="mt-8 space-y-6" method="POST" data-astro-reload>
         <div class="rounded-md shadow-sm -space-y-px">
+          <div>
+            <label for="username" class="sr-only">Username</label>
+            <input
+              id="username"
+              name="username"
+              type="text"
+              required
+              autocomplete="username"
+              class="appearance-none rounded-t-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-black focus:border-black focus:z-10 sm:text-sm"
+              placeholder="Username"
+            />
+          </div>
           <div>
             <label for="password" class="sr-only">Password</label>
             <input
@@ -104,8 +92,8 @@ if (Astro.request.method === 'POST') {
               type="password"
               autocomplete="current-password"
               required
-              class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-black focus:border-black focus:z-10 sm:text-sm"
-              placeholder="Admin password"
+              class="appearance-none rounded-b-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-black focus:border-black focus:z-10 sm:text-sm"
+              placeholder="Password"
             />
           </div>
         </div>
