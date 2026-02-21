@@ -8,8 +8,8 @@ export const prerender = false;
 import Layout from '@layouts/Layout.astro';
 import { checkAdminAuth } from '@lib/admin-auth';
 import { db } from '@lib/db';
-import { media, works, products } from '@lib/db/schema';
-import { isNull, sql, desc } from 'drizzle-orm';
+import { media } from '@lib/db/schema';
+import { isNull, desc } from 'drizzle-orm';
 
 // Check auth
 const auth = await checkAdminAuth(Astro.request);
@@ -17,27 +17,12 @@ if (!auth.valid) {
   return Astro.redirect('/admin/login');
 }
 
-// Get stats using proper count queries
-const mediaCountResult = await db.select({ count: sql<number>`count(*)` }).from(media).where(isNull(media.deletedAt));
-const worksCountResult = await db.select({ count: sql<number>`count(*)` }).from(works).where(isNull(works.deletedAt));
-const productsCountResult = await db.select({ count: sql<number>`count(*)` }).from(products).where(isNull(products.deletedAt));
-
-const mediaCount = mediaCountResult[0]?.count || 0;
-const worksCount = worksCountResult[0]?.count || 0;
-const productsCount = productsCountResult[0]?.count || 0;
-
 // Get recent media
 const recentMedia = await db.query.media.findMany({
   where: isNull(media.deletedAt),
   orderBy: [desc(media.createdAt)],
   limit: 6,
 });
-
-const stats = [
-  { name: 'Media Files', value: mediaCount, href: '/admin/media', color: 'bg-purple-500' },
-  { name: 'Works', value: worksCount, href: '/admin/works', color: 'bg-pink-500' },
-  { name: 'Products', value: productsCount, href: '/admin/products', color: 'bg-indigo-500' },
-];
 
 const currentPath = Astro.url.pathname;
 const adminNavItems = [
@@ -113,34 +98,17 @@ const isActive = (href: string) => {
           </ul>
         </nav>
       </aside>
-      <div class="px-4 sm:px-6 lg:px-8 pt-8 flex-1">
-        <h1 class="text-3xl font-bold text-gray-900 mb-8">Dashboard</h1>
-        {/* Stats Grid */}
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-          {stats.map((stat) => (
-            <a
-              href={stat.href}
-              class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow"
-            >
-              <div class={`w-10 h-10 ${stat.color} rounded-lg flex items-center justify-center mb-3`}>
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-              <p class="text-2xl font-bold text-gray-900">{stat.value}</p>
-              <p class="text-sm text-gray-500">{stat.name}</p>
-            </a>
-          ))}
-        </div>
+      <div class="px-4 sm:px-6 lg:px-8 pt-8 pb-4 sm:pb-6 lg:pb-8 flex-1 flex flex-col min-h-0">
+        <h1 class="text-3xl font-bold text-gray-900 mb-8 shrink-0">Dashboard</h1>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div class="flex-1 flex gap-8 min-h-0">
           {/* Recent Media */}
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+          <div class="flex-1 min-w-0 flex flex-col bg-white rounded-lg shadow-sm border border-gray-200 min-h-0">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between shrink-0">
               <h2 class="text-lg font-medium text-gray-900">Recent Media</h2>
               <a href="/admin/media" class="text-sm text-black hover:text-gray-600">View all</a>
             </div>
-            <div class="p-6">
+            <div class="p-6 flex-1 min-h-0 overflow-auto">
               <div class="grid grid-cols-3 gap-4">
                 {recentMedia.map((item) => (
                   <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden">
@@ -168,40 +136,27 @@ const isActive = (href: string) => {
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Quick Actions */}
-        <div class="mt-8 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h2 class="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
-          <div class="flex flex-wrap gap-3">
-            <a
-              href="/admin/media"
-              class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+          {/* Upload area */}
+          <div class="flex-1 min-w-0 flex flex-col bg-white rounded-lg shadow-sm border border-gray-200 min-h-0 p-6">
+            <div
+              id="dashboard-dropzone"
+              class="flex-1 min-h-0 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center transition-colors cursor-pointer hover:border-gray-400 hover:bg-gray-50/50 data-dragover:border-black data-dragover:bg-gray-100 flex flex-col items-center justify-center"
             >
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <input
+                type="file"
+                id="dashboard-file-input"
+                class="hidden"
+                accept="image/jpeg,image/png,image/tiff,image/webp,.jpg,.jpeg,.png,.tiff,.webp,audio/wav,audio/aiff,audio/flac,audio/x-m4a,.wav,.aiff,.flac,.m4a"
+                multiple
+              />
+              <svg class="w-12 h-12 text-gray-400 mb-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
               </svg>
-              Upload Media
-            </a>
-            <a
-              href="/admin/works/new"
-              class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-            >
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
-              New Work
-            </a>
-            <a
-              href="/"
-              target="_blank"
-              class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-            >
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-              View Site
-            </a>
+              <p class="text-gray-600 font-medium">Drag and drop files here, or click to browse</p>
+              <p class="text-sm text-gray-500 mt-1">Images: JPG, PNG, TIFF, WebP • Audio: WAV, AIFF, FLAC, M4A • Max 100MB per file</p>
+            </div>
+            <div id="dashboard-upload-feedback" class="hidden mt-3 text-sm text-gray-600 shrink-0"></div>
           </div>
         </div>
       </div>
@@ -213,10 +168,80 @@ const isActive = (href: string) => {
       try {
         const res = await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' });
         if (res.ok) window.location.href = '/admin/login?logged_out=1';
+        else if (res.status === 401) window.location.href = '/admin/login?session=expired';
         else alert('Logout failed. Please try again.');
       } catch {
         alert('Logout failed. Please try again.');
       }
     });
+
+    // Dashboard dropzone
+    const dropzone = document.getElementById('dashboard-dropzone');
+    const fileInput = document.getElementById('dashboard-file-input') as HTMLInputElement;
+    const feedback = document.getElementById('dashboard-upload-feedback');
+
+    if (dropzone && fileInput && feedback) {
+      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach((ev) => {
+        dropzone.addEventListener(ev, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        });
+      });
+      ['dragenter', 'dragover'].forEach((ev) => {
+        dropzone.addEventListener(ev, () => dropzone.setAttribute('data-dragover', 'true'));
+      });
+      ['dragleave', 'drop'].forEach((ev) => {
+        dropzone.addEventListener(ev, () => dropzone.removeAttribute('data-dragover'));
+      });
+
+      dropzone.addEventListener('click', () => fileInput.click());
+      dropzone.addEventListener('drop', (e: DragEvent) => {
+        const files = e.dataTransfer?.files;
+        if (files?.length) handleFiles(files);
+      });
+      fileInput.addEventListener('change', () => {
+        if (fileInput.files?.length) handleFiles(fileInput.files);
+        fileInput.value = '';
+      });
+
+      async function uploadFile(file: File): Promise<{ id: string }> {
+        const formData = new FormData();
+        formData.append('file', file);
+        const uploadUrl = new URL('/api/admin/media/upload', window.location.href).href;
+        const res = await fetch(uploadUrl, {
+          method: 'POST',
+          body: formData,
+          credentials: 'include',
+        });
+        if (res.status === 401) {
+          const err = await res.json().catch(() => ({}));
+          const reason = err?.reason || 'session_expired';
+          window.location.href = `/admin/login?session=expired&reason=${encodeURIComponent(reason)}`;
+          throw new Error('Session expired');
+        }
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err?.error || 'Upload failed');
+        }
+        return res.json();
+      }
+
+      async function handleFiles(fileList: FileList) {
+        feedback?.classList.remove('hidden');
+        if (feedback) feedback.textContent = 'Uploading...';
+        let ok = 0;
+        for (let i = 0; i < fileList.length; i++) {
+          try {
+            await uploadFile(fileList[i]);
+            ok++;
+          } catch (e) {
+            if (feedback) feedback.textContent = `Error: ${e instanceof Error ? e.message : 'Upload failed'}`;
+            return;
+          }
+        }
+        if (feedback) feedback.textContent = `${ok} file(s) uploaded. Processing in background.`;
+        setTimeout(() => window.location.reload(), 1500);
+      }
+    }
   </script>
 </Layout>

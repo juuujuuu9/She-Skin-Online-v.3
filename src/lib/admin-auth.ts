@@ -31,7 +31,7 @@ export function createSessionCookie(userId: string): { name: string; value: stri
   const data = `${userId}.${timestamp}`;
   const signature = sign(data);
   const value = `${data}.${signature}`;
-  const options = 'HttpOnly; Path=/; Max-Age=86400; SameSite=Strict';
+  const options = 'HttpOnly; Path=/; Max-Age=86400; SameSite=Lax';
   return { name: COOKIE_NAME, value, options };
 }
 
@@ -146,6 +146,29 @@ export async function checkAdminAuth(request: Request): Promise<{ valid: boolean
   } catch (error) {
     console.error('Auth check error:', error);
     return { valid: false };
+  }
+}
+
+/** Dev-only: return a short reason why auth failed (for 401 debugging) */
+export function getAdminAuthFailureReason(request: Request): string | null {
+  if (process.env.NODE_ENV === 'production') return null;
+  const cookieHeader = request.headers.get('cookie');
+  if (!cookieHeader) return 'no_cookie';
+  const match = cookieHeader.match(new RegExp(`${COOKIE_NAME}=([^;]+)`));
+  if (!match?.[1]?.trim()) return 'no_admin_session_cookie';
+  const raw = match[1].trim();
+  const parts = raw.split('.');
+  if (parts.length !== 3) return 'bad_cookie_format';
+  const [, timestamp, signature] = parts;
+  const age = Date.now() - parseInt(timestamp, 10);
+  if (age < 0 || age > SESSION_MAX_AGE_MS) return 'session_expired';
+  try {
+    const data = `${parts[0]}.${timestamp}`;
+    const expected = sign(data);
+    const valid = timingSafeEqual(Buffer.from(signature, 'base64url'), Buffer.from(expected, 'base64url'));
+    return valid ? null : 'invalid_signature';
+  } catch {
+    return 'invalid_signature';
   }
 }
 

@@ -12,7 +12,7 @@ import { deleteWork } from '@lib/db/queries';
 
 export const DELETE: APIRoute = async ({ request, params }) => {
   // Check auth
-  const auth = checkAdminAuth(request);
+  const auth = await checkAdminAuth(request);
   if (!auth.valid) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,

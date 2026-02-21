@@ -11,7 +11,7 @@ import { uploadToBunny } from '@lib/bunny';
 import { createWork, addWorkMedia, insertAudioTrack } from '@lib/db/queries';
 
 export const POST: APIRoute = async ({ request }) => {
-  const auth = checkAdminAuth(request);
+  const auth = await checkAdminAuth(request);
   if (!auth.valid) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,

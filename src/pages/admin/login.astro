@@ -16,6 +16,8 @@ if (auth.valid) {
   return Astro.redirect('/admin');
 }
 
+const sessionExpired = Astro.url.searchParams.get('session') === 'expired';
+const sessionReason = Astro.url.searchParams.get('reason') ?? '';
 let error = '';
 
 // Handle POST
@@ -45,7 +47,8 @@ if (Astro.request.method === 'POST') {
       }
 
       if (result.valid && result.userId) {
-        // Set session cookie and redirect in one response so the cookie is never dropped
+        // Use 200 + HTML redirect instead of 302 so browsers reliably store Set-Cookie
+        // (some browsers don't persist cookies set on redirect responses)
         const { name, value } = createSessionCookie(result.userId);
         const maxAge = 60 * 60 * 24;
         const secure = import.meta.env.PROD;
@@ -54,7 +57,7 @@ if (Astro.request.method === 'POST') {
           'Path=/',
           'Max-Age=' + maxAge,
           'HttpOnly',
-          'SameSite=Strict',
+          'SameSite=Lax',
         ];
         if (secure) cookieParts.push('Secure');
         const setCookie = cookieParts.join('; ');
@@ -63,10 +66,13 @@ if (Astro.request.method === 'POST') {
           console.debug('[admin/login] Session cookie set, redirecting to /admin');
         }
 
-        return new Response(null, {
-          status: 302,
+        // Give the browser a moment to persist the cookie before navigating (fixes no_cookie on subsequent fetch)
+        const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Signing in…</title></head><body><p>Signing in…</p><script>setTimeout(function(){ window.location.replace('/admin'); }, 150);</script><a href="/admin">Continue</a></body></html>`;
+        return new Response(html, {
+          status: 200,
           headers: {
-            Location: '/admin',
+            'Content-Type': 'text/html; charset=utf-8',
+            'Cache-Control': 'no-store',
             'Set-Cookie': setCookie,
           },
         });
@@ -102,7 +108,7 @@ if (Astro.request.method === 'POST') {
         </p>
       </div>
       
-      <form class="mt-8 space-y-6" method="POST" data-astro-reload>
+      <form class="mt-8 space-y-6" method="POST" action="/admin/login" data-astro-reload>
         <div class="rounded-md shadow-sm -space-y-px">
           <div>
             <label for="username" class="sr-only">Username</label>
@@ -130,7 +136,7 @@ if (Astro.request.method === 'POST') {
           </div>
         </div>
 
-        {error && (
+        {(sessionExpired || error) && (
           <div class="rounded-md bg-red-50 p-4">
             <div class="flex">
               <div class="flex-shrink-0">
@@ -139,7 +145,7 @@ if (Astro.request.method === 'POST') {
                 </svg>
               </div>
               <div class="ml-3">
-                <h3 class="text-sm font-medium text-red-800">{error}</h3>
+                <h3 class="text-sm font-medium text-red-800">{sessionExpired ? (sessionReason ? `Session issue: ${sessionReason}. Please sign in again.` : 'Your session expired or was not recognized. Please sign in again.') : error}</h3>
               </div>
             </div>
           </div>

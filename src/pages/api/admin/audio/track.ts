@@ -7,7 +7,7 @@ import { checkAdminAuth } from '@lib/admin-auth';
 import { getWorkById, updateWork } from '@lib/db/queries';
 
 export const PUT: APIRoute = async ({ request }) => {
-  const auth = checkAdminAuth(request);
+  const auth = await checkAdminAuth(request);
   if (!auth.valid) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,

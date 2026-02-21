@@ -13,7 +13,7 @@ import { eq } from 'drizzle-orm';
 
 export const POST: APIRoute = async ({ request }) => {
   // Check auth
-  const auth = checkAdminAuth(request);
+  const auth = await checkAdminAuth(request);
   if (!auth.valid) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,

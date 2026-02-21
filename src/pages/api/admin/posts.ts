@@ -14,7 +14,7 @@ import { nanoid } from '@lib/nanoid';
 
 // GET: List or single post
 export const GET: APIRoute = async ({ request, url }) => {
-  const authError = requireAdminAuth(request);
+  const authError = await requireAdminAuth(request);
   if (authError) return authError;
 
   const id = url.searchParams.get('id');
@@ -138,7 +138,7 @@ export const GET: APIRoute = async ({ request, url }) => {
 
 // POST: Create new post
 export const POST: APIRoute = async ({ request }) => {
-  const authError = requireAdminAuth(request);
+  const authError = await requireAdminAuth(request);
   if (authError) return authError;
 
   try {
@@ -259,7 +259,7 @@ export const POST: APIRoute = async ({ request }) => {
 
 // PUT: Update post
 export const PUT: APIRoute = async ({ request }) => {
-  const authError = requireAdminAuth(request);
+  const authError = await requireAdminAuth(request);
   if (authError) return authError;
 
   try {
@@ -407,7 +407,7 @@ export const PUT: APIRoute = async ({ request }) => {
 
 // DELETE: Soft delete post
 export const DELETE: APIRoute = async ({ request, url }) => {
-  const authError = requireAdminAuth(request);
+  const authError = await requireAdminAuth(request);
   if (authError) return authError;
 
   const id = url.searchParams.get('id');

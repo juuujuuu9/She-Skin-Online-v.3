@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { checkAdminAuth } from '@lib/admin-auth';
+import { checkAdminAuth, getAdminAuthFailureReason } from '@lib/admin-auth';
 import { 
   loadManifest, 
   saveManifest,
@@ -12,8 +12,12 @@ import { join, basename, extname } from 'path';
 export const POST: APIRoute = async ({ request }) => {
   const auth = await checkAdminAuth(request);
   if (!auth.valid) {
+    const reason = getAdminAuthFailureReason(request);
+    const body = reason
+      ? { error: 'Unauthorized', reason }
+      : { error: 'Unauthorized' };
     return new Response(
-      JSON.stringify({ error: 'Unauthorized' }), 
+      JSON.stringify(body),
       { status: 401, headers: { 'Content-Type': 'application/json' } }
     );
   }

@@ -8,7 +8,7 @@ import type { APIRoute } from 'astro';
 export const POST: APIRoute = async () => {
   // Clear the admin session cookie
   const clearCookie =
-    'admin_session=; Path=/; Max-Age=0; HttpOnly; SameSite=Strict' +
+    'admin_session=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax' +
     (import.meta.env.PROD ? '; Secure' : '');
     
   const headers = new Headers({
@@ -25,7 +25,7 @@ export const POST: APIRoute = async () => {
 // Also support GET for simple logout links
 export const GET: APIRoute = async () => {
   const clearCookie =
-    'admin_session=; Path=/; Max-Age=0; HttpOnly; SameSite=Strict' +
+    'admin_session=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax' +
     (import.meta.env.PROD ? '; Secure' : '');
     
   return new Response(null, {

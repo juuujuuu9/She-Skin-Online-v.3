@@ -14,7 +14,7 @@ import { processImageBuffer, loadManifest, saveManifest } from '@lib/media-proce
 
 // GET: List media or single item
 export const GET: APIRoute = async ({ request, url }) => {
-  const authError = requireAdminAuth(request);
+  const authError = await requireAdminAuth(request);
   if (authError) return authError;
 
   const id = url.searchParams.get('id');
@@ -78,7 +78,7 @@ export const GET: APIRoute = async ({ request, url }) => {
 
 // POST: Upload new media
 export const POST: APIRoute = async ({ request }) => {
-  const authError = requireAdminAuth(request);
+  const authError = await requireAdminAuth(request);
   if (authError) return authError;
 
   try {
@@ -172,7 +172,7 @@ export const POST: APIRoute = async ({ request }) => {
 
 // DELETE: Soft delete or permanently delete media
 export const DELETE: APIRoute = async ({ request, url }) => {
-  const authError = requireAdminAuth(request);
+  const authError = await requireAdminAuth(request);
   if (authError) return authError;
   const id = url.searchParams.get('id');
   const permanent = url.searchParams.get('permanent') === 'true';
@@ -230,7 +230,7 @@ export const DELETE: APIRoute = async ({ request, url }) => {
 
 // PATCH: Update media metadata
 export const PATCH: APIRoute = async ({ request }) => {
-  const authError = requireAdminAuth(request);
+  const authError = await requireAdminAuth(request);
   if (authError) return authError;
   try {
     const body = await request.json();

@@ -9,7 +9,7 @@ import { createWork, updateWork, getWorkBySlug, addWorkMedia, updateWorkMedia } 
 type PhysicalItem = { id?: string; slug: string; title: string; year: number; forSale: boolean; image: string };
 
 export const POST: APIRoute = async ({ request }) => {
-  const auth = checkAdminAuth(request);
+  const auth = await checkAdminAuth(request);
   if (!auth.valid) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
