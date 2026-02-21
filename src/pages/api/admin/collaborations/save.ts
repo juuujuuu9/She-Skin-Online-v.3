@@ -11,6 +11,7 @@ import type { APIRoute } from 'astro';
 import { checkAdminAuth } from '@lib/admin-auth';
 import { validateCsrfToken } from '@lib/csrf';
 import { createWork, updateWork, getWorkBySlug, addWorkMedia, updateWorkMedia } from '@lib/db/queries';
+import { validateRequest, saveCollaborationSchema } from '@lib/validation';
 
 export const POST: APIRoute = async ({ request }) => {
   // Check auth
@@ -30,18 +31,15 @@ export const POST: APIRoute = async ({ request }) => {
     );
   }
 
+  // Validate request body
+  const bodyValidation = await validateRequest(request, saveCollaborationSchema);
+  if (!bodyValidation.success) {
+    return bodyValidation.response;
+  }
+
+  const { item, isNew } = bodyValidation.data;
+
   try {
-    const body = await request.json();
-
-    if (!body.item) {
-      return new Response(JSON.stringify({ error: 'Invalid request' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
-    const { item, isNew } = body;
-
     if (isNew) {
       // Create new work
       const workId = await createWork({

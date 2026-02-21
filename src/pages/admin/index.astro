@@ -11,35 +11,74 @@ import { generateCsrfToken } from '@lib/csrf';
 import { db } from '@lib/db';
 import { media } from '@lib/db/schema';
 import { isNull, desc } from 'drizzle-orm';
+import { loadManifest } from '@lib/media-process';
 
 // Generate and set CSRF token
 const csrf = generateCsrfToken();
 Astro.response.headers.set('Set-Cookie', csrf.cookie);
 
+// Debug: Log cookie header received
+const cookieHeader = Astro.request.headers.get('cookie');
+console.log('[admin/index] Cookie header:', cookieHeader ? 'present (length: ' + cookieHeader.length + ')' : 'MISSING');
+console.log('[admin/index] Cookie names:', cookieHeader ? cookieHeader.split(';').map(c => c.split('=')[0].trim()).join(', ') : 'none');
+
 // Check auth
 const auth = await checkAdminAuth(Astro.request);
+console.log('[admin/index] Auth result:', auth.valid ? 'valid' : 'invalid', auth.debug ? `(debug: ${auth.debug})` : '');
 if (!auth.valid) {
   const reason = auth.debug || 'unknown';
   return Astro.redirect(`/admin/login?session=expired&reason=${encodeURIComponent(reason)}`);
 }
 
-// Get recent media
+// Load manifest for status counts and processed media
+const manifest = await loadManifest();
+const pendingCount = manifest.pending.filter(p => p.status === 'pending').length;
+const processingCount = manifest.pending.filter(p => p.status === 'processing').length;
+const errorCount = manifest.pending.filter(p => p.status === 'error').length;
+// Sort by createdAt descending (most recent first)
+const sortByDate = (a: { createdAt: string }, b: { createdAt: string }) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+
+const processedImages = Object.values(manifest.images).sort(sortByDate);
+const processedAudio = Object.values(manifest.audio).sort(sortByDate);
+const processedVideo = Object.values(manifest.video || {}).sort(sortByDate);
+
+// Get recent media from database
 const recentMedia = await db.query.media.findMany({
   where: isNull(media.deletedAt),
   orderBy: [desc(media.createdAt)],
-  limit: 6,
+  limit: 12,
 });
+
+// Format bytes helper
+const formatBytes = (bytes: number) => {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+};
+
+// Format duration helper
+const formatDuration = (seconds: number) => {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
+
+// Site URL for full media URLs
+const siteUrl = import.meta.env.SITE_URL || 'http://localhost:4321';
+const toFullUrl = (path: string) => {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  return `${siteUrl}${path}`;
+};
 
 const currentPath = Astro.url.pathname;
 const adminNavItems = [
   { href: '/admin', label: 'Dashboard', icon: 'dashboard' },
-  { href: '/admin/media', label: 'Media', icon: 'media' },
   { href: '/admin/works', label: 'Works', icon: 'works' },
   { href: '/admin/products', label: 'Inventory', icon: 'products' },
 ];
 const iconPaths: Record<string, string> = {
   dashboard: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />`,
-  media: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />`,
   works: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />`,
   products: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />`,
 };
@@ -50,7 +89,7 @@ const isActive = (href: string) => {
 ---
 
 <Layout title="Dashboard - she_skin Admin">
-  <div class="min-h-screen bg-gray-50 flex flex-col">
+  <div class="h-dvh bg-gray-50 flex flex-col overflow-hidden">
     <div class="flex flex-row flex-1 min-h-0 items-stretch">
       {/* Admin sidebar - in-page */}
       <aside class="w-64 shrink-0 flex flex-col bg-[#0a0a0a] text-white self-stretch">
@@ -104,47 +143,313 @@ const isActive = (href: string) => {
           </ul>
         </nav>
       </aside>
-      <div class="px-4 sm:px-6 lg:px-8 pt-8 pb-4 sm:pb-6 lg:pb-8 flex-1 flex flex-col min-h-0">
-        <h1 class="text-3xl font-bold text-gray-900 mb-8 shrink-0">Dashboard</h1>
+      <div class="px-4 sm:px-6 lg:px-8 py-4 flex-1 flex flex-col min-h-0 overflow-hidden">
+        <h1 class="text-2xl font-bold text-gray-900 mb-4 shrink-0">Dashboard</h1>
 
-        <div class="flex-1 flex gap-8 min-h-0">
-          {/* Recent Media */}
-          <div class="flex-1 min-w-0 flex flex-col bg-white rounded-lg shadow-sm border border-gray-200 min-h-0">
+        <div class="flex-1 flex gap-6 min-h-0">
+          {/* Media Library - takes 2/3 of space */}
+          <div class="w-2/3 min-w-0 flex flex-col bg-white rounded-lg shadow-sm border border-gray-200 min-h-0">
             <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between shrink-0">
-              <h2 class="text-lg font-medium text-gray-900">Recent Media</h2>
-              <a href="/admin/media" class="text-sm text-black hover:text-gray-600">View all</a>
-            </div>
-            <div class="p-6 flex-1 min-h-0 overflow-auto">
-              <div class="grid grid-cols-3 gap-4">
-                {recentMedia.map((item) => (
-                  <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                    {item.mediaType === 'image' ? (
-                      <img
-                        src={item.url}
-                        alt={item.altText || item.originalName}
-                        class="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div class="w-full h-full flex items-center justify-center text-gray-400">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                      </div>
-                    )}
-                  </div>
-                ))}
-                
-                {recentMedia.length === 0 && (
-                  <div class="col-span-3 py-8 text-center text-gray-500">
-                    <p>No media uploaded yet</p>
-                  </div>
+              <div class="flex items-center gap-3">
+                <h2 class="text-lg font-medium text-gray-900">Media Gallery</h2>
+                <span class="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                  {processedImages.length + processedAudio.length + processedVideo.length} items
+                </span>
+              </div>
+              <div class="flex items-center gap-2 text-sm text-gray-500">
+                {processedImages.length > 0 && (
+                  <span class="flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    {processedImages.length}
+                  </span>
+                )}
+                {((processedImages.length > 0 && processedAudio.length > 0) || 
+                  (processedImages.length > 0 && processedVideo.length > 0)) && <span>•</span>}
+                {processedAudio.length > 0 && (
+                  <span class="flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                    </svg>
+                    {processedAudio.length}
+                  </span>
+                )}
+                {((processedAudio.length > 0 && processedVideo.length > 0) || 
+                  (processedImages.length > 0 && processedVideo.length > 0)) && <span>•</span>}
+                {processedVideo.length > 0 && (
+                  <span class="flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    {processedVideo.length}
+                  </span>
                 )}
               </div>
             </div>
+            <div class="p-6 flex-1 min-h-0 overflow-auto">
+              {/* Images Section */}
+              {processedImages.length > 0 && (
+                <div class="mb-6">
+                  <h3 class="text-sm font-medium text-gray-700 mb-3 uppercase tracking-wide">Images</h3>
+                  <div class="grid grid-cols-4 gap-4">
+                    {processedImages.slice(0, 8).map((img) => (
+                      <div class="group relative bg-gray-100 rounded-lg overflow-hidden border border-gray-200 hover:border-gray-400 transition-all hover:shadow-md">
+                        {/* Delete button - top left */}
+                        <button
+                          class="delete-media-btn absolute top-2 left-2 z-10 p-1.5 bg-red-500/80 hover:bg-red-600 text-white rounded opacity-0 group-hover:opacity-100 transition-all"
+                          data-id={img.id}
+                          data-type="image"
+                          title="Delete image"
+                        >
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+
+                        <div class="aspect-square cursor-pointer relative bg-gray-50 flex items-center justify-center overflow-hidden" onclick={`window.open('${img.variants.lg?.url || img.variants.md?.url || img.variants.sm?.url}', '_blank')`}>
+                          <img
+                            src={img.variants.sm?.url || img.variants.md?.url || Object.values(img.variants)[0]?.url}
+                            alt={img.originalName}
+                            class="max-w-full max-h-full object-contain transition-transform group-hover:scale-105"
+                            loading="lazy"
+                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                          />
+                          <div class="hidden absolute inset-0 items-center justify-center text-gray-400 bg-gray-100">
+                            <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                          </div>
+                        </div>
+                        <div class="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/80 via-black/40 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-all">
+                          <div class="flex items-center gap-2">
+                            <button
+                              class="copy-media-url flex-1 text-xs text-white font-mono bg-white/20 hover:bg-white/30 rounded px-2 py-1.5 transition-colors text-left truncate"
+                              data-url={toFullUrl(img.variants.lg?.url || img.variants.md?.url || Object.values(img.variants)[0]?.url)}
+                              title="Click to copy URL"
+                            >
+                              {img.id}
+                            </button>
+                            <button
+                              class="p-1.5 bg-white/20 hover:bg-white/30 rounded text-white transition-colors"
+                              onclick={`window.open('${img.variants.lg?.url || img.variants.md?.url || Object.values(img.variants)[0]?.url}', '_blank')`}
+                              title="View full size"
+                            >
+                              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                        <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <span class="text-xs text-white bg-black/50 rounded px-1.5 py-0.5">
+                            {img.metadata.width && img.metadata.height ? `${img.metadata.width}×${img.metadata.height}` : 'image'}
+                          </span>
+                          <span class="text-xs text-white bg-black/50 rounded px-1.5 py-0.5">
+                            {(Object.values(img.variants)[0]?.size / 1024 / 1024).toFixed(1)} MB
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {processedImages.length > 8 && (
+                    <div class="mt-3 text-center">
+                      <span class="text-sm text-gray-500">
+                        +{processedImages.length - 8} more images
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Audio Section */}
+              {processedAudio.length > 0 && (
+                <div>
+                  <h3 class="text-sm font-medium text-gray-700 mb-3 uppercase tracking-wide">Audio</h3>
+                  <div class="grid grid-cols-2 gap-3">
+                    {processedAudio.slice(0, 4).map((track) => (
+                      <div class="group relative bg-linear-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-200 hover:border-blue-300 transition-all p-4">
+                        {/* Delete button - top left */}
+                        <button
+                          class="delete-media-btn absolute top-2 left-2 z-10 p-1.5 bg-red-500/80 hover:bg-red-600 text-white rounded opacity-0 group-hover:opacity-100 transition-all"
+                          data-id={track.id}
+                          data-type="audio"
+                          title="Delete audio"
+                        >
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+
+                        {/* Waveform visualization */}
+                        <div class="h-12 flex items-center gap-0.5 mb-3 opacity-60">
+                          {Array.from({ length: 20 }).map((_, i) => {
+                            const height = 20 + Math.random() * 60;
+                            return (
+                              <div
+                                class="flex-1 bg-blue-400 rounded-full transition-all group-hover:bg-blue-500"
+                                style={`height: ${height}%; min-height: 4px;`}
+                              />
+                            );
+                          })}
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                          <button
+                            class="audio-play-btn w-10 h-10 bg-blue-500 hover:bg-blue-600 rounded-full flex items-center justify-center text-white shrink-0 shadow-sm transition-colors"
+                            data-url={toFullUrl(track.variants.original?.url)}
+                            data-id={track.id}
+                            aria-label="Play"
+                          >
+                            {/* Play icon */}
+                            <svg class="play-icon w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M8 5v14l11-7z"/>
+                            </svg>
+                            {/* Stop icon - hidden by default */}
+                            <svg class="stop-icon w-5 h-5 hidden" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M6 6h12v12H6z"/>
+                            </svg>
+                          </button>
+                          <div class="flex-1 min-w-0">
+                            <button
+                              class="copy-media-url text-sm font-mono text-gray-900 hover:text-blue-600 transition-colors truncate block text-left font-medium"
+                              data-url={toFullUrl(track.variants.original?.url)}
+                              title="Click to copy URL"
+                            >
+                              {track.id}
+                            </button>
+                            <div class="text-xs text-gray-500 flex items-center gap-2">
+                              <span>{formatDuration(track.metadata.duration || 0)}</span>
+                              <span>•</span>
+                              <span>{track.metadata.format?.toUpperCase() || 'AUDIO'} {formatBytes(track.variants.original?.size || 0)}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Audio element - hidden */}
+                        <audio class="audio-player hidden" data-id={track.id} preload="none">
+                          <source src={toFullUrl(track.variants.original?.url)} type={`audio/${track.metadata.format || 'mpeg'}`} />
+                        </audio>
+                      </div>
+                    ))}
+                  </div>
+                  {processedAudio.length > 4 && (
+                    <div class="mt-3 text-center">
+                      <span class="text-sm text-gray-500">
+                        +{processedAudio.length - 4} more audio files
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Video Section */}
+              {processedVideo.length > 0 && (
+                <div class="mb-6">
+                  <h3 class="text-sm font-medium text-gray-700 mb-3 uppercase tracking-wide">Video</h3>
+                  <div class="grid grid-cols-2 gap-4">
+                    {processedVideo.slice(0, 4).map((vid) => (
+                      <div class="group relative bg-gray-900 rounded-lg overflow-hidden border border-gray-200 hover:border-gray-400 transition-all hover:shadow-md">
+                        {/* Delete button - top left */}
+                        <button
+                          class="delete-media-btn absolute top-2 left-2 z-20 p-1.5 bg-red-500/80 hover:bg-red-600 text-white rounded opacity-0 group-hover:opacity-100 transition-all"
+                          data-id={vid.id}
+                          data-type="video"
+                          title="Delete video"
+                        >
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+
+                        {/* Video thumbnail with play button */}
+                        <div class="video-thumbnail aspect-video relative bg-gray-800 cursor-pointer overflow-hidden" data-video-url={toFullUrl(vid.variants.original?.url)} data-video-id={vid.id}>
+                          {/* Video element as thumbnail - shows first frame */}
+                          <video
+                            class="video-poster w-full h-full object-cover transition-transform group-hover:scale-105"
+                            preload="metadata"
+                            muted
+                            playsinline
+                          >
+                            <source src={toFullUrl(vid.variants.original?.url)} type={`video/${vid.metadata.format === 'mov' ? 'quicktime' : vid.metadata.format || 'mp4'}`} />
+                          </video>
+
+                          {/* Play overlay button */}
+                          <div class="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div class="w-14 h-14 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-colors">
+                              <svg class="w-7 h-7 text-gray-900 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z"/>
+                              </svg>
+                            </div>
+                          </div>
+
+                          {/* Duration badge */}
+                          <div class="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                            {formatDuration(vid.metadata.duration || 0)}
+                          </div>
+                        </div>
+
+                        {/* Bottom overlay with info */}
+                        <div class="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/90 via-black/60 to-transparent p-4 pt-10 opacity-0 group-hover:opacity-100 transition-all">
+                          <div class="flex items-center gap-2">
+                            <button
+                              class="copy-media-url flex-1 text-xs text-white font-mono bg-white/20 hover:bg-white/30 rounded px-2 py-1.5 transition-colors text-left truncate"
+                              data-url={toFullUrl(vid.variants.original?.url)}
+                              title="Click to copy URL"
+                            >
+                              {vid.id}
+                            </button>
+                            <button
+                              class="p-1.5 bg-white/20 hover:bg-white/30 rounded text-white transition-colors"
+                              onclick={`window.open('${toFullUrl(vid.variants.original?.url)}', '_blank')`}
+                              title="View full video"
+                            >
+                              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                              </svg>
+                            </button>
+                          </div>
+                          <div class="mt-2 text-xs text-white/70 flex items-center gap-2">
+                            <span>{vid.metadata.format?.toUpperCase() || 'MP4'}</span>
+                            <span>•</span>
+                            <span>{formatBytes(vid.variants.original?.size || 0)}</span>
+                            {vid.metadata.width && vid.metadata.height && (
+                              <>
+                                <span>•</span>
+                                <span>{vid.metadata.width}×{vid.metadata.height}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {processedVideo.length > 4 && (
+                    <div class="mt-3 text-center">
+                      <span class="text-sm text-gray-500">
+                        +{processedVideo.length - 4} more videos
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {processedImages.length === 0 && processedAudio.length === 0 && processedVideo.length === 0 && (
+                <div class="py-16 text-center">
+                  <div class="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-2xl flex items-center justify-center">
+                    <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <p class="text-gray-900 font-medium">No media yet</p>
+                  <p class="text-sm text-gray-500 mt-1 max-w-sm mx-auto">Upload images, audio, or video files using the dropzone on the right. They'll appear here with thumbnails.</p>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Upload area */}
-          <div class="flex-1 min-w-0 flex flex-col bg-white rounded-lg shadow-sm border border-gray-200 min-h-0 p-6">
+          {/* Upload area - takes 1/3 of space */}
+          <div class="w-1/3 min-w-0 flex flex-col bg-white rounded-lg shadow-sm border border-gray-200 min-h-0 p-6">
             <div
               id="dashboard-dropzone"
               class="flex-1 min-h-0 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center transition-colors cursor-pointer hover:border-gray-400 hover:bg-gray-50/50 data-dragover:border-black data-dragover:bg-gray-100 flex flex-col items-center justify-center"
@@ -153,14 +458,14 @@ const isActive = (href: string) => {
                 type="file"
                 id="dashboard-file-input"
                 class="hidden"
-                accept="image/jpeg,image/png,image/tiff,image/webp,.jpg,.jpeg,.png,.tiff,.webp,audio/wav,audio/aiff,audio/flac,audio/x-m4a,.wav,.aiff,.flac,.m4a"
+                accept="image/jpeg,image/png,image/tiff,image/webp,image/gif,.jpg,.jpeg,.png,.tiff,.webp,.gif,audio/wav,audio/aiff,audio/flac,audio/x-m4a,audio/mpeg,audio/ogg,.wav,.aiff,.flac,.m4a,.mp3,.ogg,video/mp4,video/webm,video/quicktime,video/x-matroska,video/avi,.mp4,.m4v,.webm,.mov,.mkv,.avi"
                 multiple
               />
               <svg class="w-12 h-12 text-gray-400 mb-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
               </svg>
               <p class="text-gray-600 font-medium">Drag and drop files here, or click to browse</p>
-              <p class="text-sm text-gray-500 mt-1">Images: JPG, PNG, TIFF, WebP • Audio: WAV, AIFF, FLAC, M4A • Max 100MB per file</p>
+              <p class="text-sm text-gray-500 mt-1">Images: JPG, PNG, WebP, TIFF, GIF • Audio: MP3, WAV, FLAC, M4A, OGG • Video: MP4, WebM, MOV, MKV, AVI • Max 500MB per file</p>
             </div>
             <div id="dashboard-upload-feedback" class="hidden mt-3 text-sm text-gray-600 shrink-0"></div>
           </div>
@@ -205,55 +510,348 @@ const isActive = (href: string) => {
 
       dropzone.addEventListener('click', () => fileInput.click());
       dropzone.addEventListener('drop', (e: DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
         const files = e.dataTransfer?.files;
-        if (files?.length) handleFiles(files);
+        if (files && files.length > 0) {
+          console.log('[drop] Files dropped:', files.length);
+          handleFiles(files);
+        } else {
+          console.error('[drop] No files in drop event');
+        }
       });
       fileInput.addEventListener('change', () => {
-        if (fileInput.files?.length) handleFiles(fileInput.files);
+        if (fileInput.files && fileInput.files.length > 0) {
+          console.log('[input] Files selected:', fileInput.files.length);
+          handleFiles(fileInput.files);
+        }
         fileInput.value = '';
       });
 
       async function uploadFile(file: File): Promise<{ id: string }> {
         const formData = new FormData();
         formData.append('file', file);
+
+        // Get fresh CSRF token from cookie
+        const csrfMatch = document.cookie.match(/csrf_token=([^;]+)/);
+        const csrfToken = csrfMatch ? csrfMatch[1] : '';
+
+        // Debug logging
+        console.log('[upload] CSRF_TOKEN from cookie:', csrfToken.substring(0, 20) + '...');
+
         const uploadUrl = new URL('/api/admin/media/upload', window.location.href).href;
+        console.log('[upload] Uploading to:', uploadUrl);
+
         const res = await fetch(uploadUrl, {
           method: 'POST',
           body: formData,
           credentials: 'include',
           headers: {
-            'X-CSRF-Token': (window as any).CSRF_TOKEN || ''
+            'X-CSRF-Token': csrfToken
           }
         });
+
+        console.log('[upload] Response status:', res.status);
+
         if (res.status === 401) {
           const err = await res.json().catch(() => ({}));
+          console.log('[upload] Auth error:', err);
           const reason = err?.reason || 'session_expired';
           window.location.href = `/admin/login?session=expired&reason=${encodeURIComponent(reason)}`;
           throw new Error('Session expired');
         }
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
+          console.log('[upload] Error:', err);
           throw new Error(err?.error || 'Upload failed');
         }
         return res.json();
       }
 
       async function handleFiles(fileList: FileList) {
+        if (!fileList || fileList.length === 0) {
+          console.error('No files provided');
+          return;
+        }
+
+        // Convert FileList to array
+        const files = Array.from(fileList);
+        console.log('[handleFiles] Processing', files.length, 'files:', files.map(f => f.name));
+
         feedback?.classList.remove('hidden');
-        if (feedback) feedback.textContent = 'Uploading...';
-        let ok = 0;
-        for (let i = 0; i < fileList.length; i++) {
+        const total = files.length;
+        const uploadedIds: string[] = [];
+
+        // Phase 1: Upload all files
+        for (let i = 0; i < total; i++) {
+          const file = files[i];
+          if (!file) {
+            console.error(`File at index ${i} is undefined`);
+            continue;
+          }
+
+          if (feedback) {
+            feedback.innerHTML = `<span class="text-blue-600">Uploading ${i + 1}/${total}: "${file.name}"...</span>`;
+          }
+
           try {
-            await uploadFile(fileList[i]);
-            ok++;
+            const result = await uploadFile(file);
+            uploadedIds.push(result.id);
+            console.log(`[upload] Success: ${file.name} -> ${result.id}`);
           } catch (e) {
-            if (feedback) feedback.textContent = `Error: ${e instanceof Error ? e.message : 'Upload failed'}`;
+            if (feedback) {
+              feedback.innerHTML = `<span class="text-red-600">Upload failed for "${file.name}": ${e instanceof Error ? e.message : 'Unknown error'}</span>`;
+            }
             return;
           }
         }
-        if (feedback) feedback.textContent = `${ok} file(s) uploaded. Processing in background.`;
-        setTimeout(() => window.location.reload(), 1500);
+
+        // Phase 2: Process all pending files at once
+        if (uploadedIds.length > 0) {
+          if (feedback) {
+            feedback.innerHTML = `<span class="text-amber-600">Processing ${uploadedIds.length} file(s)...</span>`;
+          }
+
+          try {
+            const result = await processAllPending();
+            console.log('[process] Result:', result);
+          } catch (e) {
+            if (feedback) {
+              feedback.innerHTML = `<span class="text-red-600">Processing failed: ${e instanceof Error ? e.message : 'Unknown error'}</span>`;
+            }
+            return;
+          }
+        }
+
+        if (feedback) {
+          feedback.innerHTML = `<span class="text-green-600">${uploadedIds.length} file(s) uploaded and processed!</span>`;
+        }
+        setTimeout(() => window.location.reload(), 1000);
+      }
+
+      async function processAllPending(): Promise<{ processed: number; succeeded: number }> {
+        const csrfMatch = document.cookie.match(/csrf_token=([^;]+)/);
+        const csrfToken = csrfMatch ? csrfMatch[1] : '';
+
+        const res = await fetch('/api/admin/media/process-pending', {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'X-CSRF-Token': csrfToken
+          }
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err?.error || 'Processing failed');
+        }
+
+        return res.json();
       }
     }
+
+    // Copy media URL to clipboard
+    document.querySelectorAll('.copy-media-url').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const url = btn.getAttribute('data-url');
+        if (url) {
+          navigator.clipboard.writeText(url).then(() => {
+            const originalText = btn.textContent;
+            btn.textContent = 'URL copied!';
+            btn.classList.add('text-green-400');
+            setTimeout(() => {
+              btn.textContent = originalText;
+              btn.classList.remove('text-green-400');
+            }, 1500);
+          });
+        }
+      });
+    });
+
+    // Audio player controls
+    let currentlyPlaying: { id: string; btn: Element } | null = null;
+
+    document.querySelectorAll('.audio-play-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const id = btn.getAttribute('data-id');
+        const url = btn.getAttribute('data-url');
+        if (!id || !url) return;
+
+        const playIcon = btn.querySelector('.play-icon');
+        const stopIcon = btn.querySelector('.stop-icon');
+
+        // If this is currently playing, stop it
+        if (currentlyPlaying?.id === id) {
+          const audio = document.querySelector(`.audio-player[data-id="${id}"]`) as HTMLAudioElement;
+          if (audio) {
+            audio.pause();
+            audio.currentTime = 0;
+          }
+          playIcon?.classList.remove('hidden');
+          stopIcon?.classList.add('hidden');
+          currentlyPlaying = null;
+          return;
+        }
+
+        // Stop any other playing audio first
+        if (currentlyPlaying) {
+          const otherAudio = document.querySelector(`.audio-player[data-id="${currentlyPlaying.id}"]`) as HTMLAudioElement;
+          if (otherAudio) {
+            otherAudio.pause();
+            otherAudio.currentTime = 0;
+          }
+          // Reset other button icons
+          const otherPlayIcon = currentlyPlaying.btn.querySelector('.play-icon');
+          const otherStopIcon = currentlyPlaying.btn.querySelector('.stop-icon');
+          otherPlayIcon?.classList.remove('hidden');
+          otherStopIcon?.classList.add('hidden');
+        }
+
+        // Start playing this audio
+        const audio = document.querySelector(`.audio-player[data-id="${id}"]`) as HTMLAudioElement;
+        if (audio) {
+          audio.play().then(() => {
+            playIcon?.classList.add('hidden');
+            stopIcon?.classList.remove('hidden');
+            currentlyPlaying = { id, btn };
+          }).catch((err) => {
+            console.error('Failed to play audio:', err);
+            alert('Failed to play audio');
+          });
+
+          // Handle audio ending naturally
+          audio.onended = () => {
+            playIcon?.classList.remove('hidden');
+            stopIcon?.classList.add('hidden');
+            if (currentlyPlaying?.id === id) {
+              currentlyPlaying = null;
+            }
+          };
+        }
+      });
+    });
+
+    // Video player - click poster to play/pause inline
+    let currentVideo: { id: string; container: Element } | null = null;
+
+    document.querySelectorAll('.video-thumbnail').forEach(poster => {
+      poster.addEventListener('click', (e) => {
+        // Don't trigger if clicking copy button
+        if ((e.target as Element).closest('.copy-media-url')) return;
+
+        const card = poster.closest('.group');
+        const url = poster.getAttribute('data-video-url');
+        const id = poster.getAttribute('data-video-id');
+        if (!url || !id || !card) return;
+
+        e.preventDefault();
+
+        // If this video is already playing, pause it
+        if (currentVideo?.id === id) {
+          const playingVideo = card.querySelector('.video-playing');
+          if (playingVideo) {
+            (playingVideo as HTMLVideoElement).pause();
+            playingVideo.remove();
+          }
+          const posterVideo = card.querySelector('.video-poster') as HTMLVideoElement;
+          if (posterVideo) posterVideo.style.display = '';
+          currentVideo = null;
+          return;
+        }
+
+        // Stop any other playing video
+        if (currentVideo) {
+          const otherCard = currentVideo.container;
+          const otherPlayingVideo = otherCard.querySelector('.video-playing');
+          if (otherPlayingVideo) {
+            (otherPlayingVideo as HTMLVideoElement).pause();
+            otherPlayingVideo.remove();
+          }
+          const otherPosterVideo = otherCard.querySelector('.video-poster') as HTMLVideoElement;
+          if (otherPosterVideo) otherPosterVideo.style.display = '';
+        }
+
+        // Hide poster video and create playing video
+        const posterVideo = card.querySelector('.video-poster') as HTMLVideoElement;
+        if (posterVideo) posterVideo.style.display = 'none';
+
+        const video = document.createElement('video');
+        video.className = 'video-playing absolute inset-0 w-full h-full bg-black';
+        video.controls = true;
+        video.autoplay = true;
+        video.innerHTML = `<source src="${url}" type="video/mp4">`;
+
+        // When video ends or is paused, show poster again
+        video.onended = () => {
+          if (posterVideo) posterVideo.style.display = '';
+          video.remove();
+          if (currentVideo?.id === id) currentVideo = null;
+        };
+
+        video.onpause = () => {
+          // Only remove if user clicked pause, not if it's buffering
+          setTimeout(() => {
+            if (video.paused) {
+              if (posterVideo) posterVideo.style.display = '';
+              video.remove();
+              if (currentVideo?.id === id) currentVideo = null;
+            }
+          }, 100);
+        };
+
+        poster.appendChild(video);
+        currentVideo = { id, container: card };
+      });
+    });
+
+    // Delete media
+    document.querySelectorAll('.delete-media-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const id = btn.getAttribute('data-id');
+        const type = btn.getAttribute('data-type');
+
+        if (!id) return;
+
+        if (!confirm(`Delete this ${type}? This cannot be undone.`)) return;
+
+        const csrfMatch = document.cookie.match(/csrf_token=([^;]+)/);
+        const csrfToken = csrfMatch ? csrfMatch[1] : '';
+
+        try {
+          const res = await fetch(`/api/admin/media/delete?id=${encodeURIComponent(id)}&type=${encodeURIComponent(type || 'image')}`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+              'X-CSRF-Token': csrfToken
+            }
+          });
+
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err?.error || 'Delete failed');
+          }
+
+          // Remove the card from DOM
+          const card = btn.closest('.group');
+          if (card) {
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.9)';
+            setTimeout(() => card.remove(), 300);
+          }
+
+          alert(`${type} deleted successfully`);
+        } catch (e) {
+          alert(`Failed to delete: ${e instanceof Error ? e.message : 'Unknown error'}`);
+        }
+      });
+    });
   </script>
 </Layout>

@@ -228,8 +228,16 @@ npm run dev
 - [x] Debug Cleanup
 - [x] Rate Limiting
 - [x] Audit Logging
-- [ ] Input Validation Schema (recommended next)
-- [ ] Content Security Policy (recommended next)
+- [x] Input Validation Schema (Zod)
+- [x] Content Security Policy (CSP)
+
+---
+
+## Additional Security Documentation
+
+- `SECURITY_IMPROVEMENTS.md` - Zod validation and CSP implementation details
+- `src/lib/validation.ts` - All input validation schemas
+- `src/middleware.ts` - CSP and security headers
 
 ---
 

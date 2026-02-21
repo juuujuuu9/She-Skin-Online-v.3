@@ -1,0 +1,244 @@
+{
+  "video": {},
+  "pending": [],
+  "images": {
+    "BE377E81-3F93-4DD9-A590-AA12A8675B33": {
+      "id": "BE377E81-3F93-4DD9-A590-AA12A8675B33",
+      "type": "image",
+      "originalName": "BE377E81-3F93-4DD9-A590-AA12A8675B33.jpg",
+      "variants": {
+        "sm": {
+          "url": "/media/BE377E81-3F93-4DD9-A590-AA12A8675B33-sm.webp",
+          "size": 88194,
+          "width": 400,
+          "height": 400
+        },
+        "md": {
+          "url": "/media/BE377E81-3F93-4DD9-A590-AA12A8675B33-md.webp",
+          "size": 322436,
+          "width": 800,
+          "height": 800
+        },
+        "lg": {
+          "url": "/media/BE377E81-3F93-4DD9-A590-AA12A8675B33-lg.webp",
+          "size": 497332,
+          "width": 1600,
+          "height": 1600
+        }
+      },
+      "metadata": {
+        "width": 1024,
+        "height": 1024,
+        "format": "webp"
+      },
+      "createdAt": "2026-02-21T21:24:26.628Z"
+    },
+    "favicon": {
+      "id": "favicon",
+      "type": "image",
+      "originalName": "favicon.jpg",
+      "variants": {
+        "sm": {
+          "url": "/media/favicon-sm.webp",
+          "size": 3336,
+          "width": 400,
+          "height": 400
+        },
+        "md": {
+          "url": "/media/favicon-md.webp",
+          "size": 6132,
+          "width": 800,
+          "height": 800
+        },
+        "lg": {
+          "url": "/media/favicon-lg.webp",
+          "size": 6132,
+          "width": 1600,
+          "height": 1600
+        }
+      },
+      "metadata": {
+        "width": 720,
+        "height": 720,
+        "format": "webp"
+      },
+      "createdAt": "2026-02-21T21:24:26.707Z"
+    },
+    "Modern_Problems_Require_Modern_Solutions": {
+      "id": "Modern_Problems_Require_Modern_Solutions",
+      "type": "image",
+      "originalName": "Modern_Problems_Require_Modern_Solutions.jpg",
+      "variants": {
+        "sm": {
+          "url": "/media/Modern_Problems_Require_Modern_Solutions-sm.webp",
+          "size": 13036,
+          "width": 400,
+          "height": 400
+        },
+        "md": {
+          "url": "/media/Modern_Problems_Require_Modern_Solutions-md.webp",
+          "size": 21462,
+          "width": 800,
+          "height": 800
+        },
+        "lg": {
+          "url": "/media/Modern_Problems_Require_Modern_Solutions-lg.webp",
+          "size": 21462,
+          "width": 1600,
+          "height": 1600
+        }
+      },
+      "metadata": {
+        "width": 600,
+        "height": 454,
+        "format": "webp"
+      },
+      "createdAt": "2026-02-21T21:24:26.834Z"
+    },
+    "og-meta": {
+      "id": "og-meta",
+      "type": "image",
+      "originalName": "og-meta.jpg",
+      "variants": {
+        "sm": {
+          "url": "/media/og-meta-sm.webp",
+          "size": 6022,
+          "width": 400,
+          "height": 400
+        },
+        "md": {
+          "url": "/media/og-meta-md.webp",
+          "size": 13990,
+          "width": 800,
+          "height": 800
+        },
+        "lg": {
+          "url": "/media/og-meta-lg.webp",
+          "size": 23014,
+          "width": 1600,
+          "height": 1600
+        }
+      },
+      "metadata": {
+        "width": 1200,
+        "height": 628,
+        "format": "webp"
+      },
+      "createdAt": "2026-02-21T21:24:26.965Z"
+    },
+    "screencapture-dcc-godaddy-control-portfolio-2026-02-19-10_08_00": {
+      "id": "screencapture-dcc-godaddy-control-portfolio-2026-02-19-10_08_00",
+      "type": "image",
+      "originalName": "screencapture-dcc-godaddy-control-portfolio-2026-02-19-10_08_00.jpg",
+      "variants": {
+        "sm": {
+          "url": "/media/screencapture-dcc-godaddy-control-portfolio-2026-02-19-10_08_00-sm.webp",
+          "size": 12868,
+          "width": 400,
+          "height": 400
+        },
+        "md": {
+          "url": "/media/screencapture-dcc-godaddy-control-portfolio-2026-02-19-10_08_00-md.webp",
+          "size": 37556,
+          "width": 800,
+          "height": 800
+        },
+        "lg": {
+          "url": "/media/screencapture-dcc-godaddy-control-portfolio-2026-02-19-10_08_00-lg.webp",
+          "size": 100060,
+          "width": 1600,
+          "height": 1600
+        }
+      },
+      "metadata": {
+        "width": 1819,
+        "height": 1804,
+        "format": "webp"
+      },
+      "createdAt": "2026-02-21T21:24:27.402Z"
+    }
+  },
+  "audio": {
+    "[Evil Empire Tag Voice]THOUG......WEB!!": {
+      "id": "[Evil Empire Tag Voice]THOUG......WEB!!",
+      "type": "audio",
+      "originalName": "[Evil Empire Tag Voice]THOUG......WEB!!.mp3",
+      "variants": {
+        "original": {
+          "url": "/media/[Evil Empire Tag Voice]THOUG......WEB!!.mp3",
+          "size": 82558
+        }
+      },
+      "metadata": {
+        "format": "mp3",
+        "duration": 5
+      },
+      "createdAt": "2026-02-21T21:41:50.629Z"
+    },
+    "[Evil Empire Tag Voice]WORLD......TROL!": {
+      "id": "[Evil Empire Tag Voice]WORLD......TROL!",
+      "type": "audio",
+      "originalName": "[Evil Empire Tag Voice]WORLD......TROL!.mp3",
+      "variants": {
+        "original": {
+          "url": "/media/[Evil Empire Tag Voice]WORLD......TROL!.mp3",
+          "size": 54124
+        }
+      },
+      "metadata": {
+        "format": "mp3",
+        "duration": 3
+      },
+      "createdAt": "2026-02-21T21:41:50.643Z"
+    },
+    "[Evil Empire Tag Voice]You’r......on...": {
+      "id": "[Evil Empire Tag Voice]You’r......on...",
+      "type": "audio",
+      "originalName": "[Evil Empire Tag Voice]You’r......on....mp3",
+      "variants": {
+        "original": {
+          "url": "/media/[Evil Empire Tag Voice]You’r......on....mp3",
+          "size": 59152
+        }
+      },
+      "metadata": {
+        "format": "mp3",
+        "duration": 3
+      },
+      "createdAt": "2026-02-21T21:41:50.658Z"
+    },
+    "sheskin - beside a luv like mine (mt1 stream)": {
+      "id": "sheskin - beside a luv like mine (mt1 stream)",
+      "type": "audio",
+      "originalName": "sheskin - beside a luv like mine (mt1 stream).mp3",
+      "variants": {
+        "original": {
+          "url": "/media/sheskin - beside a luv like mine (mt1 stream).mp3",
+          "size": 20030814
+        }
+      },
+      "metadata": {
+        "format": "mp3",
+        "duration": 1308
+      },
+      "createdAt": "2026-02-21T21:42:55.896Z"
+    },
+    "LIBC - Driving On The Sun": {
+      "id": "LIBC - Driving On The Sun",
+      "type": "audio",
+      "originalName": "LIBC - Driving On The Sun.mp3",
+      "variants": {
+        "original": {
+          "url": "/media/LIBC - Driving On The Sun.mp3",
+          "size": 18515892
+        }
+      },
+      "metadata": {
+        "format": "mp3",
+        "duration": 1147
+      },
+      "createdAt": "2026-02-21T21:43:14.253Z"
+    }
+  },
+  "lastProcessed": "2026-02-21T21:43:14.253Z"
+}

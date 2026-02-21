@@ -1,3 +1,5 @@
+export const prerender = false;
+
 /**
  * Password Reset API - Request reset link
  * POST /api/admin/forgot-password

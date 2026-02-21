@@ -11,7 +11,7 @@ import bcrypt from 'bcryptjs';
 
 const COOKIE_NAME = 'admin_session';
 const SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24h
-const DEBUG_AUTH = false; // Disabled in production
+const DEBUG_AUTH = process.env.DEBUG_ADMIN_LOGIN === '1' || process.env.DEBUG_ADMIN_LOGIN === 'true'; // Enable via env var
 
 // Admin secret from env for signing cookies
 function getAdminSecret(): string {

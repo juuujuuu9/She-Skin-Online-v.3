@@ -1,3 +1,5 @@
+export const prerender = false;
+
 /**
  * PUT /api/admin/audio/track — Update track metadata (database)
  */

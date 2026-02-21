@@ -23,7 +23,7 @@ export function generateCsrfToken(): { token: string; cookie: string } {
     .digest('base64url');
   
   const token = `${timestamp}.${signature}`;
-  const cookie = `${CSRF_COOKIE}=${token}; Path=/; SameSite=Strict`;
+  const cookie = `${CSRF_COOKIE}=${token}; Path=/; SameSite=Lax`;
   
   return { token, cookie };
 }

@@ -13,6 +13,7 @@ import { softDeleteWork, hardDeleteWork, restoreWork } from '@lib/db/queries';
 import { db } from '@lib/db';
 import { works } from '@lib/db/schema';
 import { eq } from 'drizzle-orm';
+import { validateParam, idSchema, deleteWorkSchema, validateQuery } from '@lib/validation';
 
 export const DELETE: APIRoute = async ({ request, params }) => {
   const auth = await checkAdminAuth(request);
@@ -31,13 +32,13 @@ export const DELETE: APIRoute = async ({ request, params }) => {
     );
   }
 
-  const id = params?.id;
-  if (!id) {
-    return new Response(JSON.stringify({ error: 'Missing id' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    });
+  // Validate URL parameter
+  const idParam = params?.id;
+  const idValidation = validateParam(idParam, idSchema);
+  if (!idValidation.success) {
+    return idValidation.response;
   }
+  const id = idValidation.data;
 
   try {
     const url = new URL(request.url);
@@ -114,13 +115,13 @@ export const POST: APIRoute = async ({ request, params }) => {
     );
   }
 
-  const id = params?.id;
-  if (!id) {
-    return new Response(JSON.stringify({ error: 'Missing id' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    });
+  // Validate URL parameter
+  const idParam = params?.id;
+  const idValidation = validateParam(idParam, idSchema);
+  if (!idValidation.success) {
+    return idValidation.response;
   }
+  const id = idValidation.data;
 
   try {
     const success = await restoreWork(id);

@@ -11,19 +11,20 @@ import { posts, postMeta, postMedia, media, revisions } from '@lib/db/schema';
 import { eq, desc, and, isNull, like, sql } from 'drizzle-orm';
 import { requireAdminAuth } from '@lib/admin-auth';
 import { nanoid } from '@lib/nanoid';
+import { validateRequest, validateQuery, createPostSchema, updatePostSchema, deletePostSchema, getPostSchema, idSchema } from '@lib/validation';
 
 // GET: List or single post
 export const GET: APIRoute = async ({ request, url }) => {
   const authError = await requireAdminAuth(request);
   if (authError) return authError;
 
-  const id = url.searchParams.get('id');
-  const slug = url.searchParams.get('slug');
-  const postType = url.searchParams.get('type') || 'page';
-  const status = url.searchParams.get('status');
-  const search = url.searchParams.get('search');
-  const limit = parseInt(url.searchParams.get('limit') || '50');
-  const offset = parseInt(url.searchParams.get('offset') || '0');
+  // Validate query parameters
+  const queryValidation = validateQuery(url, getPostSchema);
+  if (!queryValidation.success) {
+    return queryValidation.response;
+  }
+
+  const { id, slug, type: postType, status, search, limit, offset } = queryValidation.data;
 
   try {
     // Single post by ID
@@ -141,29 +142,15 @@ export const POST: APIRoute = async ({ request }) => {
   const authError = await requireAdminAuth(request);
   if (authError) return authError;
 
-  try {
-    const body = await request.json();
-    const {
-      title,
-      slug: providedSlug,
-      content = '',
-      excerpt = '',
-      postType = 'page',
-      status = 'draft',
-      metaTitle,
-      metaDescription,
-      ogImage,
-      parentId,
-      meta = {},
-      mediaIds = [],
-    } = body;
+  // Validate request body
+  const bodyValidation = await validateRequest(request, createPostSchema);
+  if (!bodyValidation.success) {
+    return bodyValidation.response;
+  }
 
-    if (!title) {
-      return new Response(JSON.stringify({ error: 'Title is required' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
+  const { title, slug: providedSlug, content, excerpt, postType, status, metaTitle, metaDescription, ogImage, parentId, meta, mediaIds } = bodyValidation.data;
+
+  try {
 
     // Generate slug if not provided
     const slug = providedSlug || title.toLowerCase()
@@ -262,16 +249,16 @@ export const PUT: APIRoute = async ({ request }) => {
   const authError = await requireAdminAuth(request);
   if (authError) return authError;
 
-  try {
-    const body = await request.json();
-    const { id } = body;
+  // Validate request body
+  const bodyValidation = await validateRequest(request, updatePostSchema);
+  if (!bodyValidation.success) {
+    return bodyValidation.response;
+  }
 
-    if (!id) {
-      return new Response(JSON.stringify({ error: 'Post ID is required' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
+  const { id } = bodyValidation.data;
+
+  try {
+    const body = bodyValidation.data;
 
     // Get existing post
     const existingPost = await db.query.posts.findFirst({
@@ -410,19 +397,19 @@ export const DELETE: APIRoute = async ({ request, url }) => {
   const authError = await requireAdminAuth(request);
   if (authError) return authError;
 
+  // Validate query parameters
   const id = url.searchParams.get('id');
-
-  if (!id) {
-    return new Response(JSON.stringify({ error: 'Post ID is required' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    });
+  const paramValidation = validateQuery(new URL(`http://localhost?id=${id}`), deletePostSchema);
+  if (!paramValidation.success) {
+    return paramValidation.response;
   }
+
+  const validatedId = paramValidation.data.id;
 
   try {
     // Get post with media
     const post = await db.query.posts.findFirst({
-      where: eq(posts.id, id),
+      where: eq(posts.id, validatedId),
       with: {
         media: true,
       },
@@ -439,12 +426,12 @@ export const DELETE: APIRoute = async ({ request, url }) => {
 
     // Soft delete the post
     await db.update(posts)
-      .set({ 
+      .set({
         deletedAt: now,
         updatedAt: now,
         status: 'archived',
       })
-      .where(eq(posts.id, id));
+      .where(eq(posts.id, validatedId));
 
     // Decrement media ref counts
     for (const mediaLink of post.media) {

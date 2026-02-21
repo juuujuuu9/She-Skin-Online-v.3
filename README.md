@@ -41,11 +41,17 @@ src/
 ├── pages/
 │   ├── works/           # Archive views
 │   ├── shop/            # Store pages
-│   └── admin/           # Client dashboard
+│   ├── admin/           # Client dashboard
+│   └── api/             # API routes
 ├── lib/
 │   ├── db/              # Database schema & queries
+│   ├── validation.ts    # Input validation (Zod)
+│   ├── audit.ts         # Security audit logging
+│   ├── rate-limit.ts    # Rate limiting
+│   ├── csrf.ts          # CSRF protection
 │   ├── bunny.ts         # CDN integration
 │   └── media-processor.ts
+├── middleware.ts         # Astro middleware (CSP, security headers)
 └── layouts/
 
 media/
@@ -194,6 +200,22 @@ Automatic archive pages at `/works/[category]/`:
 - `/works/digital/` — Grid view
 - `/works/collaborations/` — Grid view
 
+## 🔒 Security
+
+Enterprise-grade security features built-in:
+
+| Feature | Implementation |
+|---------|---------------|
+| **Input Validation** | Zod schemas enforce type safety and limits |
+| **CSRF Protection** | Double Submit Cookie pattern |
+| **CSP Headers** | Content Security Policy blocks XSS |
+| **Rate Limiting** | 5 login attempts per 15 minutes |
+| **Soft Deletes** | Recoverable deletion for all content |
+| **Audit Logging** | All admin actions logged to database |
+| **Security Headers** | X-Frame-Options, X-XSS-Protection, etc. |
+
+See `SECURITY_FIXES.md` and `SECURITY_IMPROVEMENTS.md` for detailed security documentation.
+
 ## 👤 Client Dashboard
 
 Located at `/admin/` (Basic Auth protected).
@@ -204,6 +226,7 @@ Located at `/admin/` (Basic Auth protected).
 - **Work Editor**: Add/edit portfolio pieces
 - **Product Manager**: Inventory, pricing, variants
 - **Order Viewer**: Simple order list from Stripe
+- **Trash/Restore**: Soft-deleted items can be recovered
 
 ### Widget-Based
 
@@ -271,6 +294,19 @@ const SIZES = {
 ### Adding Payment Methods
 
 Edit `src/lib/stripe.ts` or add `src/lib/btcpay.ts` for crypto.
+
+## 📚 Documentation
+
+| File | Description |
+|------|-------------|
+| `README.md` | This file - getting started guide |
+| `SECURITY.md` | Security overview and features |
+| `VALIDATION.md` | Input validation documentation |
+| `SECURITY_FIXES.md` | Security audit and fixes |
+| `SECURITY_IMPROVEMENTS.md` | Zod validation and CSP details |
+| `MEDIA_IMPLEMENTATION.md` | Media processing documentation |
+| `AUDIO_PLAYER.md` | Audio player implementation |
+| `SHOP_PASSWORD.md` | Shop password gate setup |
 
 ## 📚 Environment Variables
 

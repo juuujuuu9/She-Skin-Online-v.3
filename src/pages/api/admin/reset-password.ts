@@ -1,3 +1,5 @@
+export const prerender = false;
+
 /**
  * Password Reset API - Set new password
  * POST /api/admin/reset-password

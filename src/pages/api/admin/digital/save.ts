@@ -1,3 +1,5 @@
+export const prerender = false;
+
 /**
  * POST /api/admin/digital/save — Create or update a digital work (database)
  */

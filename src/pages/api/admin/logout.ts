@@ -1,3 +1,5 @@
+export const prerender = false;
+
 /**
  * Admin Logout API
  * POST /api/admin/logout

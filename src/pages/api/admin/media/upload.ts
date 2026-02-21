@@ -1,173 +1,213 @@
+export const prerender = false;
+
 import type { APIRoute } from 'astro';
 import { checkAdminAuth } from '@lib/admin-auth';
-import { 
-  loadManifest, 
+import {
+  loadManifest,
   saveManifest,
   MEDIA_CONFIG,
-  type PendingFile 
+  type PendingFile
 } from '@lib/media-process';
 import { uploadToBunny } from '@lib/bunny';
 import { writeFile, mkdir } from 'fs/promises';
 import { join, basename, extname } from 'path';
 
 export const POST: APIRoute = async ({ request }) => {
+  // Log upload attempt for debugging
+  console.log('[upload] Received upload request');
+
+  const cookieHeader = request.headers.get('cookie');
+  const csrfHeader = request.headers.get('X-CSRF-Token');
+
+  console.log('[upload] Cookie header:', cookieHeader ? `present (length: ${cookieHeader.length})` : 'MISSING');
+  if (cookieHeader) {
+    const cookieNames = cookieHeader.split(';').map(c => c.split('=')[0].trim());
+    console.log('[upload] Cookie names found:', cookieNames.join(', '));
+    const hasSession = cookieNames.includes('admin_session');
+    const hasCsrf = cookieNames.includes('csrf_token');
+    console.log('[upload] Has admin_session:', hasSession);
+    console.log('[upload] Has csrf_token:', hasCsrf);
+  }
+  console.log('[upload] X-CSRF-Token header:', csrfHeader ? `present (length: ${csrfHeader.length})` : 'MISSING');
+  console.log('[upload] Origin:', request.headers.get('origin'));
+
   const auth = await checkAdminAuth(request);
-  
+
   if (!auth.valid) {
+    console.log('[upload] Auth failed:', auth.debug);
     return new Response(
-      JSON.stringify({ error: 'Unauthorized' }),
+      JSON.stringify({ error: 'Unauthorized', reason: auth.debug || 'unknown' }),
       { status: 401, headers: { 'Content-Type': 'application/json' } }
     );
   }
 
+  console.log('[upload] Auth success, user:', auth.userId);
+
   // Check CSRF
   const { validateCsrfToken } = await import('@lib/csrf');
   if (!validateCsrfToken(request)) {
+    console.log('[upload] CSRF validation failed');
     return new Response(
       JSON.stringify({ error: 'Invalid CSRF token' }),
       { status: 403, headers: { 'Content-Type': 'application/json' } }
     );
   }
-  
+
+  console.log('[upload] CSRF validation success');
+
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
     // Support both 'folder' (legacy) and 'folder' param names
     const folder = (formData.get('folder') as string) || 'uploads';
     const direct = formData.get('direct') === 'true' || folder !== 'uploads';
-    
+
     if (!file) {
       return new Response(
-        JSON.stringify({ error: 'No file provided' }), 
+        JSON.stringify({ error: 'No file provided' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
-    
-    // Check file size (100MB limit)
-    if (file.size > MEDIA_CONFIG.maxFileSize) {
+
+    // Validate file type
+    const allowedTypes = Object.keys(MEDIA_CONFIG.allowedTypes);
+    if (!allowedTypes.includes(file.type)) {
       return new Response(
-        JSON.stringify({ 
-          error: `File too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum is 100MB.`
-        }), 
-        { status: 413, headers: { 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: `File type ${file.type} not allowed` }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
-    
-    const buffer = Buffer.from(await file.arrayBuffer());
+
+    // Validate file size
+    const maxSize = MEDIA_CONFIG.maxSizeBytes;
+    if (file.size > maxSize) {
+      return new Response(
+        JSON.stringify({ error: `File too large. Max size: ${MEDIA_CONFIG.maxSizeMB}MB` }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Get file extension
     const ext = extname(file.name).toLowerCase();
-    
-    // Determine media type
-    const isImage = file.type.startsWith('image/');
-    const isAudio = file.type.startsWith('audio/');
-    
-    if (!isImage && !isAudio) {
+    if (!ext) {
       return new Response(
-        JSON.stringify({ error: `Unsupported file type: ${file.type}` }), 
+        JSON.stringify({ error: 'File must have an extension' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
-    
-    const type = isImage ? 'images' : 'audio';
-    const allowedImageExts = ['.jpg', '.jpeg', '.png', '.tiff', '.webp'];
-    const allowedAudioExts = ['.wav', '.aiff', '.flac', '.m4a'];
-    
-    if (isImage && !allowedImageExts.includes(ext)) {
+
+    // Check extension against allowed types
+    const allowedExts = Object.values(MEDIA_CONFIG.allowedTypes).flat();
+    if (!allowedExts.includes(ext)) {
       return new Response(
-        JSON.stringify({ error: `Unsupported image format: ${ext}. Use: ${allowedImageExts.join(', ')}` }), 
+        JSON.stringify({ error: `File extension ${ext} not allowed` }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
-    
-    if (isAudio && !allowedAudioExts.includes(ext)) {
-      return new Response(
-        JSON.stringify({ error: `Unsupported audio format: ${ext}. Use: ${allowedAudioExts.join(', ')}` }), 
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
+
+    // Determine media type from folder or file type
+    let type: 'image' | 'audio' | 'video' | 'document' = 'document';
+    if (folder === 'audio' || file.type.startsWith('audio/')) {
+      type = 'audio';
+    } else if (file.type.startsWith('video/')) {
+      type = 'video';
+    } else if (file.type.startsWith('image/')) {
+      type = 'image';
     }
-    
-    // DIRECT UPLOAD MODE: Upload immediately to CDN (for work editors)
-    if (direct) {
-      const timestamp = Date.now();
-      const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '-').toLowerCase();
-      const filename = `${folder}/${timestamp}-${safeName}`;
-      
-      const url = await uploadToBunny(buffer, filename, {
-        contentType: file.type,
-      });
-      
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          url,
-          filename: safeName,
-          size: buffer.length,
-          mode: 'direct',
-        }), 
-        { 
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
-    
-    // QUEUE MODE: Save to disk and add to manifest for background processing
-    // Sanitize filename
-    const sanitizedName = file.name
-      .replace(/[^a-zA-Z0-9._-]/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-+|-+$/g, '');
-    
-    const id = basename(sanitizedName, ext);
-    
-    // Save to originals folder
-    const originalsDir = join(MEDIA_CONFIG.sourceDir, type);
-    await mkdir(originalsDir, { recursive: true });
-    const originalPath = join(originalsDir, sanitizedName);
-    
-    await writeFile(originalPath, buffer);
-    
-    // Add to pending queue
-    const manifest = await loadManifest();
-    
-    // Remove from pending if already exists (re-upload)
-    manifest.pending = manifest.pending.filter(p => p.id !== id);
-    
-    const pending: PendingFile = {
+
+    // Save file to temp directory for later processing
+    const tmpDir = join(process.cwd(), 'tmp', 'uploads');
+    await mkdir(tmpDir, { recursive: true });
+    const timestamp = Date.now();
+    const id = `${type}_${timestamp}_${Math.random().toString(36).substring(2, 9)}`;
+    const tmpPath = join(tmpDir, `${id}${ext}`);
+    const arrayBuffer = await file.arrayBuffer();
+    await writeFile(tmpPath, Buffer.from(arrayBuffer));
+
+    // Create pending file entry with path
+    const pendingFile: PendingFile = {
       id,
-      filename: sanitizedName,
-      type: isImage ? 'image' : 'audio',
-      originalPath: `media/originals/${type}/${sanitizedName}`,
-      status: 'pending',
+      originalName: file.name,
+      type,
+      folder,
+      size: file.size,
+      mimeType: file.type,
       uploadedAt: new Date().toISOString(),
+      uploadedBy: auth.userId,
+      status: 'pending',
+      originalPath: tmpPath,
     };
-    
-    manifest.pending.push(pending);
+
+    // Save to pending manifest
+    const manifest = await loadManifest();
+    manifest.pending.push(pendingFile);
     await saveManifest(manifest);
-    
+
+    console.log('[upload] Saved pending file:', { id, tmpPath, size: file.size });
+
+    // If direct upload is requested (not pending), upload to Bunny immediately
+    if (direct) {
+      console.log('[upload] Direct upload requested, uploading to Bunny...');
+      const bunnyResult = await uploadToBunny(tmpPath, `${folder}/${id}${ext}`);
+
+      if (!bunnyResult.success) {
+        // Update status to failed
+        pendingFile.status = 'failed';
+        pendingFile.error = bunnyResult.error || 'Upload to Bunny failed';
+        const updatedManifest = await loadManifest();
+        const idx = updatedManifest.pending.findIndex(p => p.id === id);
+        if (idx >= 0) {
+          updatedManifest.pending[idx] = pendingFile;
+          await saveManifest(updatedManifest);
+        }
+
+        return new Response(
+          JSON.stringify({ error: pendingFile.error }),
+          { status: 500, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Update to completed
+      pendingFile.status = 'completed';
+      pendingFile.bunnyUrl = bunnyResult.url;
+      pendingFile.bunnyPath = bunnyResult.path;
+      const updatedManifest = await loadManifest();
+      const idx = updatedManifest.pending.findIndex(p => p.id === id);
+      if (idx >= 0) {
+        updatedManifest.pending[idx] = pendingFile;
+        await saveManifest(updatedManifest);
+      }
+
+      console.log('[upload] Direct upload complete:', bunnyResult.url);
+
+      return new Response(
+        JSON.stringify({
+          id,
+          type,
+          status: 'completed',
+          url: bunnyResult.url,
+          path: bunnyResult.path,
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Return pending status
     return new Response(
       JSON.stringify({
-        success: true,
         id,
-        type: pending.type,
+        type,
         status: 'pending',
-        mode: 'queued',
-        message: 'File uploaded and queued for processing',
-      }), 
+        message: 'File saved for processing. Use /api/admin/media/process-pending to process.',
+      }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     );
-    
+
   } catch (error) {
-    console.error('Media upload error:', error);
+    console.error('[upload] Error:', error);
     return new Response(
-      JSON.stringify({ 
-        error: error instanceof Error ? error.message : 'Upload failed' 
-      }), 
+      JSON.stringify({ error: 'Upload failed', details: String(error) }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
-};
-
-// Disable body parsing for multipart
-export const config = {
-  bodyParser: false,
 };

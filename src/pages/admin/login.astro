@@ -96,8 +96,19 @@ if (Astro.request.method === 'POST') {
           if (secure) cookieParts.push('Secure');
           const setCookie = cookieParts.join('; ');
 
+          // Debug logging
+          console.log('[login] Setting cookie:', cookieParts.slice(0, 2).join('; ') + '; ...');
+          console.log('[login] Cookie length:', setCookie.length);
+          console.log('[login] Secure flag:', secure);
+
           // HTML redirect to ensure cookie is stored
-          const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Signing in…</title></head><body><p>Signing in…</p><script>setTimeout(function(){ window.location.replace('/admin'); }, 150);</script><a href="/admin">Continue</a></body></html>`;
+          const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Signing in…</title></head><body><p>Signing in…</p><script>
+            console.log('[login redirect] Cookies before redirect:', document.cookie);
+            setTimeout(function(){ 
+              console.log('[login redirect] Redirecting to /admin');
+              window.location.replace('/admin'); 
+            }, 500);
+          </script><a href="/admin">Continue</a></body></html>`;
           return new Response(html, {
             status: 200,
             headers: {
@@ -208,7 +219,51 @@ if (Astro.request.method === 'POST') {
         <a href="/" class="text-sm text-gray-400 hover:text-gray-600 block">
           ← Back to site
         </a>
+        <button type="button" id="test-cookie-btn" class="text-xs text-gray-400 hover:text-gray-600 block mt-4">
+          🔧 Test Cookies (Debug)
+        </button>
+        <div id="cookie-debug-output" class="text-xs text-left bg-gray-100 p-2 rounded mt-2 hidden font-mono whitespace-pre-wrap"></div>
       </div>
     </div>
   </div>
+  <script>
+    document.getElementById('test-cookie-btn')?.addEventListener('click', async () => {
+      const output = document.getElementById('cookie-debug-output');
+      if (!output) return;
+      output.classList.remove('hidden');
+
+      let results = ['=== Cookie Debug ==='];
+      results.push(`Current cookies: ${document.cookie || '(none)'}`);
+      results.push(`Cookie count: ${document.cookie ? document.cookie.split(';').length : 0}`);
+
+      // Test setting a cookie via API
+      results.push('\nTesting cookie API...');
+      try {
+        const res = await fetch('/api/test-cookie', {
+          method: 'POST',
+          credentials: 'include'
+        });
+        const data = await res.json();
+        results.push(`Set cookie response: ${JSON.stringify(data)}`);
+
+        // Check if cookie was stored
+        await new Promise(r => setTimeout(r, 100));
+        results.push(`\nCookies after API call: ${document.cookie || '(none)'}`);
+
+        // Try reading via GET
+        const getRes = await fetch('/api/test-cookie', {
+          method: 'GET',
+          credentials: 'include'
+        });
+        const getData = await getRes.json();
+        results.push(`\nServer received cookies: ${JSON.stringify(getData.cookieNames)}`);
+        results.push(`\nAll headers server received: ${JSON.stringify(getData.allHeadersReceived)}`);
+      } catch (e) {
+        results.push(`Error: ${e}`);
+      }
+
+      output.textContent = results.join('\n');
+      console.log('[cookie debug]', results.join('\n'));
+    });
+  </script>
 </Layout>

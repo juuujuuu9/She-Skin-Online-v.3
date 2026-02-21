@@ -1,3 +1,5 @@
+export const prerender = false;
+
 /**
  * POST /api/admin/physical/save — Create or update a physical work (database)
  */

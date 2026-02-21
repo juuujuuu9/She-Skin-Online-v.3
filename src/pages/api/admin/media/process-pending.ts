@@ -1,3 +1,5 @@
+export const prerender = false;
+
 import type { APIRoute } from 'astro';
 import { checkAdminAuth } from '@lib/admin-auth';
 import { 
@@ -45,20 +47,23 @@ export const POST: APIRoute = async ({ request }) => {
         await saveManifest(manifest);
         
         // Read the original file
-        const buffer = await readFile(file.originalPath);
-        
+        const buffer = await readFile(file.originalPath!);
+
         // Process it
         const result: ProcessingResult = await processMediaFile(
-          buffer, 
-          file.filename, 
+          buffer,
+          file.originalName,
+          file.mimeType,
           manifest
         );
         
         // Update manifest with result
         if (result.type === 'image') {
           manifest.images[result.data.id] = result.data;
-        } else {
+        } else if (result.type === 'audio') {
           manifest.audio[result.data.id] = result.data;
+        } else if (result.type === 'video') {
+          manifest.video[result.data.id] = result.data;
         }
         
         // Remove from pending
@@ -139,6 +144,7 @@ export const GET: APIRoute = async ({ request }) => {
         },
         images: Object.keys(manifest.images).length,
         audio: Object.keys(manifest.audio).length,
+        video: Object.keys(manifest.video || {}).length,
       }), 
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     );
