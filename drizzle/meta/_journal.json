@@ -15,6 +15,13 @@
       "when": 1771628560207,
       "tag": "0001_fuzzy_blazing_skull",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1771650558586,
+      "tag": "0002_light_umar",
+      "breakpoints": true
     }
   ]
 }

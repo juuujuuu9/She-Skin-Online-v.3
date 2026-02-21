@@ -378,3 +378,18 @@ export const audioTracksRelations = relations(audioTracks, ({ one }) => ({
     references: [works.id],
   }),
 }));
+
+// ============================================================================
+// PASSWORD RESET TOKENS
+// ============================================================================
+
+export const passwordResetTokens = pgTable('password_reset_tokens', {
+  id: text('id').primaryKey(),
+  email: text('email').notNull(), // admin email
+  token: text('token').notNull().unique(), // secure random token
+  expiresAt: timestamp('expires_at').notNull(), // 1 hour expiry
+  used: boolean('used').default(false),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
