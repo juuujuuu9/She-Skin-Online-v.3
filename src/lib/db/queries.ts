@@ -580,6 +580,7 @@ function workToGridItem(work: WorkWithMedia): CollaborationItem {
     id: work.id,
     slug: work.slug,
     title: work.title,
+    year: work.year ?? null,
     forSale: work.forSale ?? false,
     externalUrl: work.externalUrl,
     image: primaryImage ? {

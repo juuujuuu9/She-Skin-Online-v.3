@@ -18,12 +18,6 @@ const CSP_DIRECTIVES = {
   'style-src': [
     "'self'",
     "'unsafe-inline'",  // Required for Tailwind CSS
-    'https://fonts.googleapis.com',  // Google Fonts
-  ],
-  'font-src': [
-    "'self'",
-    'data:',
-    'https://fonts.gstatic.com',  // Google Fonts
   ],
   'img-src': [
     "'self'",
@@ -31,18 +25,20 @@ const CSP_DIRECTIVES = {
     'blob:',
     'https://*.b-cdn.net',      // Bunny.net CDN
     'https://*.bunnycdn.com',   // Bunny.net storage
-    'https://www.sheskin.org',  // WordPress legacy media
   ],
   'media-src': [
     "'self'",
     'https://*.b-cdn.net',      // Bunny.net CDN for audio/video
     'https://*.bunnycdn.com',
-    'https://www.sheskin.org',  // WordPress legacy media
   ],
   'connect-src': [
     "'self'",
     'https://*.stripe.com',     // Stripe payment processing
     'https://*.neon.tech',      // Neon database (if direct connection needed)
+  ],
+  'font-src': [
+    "'self'",
+    'data:',
   ],
   'frame-src': [
     "'self'",
@@ -51,7 +47,7 @@ const CSP_DIRECTIVES = {
   'object-src': ["'none'"],
   'base-uri': ["'self'"],
   'form-action': ["'self'"],
-  'frame-ancestors': ["'self'"],  // Allow same-site framing (astro dev tools)
+  'frame-ancestors': ["'none'"],  // Prevents clickjacking
   'upgrade-insecure-requests': [],  // Upgrade HTTP to HTTPS
 };
 

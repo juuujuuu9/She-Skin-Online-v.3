@@ -27,6 +27,16 @@ media/processed/*
 !media/originals/.gitkeep
 !media/processed/.gitkeep
 
+# Public processed media (generated files)
+public/media/*.webp
+public/media/*.jpg
+public/media/*.png
+public/media/*.mp3
+public/media/*.mp4
+public/media/audio/*
+public/media/physical/*
+public/media/digital/*
+
 # Database
 *.db
 *.sqlite

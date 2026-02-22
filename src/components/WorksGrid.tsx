@@ -51,6 +51,8 @@ interface WorksGridProps {
   defaultColsMobile?: number;
   /** Center items vertically within each row (e.g. for physical) */
   alignRowsCenter?: boolean;
+  /** Category to determine special rendering (e.g. ear icon for physical) */
+  category?: string;
 }
 
 function getDefaultCols(
@@ -68,6 +70,7 @@ export function WorksGrid({
   defaultColsDesktop,
   defaultColsMobile,
   alignRowsCenter,
+  category,
 }: WorksGridProps) {
   const overrides =
     defaultColsDesktop != null || defaultColsMobile != null

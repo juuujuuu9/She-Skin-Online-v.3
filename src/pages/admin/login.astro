@@ -6,27 +6,18 @@
 export const prerender = false;
 
 import Layout from '@layouts/Layout.astro';
-import { checkAdminAuth, verifyAdminCredentials, createSessionCookie } from '@lib/admin-auth';
-import { checkRateLimit, ADMIN_RATE_LIMITS, getClientIdentifier } from '@lib/rate-limit';
-import { logAction, AuditActions, AuditResources } from '@lib/audit';
+import { checkAdminAuth, verifyAdminCredentials, createSessionCookie, hashPassword } from '@lib/admin-auth';
+import { db } from '@lib/db';
+import { users } from '@lib/db/schema';
 
-// Check if already logged in (but allow showing login page for session errors)
+// Check if already logged in
+const auth = await checkAdminAuth(Astro.request);
+if (auth.valid) {
+  return Astro.redirect('/admin');
+}
+
 const sessionExpired = Astro.url.searchParams.get('session') === 'expired';
 const sessionReason = Astro.url.searchParams.get('reason') ?? '';
-
-// Only redirect if auth is valid AND there's no session error showing
-if (!sessionExpired) {
-  const auth = await checkAdminAuth(Astro.request);
-  if (auth.valid) {
-    return Astro.redirect('/admin');
-  }
-}
-
-// For session errors, clear the bad cookie before showing login page
-if (sessionExpired || sessionReason) {
-  Astro.response.headers.append('Set-Cookie', 'admin_session=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax');
-}
-
 let error = '';
 
 // Handle POST

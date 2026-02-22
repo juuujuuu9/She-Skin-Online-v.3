@@ -11,7 +11,7 @@ import bcrypt from 'bcryptjs';
 
 const COOKIE_NAME = 'admin_session';
 const SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24h
-const DEBUG_AUTH = process.env.DEBUG_ADMIN_LOGIN === '1' || process.env.DEBUG_ADMIN_LOGIN === 'true'; // Enable via env var
+const DEBUG_AUTH = false; // Disabled in production
 
 // Admin secret from env for signing cookies
 function getAdminSecret(): string {
@@ -105,10 +105,6 @@ export async function hashPassword(password: string): Promise<string> {
 export async function verifyPassword(password: string, hash: string): Promise<boolean> {
   return bcrypt.compare(password, hash);
 }
-
-// Support both Node.js and Astro environments
-// In Astro, use import.meta.env.DEV; in Node.js, use process.env
-// DEBUG_AUTH is defined at the top of this file
 
 /** Verify admin credentials against database */
 export async function verifyAdminCredentials(username: string, password: string): Promise<{ valid: boolean; userId?: string }> {

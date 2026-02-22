@@ -47,13 +47,12 @@ export const POST: APIRoute = async ({ request }) => {
         await saveManifest(manifest);
         
         // Read the original file
-        const buffer = await readFile(file.originalPath!);
-
+        const buffer = await readFile(file.originalPath);
+        
         // Process it
         const result: ProcessingResult = await processMediaFile(
-          buffer,
-          file.originalName,
-          file.mimeType,
+          buffer, 
+          file.filename, 
           manifest
         );
         
@@ -144,7 +143,6 @@ export const GET: APIRoute = async ({ request }) => {
         },
         images: Object.keys(manifest.images).length,
         audio: Object.keys(manifest.audio).length,
-        video: Object.keys(manifest.video || {}).length,
       }), 
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     );

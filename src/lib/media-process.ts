@@ -124,19 +124,13 @@ const MANIFEST_PATH = join(process.cwd(), 'data', 'media-manifest.json');
 export async function loadManifest(): Promise<MediaManifest> {
   try {
     const data = await readFile(MANIFEST_PATH, 'utf-8');
-    const parsed = JSON.parse(data);
-    // Ensure video field exists for backwards compatibility
-    return {
-      video: {},
-      ...parsed,
-    };
+    return JSON.parse(data);
   } catch {
     // Return empty manifest if file doesn't exist
     return {
       pending: [],
       images: {},
       audio: {},
-      video: {},
     };
   }
 }
@@ -152,7 +146,7 @@ export async function saveManifest(manifest: MediaManifest): Promise<void> {
 
 // Processing result type
 export interface ProcessingResult {
-  type: 'image' | 'audio' | 'video';
+  type: 'image' | 'audio';
   data: ProcessedMedia;
 }
 

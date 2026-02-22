@@ -1,7 +1,84 @@
 {
   "video": {},
-  "pending": [],
-  "images": {},
+  "pending": [
+    {
+      "id": "video_1771722195747_cqjxuyt",
+      "originalName": "5427788-uhd_2160_4096_25fps.mp4",
+      "type": "video",
+      "folder": "uploads",
+      "size": 42297581,
+      "mimeType": "video/mp4",
+      "uploadedAt": "2026-02-22T01:03:15.808Z",
+      "uploadedBy": "mhRku1LZeTz0Nfl1WOTuj",
+      "status": "error",
+      "originalPath": "/Users/user/Development/sheskin/repo/tmp/uploads/video_1771722195747_cqjxuyt.mp4",
+      "error": "The \"path\" argument must be of type string. Received undefined"
+    }
+  ],
+  "images": {
+    "blue_agave_999": {
+      "id": "blue_agave_999",
+      "type": "image",
+      "originalName": "blue_agave_999.jpg",
+      "variants": {
+        "sm": {
+          "url": "/media/blue_agave_999-sm.webp",
+          "size": 20520,
+          "width": 400,
+          "height": 400
+        },
+        "md": {
+          "url": "/media/blue_agave_999-md.webp",
+          "size": 92940,
+          "width": 800,
+          "height": 800
+        },
+        "lg": {
+          "url": "/media/blue_agave_999-lg.webp",
+          "size": 158570,
+          "width": 1600,
+          "height": 1600
+        }
+      },
+      "metadata": {
+        "width": 1024,
+        "height": 1024,
+        "format": "webp"
+      },
+      "createdAt": "2026-02-22T00:19:32.394Z"
+    },
+    "Modern_Problems_Require_Modern_Solutions": {
+      "id": "Modern_Problems_Require_Modern_Solutions",
+      "type": "image",
+      "originalName": "Modern_Problems_Require_Modern_Solutions.jpg",
+      "variants": {
+        "sm": {
+          "url": "/media/Modern_Problems_Require_Modern_Solutions-sm.webp",
+          "size": 13036,
+          "width": 400,
+          "height": 400
+        },
+        "md": {
+          "url": "/media/Modern_Problems_Require_Modern_Solutions-md.webp",
+          "size": 21462,
+          "width": 800,
+          "height": 800
+        },
+        "lg": {
+          "url": "/media/Modern_Problems_Require_Modern_Solutions-lg.webp",
+          "size": 21462,
+          "width": 1600,
+          "height": 1600
+        }
+      },
+      "metadata": {
+        "width": 600,
+        "height": 454,
+        "format": "webp"
+      },
+      "createdAt": "2026-02-22T00:22:57.341Z"
+    }
+  },
   "audio": {},
-  "lastProcessed": "2026-02-21T23:46:16.820Z"
+  "lastProcessed": "2026-02-22T01:03:15.906Z"
 }

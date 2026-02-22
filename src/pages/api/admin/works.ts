@@ -1,7 +1,9 @@
 /**
- * Admin API — Create or update works
+ * Admin API — Create, update, get, or delete works
+ * GET /api/admin/works?id={id} - Get a single work
  * POST /api/admin/works - Create new work
  * PUT /api/admin/works - Update existing work
+ * DELETE /api/admin/works?id={id} - Delete a work
  */
 
 export const prerender = false;
@@ -9,7 +11,7 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { checkAdminAuth } from '@lib/admin-auth';
 import { validateCsrfToken } from '@lib/csrf';
-import { createWork, updateWork, getWorkById, addWorkMedia, updateWorkMedia, deleteWorkMedia } from '@lib/db/queries';
+import { createWork, updateWork, getWorkById, addWorkMedia, updateWorkMedia, deleteWorkMedia, deleteWork } from '@lib/db/queries';
 import { z } from 'zod';
 
 // Validation schema
@@ -25,6 +27,106 @@ const workSchema = z.object({
   externalUrl: z.string().url().max(500).optional(),
   mediaIds: z.array(z.string()).optional(),
 });
+
+// GET - Fetch a single work by ID
+export const GET: APIRoute = async ({ request }) => {
+  // Check auth
+  const auth = await checkAdminAuth(request);
+  if (!auth.valid) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  // Get work ID from query params
+  const url = new URL(request.url);
+  const id = url.searchParams.get('id');
+
+  if (!id) {
+    return new Response(
+      JSON.stringify({ error: 'Work ID is required' }),
+      { status: 400, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
+  try {
+    const work = await getWorkById(id);
+    if (!work) {
+      return new Response(
+        JSON.stringify({ error: 'Work not found' }),
+        { status: 404, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    return new Response(
+      JSON.stringify(work),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
+  } catch (error) {
+    console.error('Get work error:', error);
+    return new Response(
+      JSON.stringify({ error: 'Failed to fetch work', details: (error as Error).message }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+};
+
+// DELETE - Delete a work
+export const DELETE: APIRoute = async ({ request }) => {
+  // Check auth
+  const auth = await checkAdminAuth(request);
+  if (!auth.valid) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  // Check CSRF
+  if (!validateCsrfToken(request)) {
+    return new Response(
+      JSON.stringify({ error: 'Invalid CSRF token' }),
+      { status: 403, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
+  // Get work ID from query params
+  const url = new URL(request.url);
+  const id = url.searchParams.get('id');
+
+  if (!id) {
+    return new Response(
+      JSON.stringify({ error: 'Work ID is required' }),
+      { status: 400, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
+  try {
+    // Check if work exists
+    const existing = await getWorkById(id);
+    if (!existing) {
+      return new Response(
+        JSON.stringify({ error: 'Work not found' }),
+        { status: 404, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Delete the work (soft delete)
+    await deleteWork(id);
+
+    return new Response(
+      JSON.stringify({ success: true, message: 'Work deleted' }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
+  } catch (error) {
+    console.error('Delete work error:', error);
+    return new Response(
+      JSON.stringify({ error: 'Failed to delete work', details: (error as Error).message }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+};
 
 export const POST: APIRoute = async ({ request }) => {
   // Check auth

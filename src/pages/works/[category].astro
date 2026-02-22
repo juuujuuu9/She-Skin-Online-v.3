@@ -55,7 +55,7 @@ const config = categoryConfig[categoryProp];
 // All categories use the adjustable grid; audio uses list layout in the template below
 const useWorksGrid = true;
 
-// Map to WorksGrid shape (slug, title, forSale, image, href). Variants from DB may be { url, width } or URL strings; normalize to grid shape.
+// Map to WorksGrid shape (slug, title, year, forSale, image, href). Variants from DB may be { url, width } or URL strings; normalize to grid shape.
 function toGridItem(item: typeof gridItems[number]) {
   const img = item.image;
   let variants: { sm?: { url: string; width: number }; md?: { url: string; width: number }; lg?: { url: string; width: number } } | undefined;
@@ -72,6 +72,7 @@ function toGridItem(item: typeof gridItems[number]) {
   return {
     slug: item.slug,
     title: item.title,
+    year: item.year ?? undefined,
     forSale: item.forSale,
     image: img
       ? {
