@@ -1,37 +1,54 @@
 ---
+export const prerender = false;
+
 import Layout from '@layouts/Layout.astro';
 import { AudioGrid } from '@components/AudioGrid';
 import { AudioGridControls } from '@components/AudioGridControls';
-import type { Track } from '@lib/audioStore';
+import { getPublishedAudioPosts } from '@lib/db/queries';
+import type { Track, Release } from '@lib/audioStore';
 
-const BALLM_TRACK: Track = {
-  id: 'ballm-mt1',
-  title: 'beside a luv like mine (mt1 stream)',
-  artist: 'she_skin',
-  src: '/media/audio/sheskin - beside a luv like mine (mt1 stream).mp3',
-  album: 'ICT★SNU SOUND Vol. 1',
-  year: 2024,
-};
+// Fetch audio posts from database
+const audioPosts = await getPublishedAudioPosts();
 
-const LIBC_TRACK: Track = {
-  id: 'libc-driving',
-  title: 'Driving On The Sun',
-  artist: 'LIBC',
-  src: '/media/audio/LIBC - Driving On The Sun.mp3',
-};
+// Debug: log what we got
+console.log('[Audio Page] Fetched posts:', audioPosts.length);
+console.log('[Audio Page] Posts:', audioPosts.map(p => ({ title: p.title, hasAudio: !!p.audioFile, audioUrl: p.audioFile?.slice(0, 50) })));
 
-// Release data - replace with CMS data (placeholders have no audio)
-const releases = [
-  { id: '1', title: 'ICT★SNU SOUND Vol. 1', year: 2024, coverArt: '/media/audio/BALLM-COVER.jpg', tracks: [BALLM_TRACK] },
-  { id: '2', title: 'Driving On The Sun', year: 2024, coverArt: '/media/audio/Screenshot-2025-12-17-at-12.47.33-AM.webp', tracks: [LIBC_TRACK] },
-  { id: '3', title: 'Release 3', year: 2024, coverArt: null, tracks: [] },
-  { id: '4', title: 'Release 4', year: 2024, coverArt: null, tracks: [] },
-  { id: '5', title: 'Release 5', year: 2024, coverArt: null, tracks: [] },
-  { id: '6', title: 'Release 6', year: 2024, coverArt: null, tracks: [] },
-  { id: '7', title: 'Release 7', year: 2024, coverArt: null, tracks: [] },
-  { id: '8', title: 'Release 8', year: 2024, coverArt: null, tracks: [] },
-  { id: '9', title: 'Release 9', year: 2024, coverArt: null, tracks: [] },
-];
+// Transform database posts to Release/Track format
+const releases: Release[] = audioPosts.map((post) => {
+  const year = post.publishedAt?.getFullYear() || new Date().getFullYear();
+  
+  // Build track from audio file if available
+  const tracks: Track[] = [];
+  
+  if (post.audioFile) {
+    tracks.push({
+      id: post.slug,
+      title: post.title,
+      artist: 'she_skin', // Could be enhanced with artist field in DB
+      src: post.audioFile,
+      coverArt: post.artwork || undefined,
+      album: post.title,
+      year,
+    });
+  }
+  
+  // Note: YouTube and SoundCloud links are stored but require
+  // separate player components. For now, they show as releases
+  // with external links that can be enhanced later.
+  
+  return {
+    id: post.id,
+    title: post.title,
+    year,
+    coverArt: post.artwork,
+    tracks,
+  };
+});
+
+// Filter out releases with no playable tracks (unless they have external links)
+// For now, we show all - empty tracks array just means no direct audio
+const playableReleases = releases;
 ---
 
 <Layout title="ICT★SNU SOUND - she_skin">
@@ -52,7 +69,16 @@ const releases = [
     </header>
 
     <section class="px-4 sm:px-6 pt-6 pb-12" id="audio-grid-section">
-      <AudioGrid client:idle releases={releases} />
+      {playableReleases.length > 0 ? (
+        <AudioGrid client:idle releases={playableReleases} />
+      ) : (
+        <div class="text-center py-20">
+          <p class="text-gray-500">No audio releases yet.</p>
+          <p class="text-sm text-gray-400 mt-2">
+            New releases will appear here when published from the admin panel.
+          </p>
+        </div>
+      )}
     </section>
   </main>
 </Layout>

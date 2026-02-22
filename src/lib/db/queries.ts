@@ -6,7 +6,7 @@
 
 import { eq, and, desc, asc, inArray, isNull } from 'drizzle-orm';
 import { db } from './index';
-import { products, categories, productImages, productCategories, productAttributes, productSizeInventory, carts, cartItems, siteSettings, media } from './schema';
+import { products, categories, productImages, productCategories, productAttributes, productSizeInventory, carts, cartItems, siteSettings, media, audioPosts } from './schema';
 import type { Product, ProductCategory, Cart as AppCart, CartItem as AppCartItem } from '../types';
 import type { Product as DBProduct, ProductImage, ProductAttribute, ProductSizeInventory } from './schema';
 import type { Category } from './schema';
@@ -677,12 +677,14 @@ export async function addWorkMedia(
     height?: number;
     isPrimary?: boolean;
     sortOrder?: number;
+    mediaId?: string;
   }
 ): Promise<string> {
   const id = crypto.randomUUID();
   await db.insert(workMedia).values({
     id,
     workId,
+    mediaId: data.mediaId || null,
     type: data.type,
     url: data.url,
     variants: data.variants || null,
@@ -777,6 +779,32 @@ export async function getAllWorks(includeDeleted = false) {
  */
 export async function hardDeleteWork(id: string): Promise<void> {
   await db.delete(works).where(eq(works.id, id));
+}
+
+// ============================================================
+// AUDIO POSTS QUERIES (Public)
+// ============================================================
+
+/** Get all published audio posts for public display */
+export async function getPublishedAudioPosts() {
+  return db.query.audioPosts.findMany({
+    where: and(
+      eq(audioPosts.status, 'published'),
+      isNull(audioPosts.deletedAt)
+    ),
+    orderBy: [desc(audioPosts.publishedAt)],
+  });
+}
+
+/** Get single published audio post by slug */
+export async function getAudioPostBySlug(slug: string) {
+  return db.query.audioPosts.findFirst({
+    where: and(
+      eq(audioPosts.slug, slug),
+      eq(audioPosts.status, 'published'),
+      isNull(audioPosts.deletedAt)
+    ),
+  });
 }
 
 // ============================================================
