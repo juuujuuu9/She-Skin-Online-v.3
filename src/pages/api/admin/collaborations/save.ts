@@ -39,6 +39,7 @@ export const POST: APIRoute = async ({ request }) => {
 
   const { item, isNew } = bodyValidation.data;
 
+  try {
     if (isNew) {
       // Create new work
       const workId = await createWork({

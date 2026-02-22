@@ -312,7 +312,6 @@ export type PostMeta = typeof postMeta.$inferSelect;
 export type Media = typeof media.$inferSelect;
 export type PostMedia = typeof postMedia.$inferSelect;
 export type Revision = typeof revisions.$inferSelect;
-export type AudioPost = typeof audioPosts.$inferSelect;
 
 // ============================================================================
 // RELATIONS

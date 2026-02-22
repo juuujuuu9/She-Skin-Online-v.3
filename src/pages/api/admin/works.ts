@@ -290,41 +290,40 @@ export const PUT: APIRoute = async ({ request }) => {
       externalUrl: data.externalUrl || null,
     });
 
-    // Handle media updates
-    if (data.mediaIds !== undefined) {
-      // Delete existing media
+    // Handle media updates - only if mediaIds is provided and non-empty
+    if (data.mediaIds && data.mediaIds.length > 0) {
+      // Delete existing media only if we're replacing with new media
       for (const media of existing.media) {
         await deleteWorkMedia(media.id);
       }
 
-      // Add new media
-      if (data.mediaIds.length > 0) {
-        const manifestRes = await fetch(new URL('/data/media-manifest.json', request.url));
-        const manifest = await manifestRes.json();
+      // Add new media from manifest
+      const manifestRes = await fetch(new URL('/data/media-manifest.json', request.url));
+      const manifest = await manifestRes.json();
+      
+      for (let i = 0; i < data.mediaIds.length; i++) {
+        const mediaId = data.mediaIds[i];
+        const mediaItem = manifest.images?.[mediaId];
         
-        for (let i = 0; i < data.mediaIds.length; i++) {
-          const mediaId = data.mediaIds[i];
-          const mediaItem = manifest.images?.[mediaId];
-          
-          if (mediaItem) {
-            const imageUrl = mediaItem.variants?.lg?.url || mediaItem.variants?.md?.url || mediaItem.variants?.sm?.url || Object.values(mediaItem.variants || {})[0]?.url;
-            if (imageUrl) {
-              await addWorkMedia(data.id, {
-                type: 'image',
-                url: imageUrl,
-                variants: mediaItem.variants || null,
-                blurhash: mediaItem.blurhash || null,
-                dominantColor: mediaItem.dominantColor || null,
-                width: mediaItem.metadata?.width || null,
-                height: mediaItem.metadata?.height || null,
-                isPrimary: i === 0,
-                sortOrder: i,
-              });
-            }
+        if (mediaItem) {
+          const imageUrl = mediaItem.variants?.lg?.url || mediaItem.variants?.md?.url || mediaItem.variants?.sm?.url || Object.values(mediaItem.variants || {})[0]?.url;
+          if (imageUrl) {
+            await addWorkMedia(data.id, {
+              type: 'image',
+              url: imageUrl,
+              variants: mediaItem.variants || null,
+              blurhash: mediaItem.blurhash || null,
+              dominantColor: mediaItem.dominantColor || null,
+              width: mediaItem.metadata?.width || null,
+              height: mediaItem.metadata?.height || null,
+              isPrimary: i === 0,
+              sortOrder: i,
+            });
           }
         }
       }
     }
+    // If mediaIds is undefined or empty, preserve existing media (don't delete)
 
     return new Response(
       JSON.stringify({ success: true, id: data.id, message: 'Work updated' }),

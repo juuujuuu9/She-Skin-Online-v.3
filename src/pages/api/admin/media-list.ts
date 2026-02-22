@@ -1,5 +1,3 @@
-export const prerender = false;
-
 /**
  * Media list API - List, upload, delete, update media (DB + CDN)
  * Route: /api/admin/media-list (avoids conflict with /api/admin/media/upload etc.)

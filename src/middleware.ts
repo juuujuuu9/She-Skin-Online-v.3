@@ -18,6 +18,7 @@ const CSP_DIRECTIVES = {
   'style-src': [
     "'self'",
     "'unsafe-inline'",  // Required for Tailwind CSS
+    'https://fonts.googleapis.com',  // Google Fonts stylesheet
   ],
   'img-src': [
     "'self'",
@@ -39,6 +40,7 @@ const CSP_DIRECTIVES = {
   'font-src': [
     "'self'",
     'data:',
+    'https://fonts.gstatic.com',  // Google Fonts font files
   ],
   'frame-src': [
     "'self'",
@@ -102,7 +104,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   // Add security headers to all responses
   response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('X-Frame-Options', 'DENY');
+  // X-Frame-Options: DENY in production, SAMEORIGIN in development
+  // (allows browser extensions/dev tools to frame the page during development)
+  response.headers.set('X-Frame-Options', import.meta.env.PROD ? 'DENY' : 'SAMEORIGIN');
   response.headers.set('X-XSS-Protection', '1; mode=block');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
 

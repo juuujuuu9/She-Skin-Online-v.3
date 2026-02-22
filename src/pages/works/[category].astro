@@ -109,7 +109,7 @@ const featuredWorks: typeof gridItems = [];
         {useWorksGrid ? <div class="w-12 shrink-0" aria-hidden="true" /> : null}
         {useWorksGrid && (
           <WorksGridControls
-            client:only="react"
+            client:idle
             defaultColsDesktop={
               categoryProp === 'digital' ? 3
               : categoryProp === 'physical' ? 5

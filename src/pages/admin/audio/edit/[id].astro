@@ -9,7 +9,7 @@ import Layout from '@layouts/Layout.astro';
 import { checkAdminAuth } from '@lib/admin-auth';
 import { getWorkById } from '@lib/db/queries';
 
-const auth = checkAdminAuth(Astro.request);
+const auth = await checkAdminAuth(Astro.request);
 if (!auth.valid) {
   return Astro.redirect('/admin/login');
 }

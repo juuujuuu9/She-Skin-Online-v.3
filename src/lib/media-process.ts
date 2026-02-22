@@ -4,7 +4,7 @@
  */
 
 import { readFile, writeFile, mkdir, unlink } from 'fs/promises';
-import { join, extname, basename } from 'path';
+import { join, extname, basename, dirname } from 'path';
 import sharp from 'sharp';
 import ffmpeg from 'fluent-ffmpeg';
 
@@ -167,11 +167,26 @@ const IMAGE_CONFIG = {
 /**
  * Store file in public directory
  */
-async function storeFile(buffer: Buffer, filename: string): Promise<string> {
+async function storeFile(buffer: Buffer, filename: string, contentType?: string): Promise<string> {
   const filePath = join(PUBLIC_MEDIA_DIR, filename);
-  await mkdir(PUBLIC_MEDIA_DIR, { recursive: true });
+  const dir = dirname(filePath);
+  await mkdir(dir, { recursive: true });
   await writeFile(filePath, buffer);
   return `/media/${filename}`;
+}
+
+/**
+ * Delete a file from the public media directory
+ */
+async function deleteFile(url: string): Promise<void> {
+  // Extract filename from URL (e.g., "/media/images/file.webp" -> "images/file.webp")
+  const filename = url.replace(/^\/media\//, '');
+  const filePath = join(PUBLIC_MEDIA_DIR, filename);
+  try {
+    await unlink(filePath);
+  } catch {
+    // Ignore errors (file may not exist)
+  }
 }
 
 /**
@@ -224,6 +239,104 @@ async function processImageWithSharp(
     },
     createdAt: new Date().toISOString(),
   };
+}
+
+// ============================================================================
+// Legacy Image Processing (for media-list.ts compatibility)
+// ============================================================================
+
+export interface ProcessedImage {
+  id: string;
+  original: string;
+  hash: string;
+  variants: Record<string, { url: string; width: number; height: number; size: number }>;
+  blurhash: string;
+  dominantColor: string;
+  aspectRatio: number;
+  metadata: {
+    width: number;
+    height: number;
+    format: string;
+    hasAlpha: boolean;
+  };
+}
+
+/**
+ * Process image buffer for legacy API compatibility
+ * Used by media-list.ts to process uploaded images
+ */
+export async function processImageBuffer(
+  buffer: Buffer,
+  filename: string,
+  manifest: MediaManifest
+): Promise<{ result: ProcessedImage; replaced?: boolean }> {
+  const id = basename(filename, extname(filename));
+  const hash = await getFileHash(buffer);
+
+  // Check for existing
+  const existing = manifest.images[id];
+  if (existing && existing.hash === hash) {
+    return { result: existing };
+  }
+
+  const pipeline = sharp(buffer);
+  const metadata = await pipeline.metadata();
+  const blurhash = await generateBlurhash(buffer);
+  const dominantColor = await getDominantColor(buffer);
+
+  const variants: ProcessedImage['variants'] = {};
+
+  // Generate WebP variants for each size
+  for (const [sizeName, width] of Object.entries(MEDIA_CONFIG.sizes)) {
+    if ((metadata.width || 0) < width) continue;
+
+    const processedBuffer = await pipeline
+      .clone()
+      .resize(width, undefined, { withoutEnlargement: true })
+      .webp({
+        quality: MEDIA_CONFIG.imageQuality,
+        effort: 6,
+        smartSubsample: true,
+      })
+      .toBuffer();
+
+    const hashedFilename = `images/${id}-${hash}-${sizeName}.webp`;
+    const url = await storeFile(processedBuffer, hashedFilename, 'image/webp');
+
+    const processedInfo = await sharp(processedBuffer).metadata();
+
+    variants[sizeName] = {
+      url,
+      width: processedInfo.width || width,
+      height: processedInfo.height || Math.round(width / (metadata.width! / metadata.height!)),
+      size: processedBuffer.length,
+    };
+  }
+
+  const result: ProcessedImage = {
+    id,
+    original: filename,
+    hash,
+    variants,
+    blurhash,
+    dominantColor,
+    aspectRatio: (metadata.width || 1) / (metadata.height || 1),
+    metadata: {
+      width: metadata.width || 0,
+      height: metadata.height || 0,
+      format: metadata.format || 'unknown',
+      hasAlpha: metadata.hasAlpha || false,
+    },
+  };
+
+  // Cleanup old variants
+  if (existing) {
+    for (const variant of Object.values(existing.variants)) {
+      await deleteFile(variant.url);
+    }
+  }
+
+  return { result, replaced: !!existing };
 }
 
 /**

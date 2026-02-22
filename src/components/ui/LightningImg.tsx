@@ -124,7 +124,7 @@ export function LightningImg({
           sizes={sizes}
           loading={priority ? 'eager' : 'lazy'}
           decoding={priority ? 'sync' : 'async'}
-          fetchPriority={priority ? 'high' : 'auto'}
+          fetchpriority={priority ? 'high' : 'auto'}
           onLoad={() => setLoaded(true)}
           onError={() => setError(true)}
           className={`w-full transition-opacity duration-300 ${

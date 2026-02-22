@@ -132,10 +132,10 @@ const navItems = [
     
     {/* Persistent Audio Player - persists across client-side nav so playback continues */}
     {!Astro.url.pathname.startsWith('/admin') && (
-      <AudioPlayer client:only="react" transition:persist="audio-player" />
+      <AudioPlayer client:idle transition:persist="audio-player" />
     )}
 
-    {/* Lenis smooth scroll - client-only to avoid SSR/React dedupe issues */}
-    <LenisSmoothScroll client:only="react" />
+    {/* Lenis smooth scroll - client:idle to not block page transitions */}
+    <LenisSmoothScroll client:idle />
   </body>
 </html>

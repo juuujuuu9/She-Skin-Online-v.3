@@ -12,7 +12,7 @@ import { posts, postMedia, media } from '@lib/db/schema';
 import { desc, isNull, eq } from 'drizzle-orm';
 
 // Check auth
-const auth = checkAdminAuth(Astro.request);
+const auth = await checkAdminAuth(Astro.request);
 if (!auth.valid) {
   return Astro.redirect('/admin/login');
 }

@@ -2,13 +2,14 @@
  * Admin API — Upload audio files and cover art (saved to database)
  *
  * POST /api/admin/audio/upload
- * Body: FormData with: audio, cover (optional), title, artist, album, year
+ * Body: FormData with: audio, cover (optional), coverMediaId (optional), title, artist, album, year
  */
 
 import type { APIRoute } from 'astro';
 import { checkAdminAuth } from '@lib/admin-auth';
 import { uploadToBunny } from '@lib/bunny';
 import { createWork, addWorkMedia, insertAudioTrack } from '@lib/db/queries';
+import { loadManifest } from '@lib/media-process';
 
 export const POST: APIRoute = async ({ request }) => {
   const auth = await checkAdminAuth(request);
@@ -23,6 +24,7 @@ export const POST: APIRoute = async ({ request }) => {
     const formData = await request.formData();
     const audioFile = formData.get('audio') as File;
     const coverFile = formData.get('cover') as File | null;
+    const coverMediaId = (formData.get('coverMediaId') as string)?.trim();
     const title = (formData.get('title') as string)?.trim();
     const artist = (formData.get('artist') as string)?.trim();
     const album = (formData.get('album') as string)?.trim() || '';
@@ -50,7 +52,18 @@ export const POST: APIRoute = async ({ request }) => {
     });
 
     let coverUrl = '';
-    if (coverFile) {
+    if (coverMediaId) {
+      // Look up the media from manifest
+      const manifest = await loadManifest();
+      const mediaEntry = manifest.images[coverMediaId];
+      if (mediaEntry) {
+        // Use the large variant or any available variant
+        const variant = mediaEntry.variants.lg || mediaEntry.variants.md || mediaEntry.variants.sm || Object.values(mediaEntry.variants)[0];
+        if (variant) {
+          coverUrl = variant.url.startsWith('http') ? variant.url : `${request.headers.get('origin') || ''}${variant.url}`;
+        }
+      }
+    } else if (coverFile) {
       const coverFilename = `audio/covers/${timestamp}-${safeTitle}.jpg`;
       const coverBuffer = Buffer.from(await coverFile.arrayBuffer());
       coverUrl = await uploadToBunny(coverBuffer, coverFilename, {

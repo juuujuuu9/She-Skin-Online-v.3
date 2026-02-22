@@ -12,7 +12,7 @@ import { posts, postMeta } from '@lib/db/schema';
 import { eq } from 'drizzle-orm';
 
 // Check auth
-const auth = checkAdminAuth(Astro.request);
+const auth = await checkAdminAuth(Astro.request);
 if (!auth.valid) {
   return Astro.redirect('/admin/login');
 }
@@ -263,7 +263,8 @@ const title = isEditing ? 'Edit Post' : 'New Post';
       postType: 'page',
       metaTitle: '',
       metaDescription: '',
-      featuredMediaIds: [],
+      mediaIds: [],
+      meta: {},
     };
 
     // Get form values
