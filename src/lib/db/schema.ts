@@ -436,3 +436,18 @@ export const passwordResetTokens = pgTable('password_reset_tokens', {
 });
 
 export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+
+// ============================================================================
+// SITE SETTINGS - Global configuration (homepage video, etc.)
+// ============================================================================
+
+export const siteSettings = pgTable('site_settings', {
+  id: text('id').primaryKey(),
+  key: text('key').notNull().unique(),
+  value: text('value').notNull(), // JSON string
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  keyIdx: index('site_settings_key_idx').on(table.key),
+}));
+
+export type SiteSetting = typeof siteSettings.$inferSelect;

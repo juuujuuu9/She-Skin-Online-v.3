@@ -1,16 +1,27 @@
 ---
+export const prerender = false;
+
 import Layout from '@layouts/Layout.astro';
+import { getHomepageVideo } from '@lib/db/queries';
+
+const video = await getHomepageVideo();
 ---
 
 <Layout title="she_skin" transparentHeader={true} neonGreenMenu={true}>
   <main class="fixed inset-0 w-full h-full overflow-hidden">
-    <video
-      class="absolute inset-0 w-full h-full object-cover"
-      src="https://www.sheskin.org/wp-content/uploads/2026/01/letter.mp4"
-      autoplay
-      muted
-      loop
-      playsinline
-    />
+    {video ? (
+      <video
+        class="absolute inset-0 w-full h-full object-cover"
+        src={video.url}
+        autoplay
+        muted
+        loop
+        playsinline
+      />
+    ) : (
+      <div class="absolute inset-0 w-full h-full bg-black flex items-center justify-center">
+        <span class="text-white/50 text-sm">No video selected</span>
+      </div>
+    )}
   </main>
 </Layout>

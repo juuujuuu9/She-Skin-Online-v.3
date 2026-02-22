@@ -9,6 +9,8 @@ import Layout from '@layouts/Layout.astro';
 import { checkAdminAuth, verifyAdminCredentials, createSessionCookie, hashPassword } from '@lib/admin-auth';
 import { db } from '@lib/db';
 import { users } from '@lib/db/schema';
+import { getClientIdentifier, checkRateLimit, ADMIN_RATE_LIMITS } from '@lib/rate-limit';
+import { logAction, AuditActions, AuditResources } from '@lib/audit';
 
 // Check if already logged in
 const auth = await checkAdminAuth(Astro.request);
