@@ -1,262 +1,48 @@
 ---
 /**
- * Admin Login — Database-backed authentication with rate limiting and audit logging
+ * Admin Login — Clerk authentication
  */
 
 export const prerender = false;
 
 import Layout from '@layouts/Layout.astro';
-import { checkAdminAuth, verifyAdminCredentials, createSessionCookie, hashPassword } from '@lib/admin-auth';
-import { db } from '@lib/db';
-import { users } from '@lib/db/schema';
-import { getClientIdentifier, checkRateLimit, ADMIN_RATE_LIMITS } from '@lib/rate-limit';
-import { logAction, AuditActions, AuditResources } from '@lib/audit';
-
-// Check if already logged in
-const auth = await checkAdminAuth(Astro.request);
-if (auth.valid) {
-  return Astro.redirect('/admin');
-}
-
-const sessionExpired = Astro.url.searchParams.get('session') === 'expired';
-const sessionReason = Astro.url.searchParams.get('reason') ?? '';
-let error = '';
-
-// Handle POST
-if (Astro.request.method === 'POST') {
-  try {
-    const formData = await Astro.request.formData();
-    const username = (formData.get('username')?.toString() ?? '').trim();
-    const password = (formData.get('password')?.toString() ?? '').trim();
-
-    if (!username || !password) {
-      error = 'Username and password are required';
-    } else {
-      // Check rate limit
-      const clientId = getClientIdentifier(Astro.request);
-      const rateLimitKey = `login:${clientId}`;
-      const rateCheck = checkRateLimit(
-        rateLimitKey,
-        ADMIN_RATE_LIMITS.login.maxAttempts,
-        ADMIN_RATE_LIMITS.login.windowMs
-      );
-      
-      if (!rateCheck.allowed) {
-        error = `Too many login attempts. Please try again in ${Math.ceil((rateCheck.resetAt - Date.now()) / 60000)} minutes.`;
-        
-        // Log rate limit hit
-        await logAction(
-          Astro.request,
-          null,
-          username,
-          AuditActions.LOGIN_FAILED,
-          AuditResources.USER,
-          null,
-          { reason: 'rate_limit_exceeded' },
-          false,
-          'Rate limit exceeded'
-        );
-      } else {
-        const result = await verifyAdminCredentials(username, password);
-
-        if (result.valid && result.userId) {
-          // Successful login - reset rate limit
-          // (optional: keep tracking for anomaly detection)
-          
-          // Log successful login
-          await logAction(
-            Astro.request,
-            result.userId,
-            username,
-            AuditActions.LOGIN,
-            AuditResources.USER,
-            result.userId,
-            { remainingAttempts: rateCheck.remaining },
-            true
-          );
-          
-          // Create session
-          const { name, value } = createSessionCookie(result.userId);
-          const maxAge = 60 * 60 * 24;
-          const secure = import.meta.env.PROD;
-          const cookieParts = [
-            `${name}=${value}`,
-            'Path=/',
-            'Max-Age=' + maxAge,
-            'HttpOnly',
-            'SameSite=Lax',
-          ];
-          if (secure) cookieParts.push('Secure');
-          const setCookie = cookieParts.join('; ');
-
-          // Debug logging
-          console.log('[login] Setting cookie:', cookieParts.slice(0, 2).join('; ') + '; ...');
-          console.log('[login] Cookie length:', setCookie.length);
-          console.log('[login] Secure flag:', secure);
-
-          // HTML redirect to ensure cookie is stored
-          const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Signing in…</title></head><body><p>Signing in…</p><script>
-            console.log('[login redirect] Cookies before redirect:', document.cookie);
-            setTimeout(function(){ 
-              console.log('[login redirect] Redirecting to /admin');
-              window.location.replace('/admin'); 
-            }, 500);
-          </script><a href="/admin">Continue</a></body></html>`;
-          return new Response(html, {
-            status: 200,
-            headers: {
-              'Content-Type': 'text/html; charset=utf-8',
-              'Cache-Control': 'no-store',
-              'Set-Cookie': setCookie,
-            },
-          });
-        } else {
-          error = 'Invalid username or password';
-          
-          // Log failed login
-          await logAction(
-            Astro.request,
-            null,
-            username,
-            AuditActions.LOGIN_FAILED,
-            AuditResources.USER,
-            null,
-            { remainingAttempts: rateCheck.remaining - 1 },
-            false,
-            'Invalid credentials'
-          );
-        }
-      }
-    }
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : 'Unknown error';
-    console.error('[admin/login] Login error:', e);
-    if (import.meta.env.DEV) {
-      error = `Error: ${msg}`;
-    } else {
-      error = 'An error occurred. Please try again.';
-    }
-  }
-}
+import { SignIn } from '@clerk/astro/react';
 ---
 
 <Layout title="Admin Login - she_skin">
-  <div class="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8">
-      <div>
-        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          she_skin Admin
-        </h2>
-        <p class="mt-2 text-center text-sm text-gray-600">
-          Media Management Dashboard
-        </p>
+  <div class="min-h-screen bg-[#0a0a0a] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full">
+      <div class="text-center mb-8">
+        <h2 class="text-3xl font-bold text-white">she_skin Admin</h2>
+        <p class="mt-2 text-gray-400">Media Management Dashboard</p>
       </div>
       
-      <form class="mt-8 space-y-6" method="POST" action="/admin/login" data-astro-reload>
-        <div class="rounded-md shadow-sm -space-y-px">
-          <div>
-            <label for="username" class="sr-only">Username</label>
-            <input
-              id="username"
-              name="username"
-              type="text"
-              required
-              autocomplete="username"
-              class="appearance-none rounded-t-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-black focus:border-black focus:z-10 sm:text-sm"
-              placeholder="Username"
-            />
-          </div>
-          <div>
-            <label for="password" class="sr-only">Password</label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              autocomplete="current-password"
-              required
-              class="appearance-none rounded-b-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-black focus:border-black focus:z-10 sm:text-sm"
-              placeholder="Password"
-            />
-          </div>
-        </div>
-
-        {(sessionExpired || error) && (
-          <div class="rounded-md bg-red-50 p-4">
-            <div class="flex">
-              <div class="flex-shrink-0">
-                <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div class="ml-3">
-                <h3 class="text-sm font-medium text-red-800">{sessionExpired ? (sessionReason ? `Session issue: ${sessionReason}. Please sign in again.` : 'Your session expired or was not recognized. Please sign in again.') : error}</h3>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div>
-          <button
-            type="submit"
-            class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition-colors"
-          >
-            Sign in
-          </button>
-        </div>
-      </form>
+      <div class="bg-[#1a1a1a] border border-[#333] rounded-xl p-6">
+        <SignIn 
+          routing="path"
+          path="/admin/login"
+          redirectUrl="/admin"
+          appearance={{
+            elements: {
+              formButtonPrimary: 'bg-blue-600 hover:bg-blue-700 text-white',
+              card: 'bg-transparent shadow-none',
+              headerTitle: 'text-white',
+              headerSubtitle: 'text-gray-400',
+              formFieldLabel: 'text-gray-300',
+              formFieldInput: 'bg-[#222] border-[#444] text-white rounded-md',
+              footerActionLink: 'text-blue-400 hover:text-blue-300',
+              identityPreview: 'bg-[#222] border-[#444] text-white',
+              alert: 'bg-red-500/10 border-red-500/20 text-red-400',
+            }
+          }}
+        />
+      </div>
       
-      <div class="text-center space-y-2">
-        <a href="/admin/forgot-password" class="text-sm text-black hover:text-gray-600 block">
-          Forgot password?
-        </a>
-        <a href="/" class="text-sm text-gray-400 hover:text-gray-600 block">
+      <div class="text-center mt-6">
+        <a href="/" class="text-sm text-gray-500 hover:text-gray-300 transition-colors">
           ← Back to site
         </a>
-        <button type="button" id="test-cookie-btn" class="text-xs text-gray-400 hover:text-gray-600 block mt-4">
-          🔧 Test Cookies (Debug)
-        </button>
-        <div id="cookie-debug-output" class="text-xs text-left bg-gray-100 p-2 rounded mt-2 hidden font-mono whitespace-pre-wrap"></div>
       </div>
     </div>
   </div>
-  <script>
-    document.getElementById('test-cookie-btn')?.addEventListener('click', async () => {
-      const output = document.getElementById('cookie-debug-output');
-      if (!output) return;
-      output.classList.remove('hidden');
-
-      let results = ['=== Cookie Debug ==='];
-      results.push(`Current cookies: ${document.cookie || '(none)'}`);
-      results.push(`Cookie count: ${document.cookie ? document.cookie.split(';').length : 0}`);
-
-      // Test setting a cookie via API
-      results.push('\nTesting cookie API...');
-      try {
-        const res = await fetch('/api/test-cookie', {
-          method: 'POST',
-          credentials: 'include'
-        });
-        const data = await res.json();
-        results.push(`Set cookie response: ${JSON.stringify(data)}`);
-
-        // Check if cookie was stored
-        await new Promise(r => setTimeout(r, 100));
-        results.push(`\nCookies after API call: ${document.cookie || '(none)'}`);
-
-        // Try reading via GET
-        const getRes = await fetch('/api/test-cookie', {
-          method: 'GET',
-          credentials: 'include'
-        });
-        const getData = await getRes.json();
-        results.push(`\nServer received cookies: ${JSON.stringify(getData.cookieNames)}`);
-        results.push(`\nAll headers server received: ${JSON.stringify(getData.allHeadersReceived)}`);
-      } catch (e) {
-        results.push(`Error: ${e}`);
-      }
-
-      output.textContent = results.join('\n');
-      console.log('[cookie debug]', results.join('\n'));
-    });
-  </script>
 </Layout>

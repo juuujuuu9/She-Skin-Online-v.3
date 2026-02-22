@@ -1,11 +1,9 @@
 ---
 /**
- * AdminLayout — Layout for admin pages with sidebar navigation
+ * AdminLayout — Layout for admin pages with Clerk authentication
  */
 
 import Layout from '@layouts/Layout.astro';
-import { checkAdminAuth } from '@lib/admin-auth';
-import { generateCsrfToken } from '@lib/csrf';
 
 interface Props {
   title: string;
@@ -13,13 +11,9 @@ interface Props {
 
 const { title } = Astro.props;
 
-// Generate and set CSRF token
-const csrf = generateCsrfToken();
-Astro.response.headers.set('Set-Cookie', csrf.cookie);
-
-// Check auth
-const auth = await checkAdminAuth(Astro.request);
-if (!auth.valid) {
+// Check auth with Clerk
+const auth = await Astro.locals.auth();
+if (!auth.userId) {
   return Astro.redirect('/admin/login');
 }
 

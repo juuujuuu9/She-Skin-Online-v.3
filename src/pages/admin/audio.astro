@@ -2,15 +2,7 @@
 export const prerender = false;
 
 import AdminLayout from '@layouts/AdminLayout.astro';
-import { checkAdminAuth } from '@lib/admin-auth';
 import MediaSelector from '@components/admin/MediaSelector';
-
-// Check auth
-const auth = await checkAdminAuth(Astro.request);
-if (!auth.valid) {
-  const reason = auth.debug || 'unknown';
-  return Astro.redirect(`/admin/login?session=expired&reason=${encodeURIComponent(reason)}`);
-}
 ---
 
 <AdminLayout title="ICT★SNU SOUND - she_skin Admin">

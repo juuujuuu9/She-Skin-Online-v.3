@@ -1,12 +1,14 @@
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
-import vercel from '@astrojs/vercel';
+import node from '@astrojs/node';
+import clerk from '@clerk/astro';
 import tailwindcss from '@tailwindcss/vite';
 
 // https://astro.build/config
 export default defineConfig({
-  adapter: vercel(),
-  integrations: [react()],
+  output: 'server',
+  adapter: node({ mode: 'standalone' }),
+  integrations: [react(), clerk()],
   prefetch: {
     // Only prefetch on link click (not hover) to reduce bandwidth contention
     // during active navigation. 'hover' can cause prefetch storms when

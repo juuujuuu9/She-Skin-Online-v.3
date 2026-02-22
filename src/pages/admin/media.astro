@@ -2,15 +2,8 @@
 export const prerender = false;
 
 import AdminLayout from '@layouts/AdminLayout.astro';
-import { requireAdminAuth } from '@lib/admin-auth';
 import { listMedia } from '@lib/upload-service';
 import MediaManager from '@components/admin/MediaManager';
-
-// Check auth server-side
-const authCheck = await requireAdminAuth(Astro.request);
-if (authCheck) {
-  return authCheck;
-}
 
 // Load initial media from database
 const { media: initialMedia, total } = await listMedia({ limit: 50 });
