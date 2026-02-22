@@ -1,14 +1,10 @@
 ---
-/**
- * Admin Audio Dashboard - ICT★SNU SOUND
- * Manage audio posts with Title, Artwork, Youtube Link, and Soundcloud Link
- */
-
 export const prerender = false;
 
 import Layout from '@layouts/Layout.astro';
 import { checkAdminAuth } from '@lib/admin-auth';
 import { generateCsrfToken } from '@lib/csrf';
+import MediaSelector from '@components/admin/MediaSelector';
 
 // Generate and set CSRF token
 const csrf = generateCsrfToken();
@@ -24,18 +20,18 @@ if (!auth.valid) {
 const currentPath = Astro.url.pathname;
 const adminNavItems = [
   { href: '/admin', label: 'Uploads', icon: 'dashboard' },
+  { href: '/admin/media', label: 'Media Library', icon: 'media' },
   { href: '/admin/audio', label: 'ICT★SNU SOUND', icon: 'audio' },
   { href: '/admin/works', label: 'Works', icon: 'works' },
   { href: '/admin/products', label: 'Inventory', icon: 'products' },
 ];
-
 const iconPaths: Record<string, string> = {
   dashboard: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />`,
+  media: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />`,
   audio: `<path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M21.6464 2.23699C21.8707 2.42699 22 2.70606 22 3.00001V16C22 18.2091 20.2091 20 18 20C15.7909 20 14 18.2091 14 16C14 13.7909 15.7909 12 18 12C18.7286 12 19.4117 12.1948 20 12.5351V4.18047L10 5.84713V18L9.99999 18.0032C9.99824 20.2109 8.20806 22 6 22C3.79086 22 2 20.2091 2 18C2 15.7909 3.79086 14 6 14C6.72857 14 7.41165 14.1948 8 14.5351V5.00001C8 4.51117 8.35341 4.09398 8.8356 4.01361L20.8356 2.01361C21.1256 1.96529 21.4221 2.04698 21.6464 2.23699ZM20 16C20 14.8954 19.1046 14 18 14C16.8954 14 16 14.8954 16 16C16 17.1046 16.8954 18 18 18C19.1046 18 20 17.1046 20 16ZM6 16C7.10457 16 8 16.8954 8 18C8 19.1046 7.10457 20 6 20C4.89543 20 4 19.1046 4 18C4 16.8954 4.89543 16 6 16Z" />`,
   works: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />`,
   products: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />`,
 };
-
 const isActive = (href: string) => {
   if (href === '/admin') return currentPath === '/admin' || currentPath === '/admin/';
   return currentPath.startsWith(href);
@@ -43,10 +39,10 @@ const isActive = (href: string) => {
 ---
 
 <Layout title="ICT★SNU SOUND - she_skin Admin">
-  <div class="h-dvh bg-gray-50 flex flex-col overflow-hidden">
+  <div class="h-dvh bg-[#0a0a0a] flex flex-col overflow-hidden">
     <div class="flex flex-row flex-1 min-h-0 items-stretch">
-      {/* Admin sidebar - in-page */}
-      <aside class="w-64 shrink-0 flex flex-col bg-[#0a0a0a] text-white self-stretch">
+      {/* Admin sidebar */}
+      <aside class="w-64 shrink-0 flex flex-col bg-[#0a0a0a] text-white self-stretch border-r border-white/10">
         <div class="flex items-center justify-between p-4 border-b border-white/10">
           <a href="/admin" class="text-lg font-bold tracking-tight text-white hover:text-white/90">
             she_skin
@@ -100,691 +96,302 @@ const isActive = (href: string) => {
         </nav>
       </aside>
 
-      {/* Main content area */}
-      <div class="px-4 sm:px-6 lg:px-8 py-4 flex-1 flex flex-col min-h-0 overflow-hidden">
-        <h1 class="text-2xl font-bold text-gray-900 mb-4 shrink-0">ICT★SNU SOUND</h1>
+      {/* Main content */}
+      <main class="flex-1 min-w-0 bg-[#111] overflow-y-auto">
+        <div class="p-6 max-w-7xl mx-auto">
+          <header class="mb-6">
+            <h1 class="text-2xl font-semibold text-white">ICT★SNU SOUND</h1>
+            <p class="text-gray-400 mt-1">Manage audio posts with artwork, YouTube, and SoundCloud links</p>
+          </header>
 
-        <div class="flex-1 flex gap-6 min-h-0">
-          {/* Audio Posts List - takes 2/3 of space */}
-          <div class="w-2/3 min-w-0 flex flex-col bg-white rounded-lg shadow-sm border border-gray-200 min-h-0">
-            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between shrink-0">
-              <div class="flex items-center gap-3">
-                <h2 class="text-lg font-medium text-gray-900">Audio Posts</h2>
-                <span class="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full" id="audio-count">
-                  0 posts
-                </span>
-              </div>
-            </div>
-            <div class="p-6 flex-1 min-h-0 overflow-auto">
-              {/* Empty state */}
-              <div id="empty-state" class="py-16 text-center">
-                <div class="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center">
-                  <svg class="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M21.6464 2.23699C21.8707 2.42699 22 2.70606 22 3.00001V16C22 18.2091 20.2091 20 18 20C15.7909 20 14 18.2091 14 16C14 13.7909 15.7909 12 18 12C18.7286 12 19.4117 12.1948 20 12.5351V4.18047L10 5.84713V18L9.99999 18.0032C9.99824 20.2109 8.20806 22 6 22C3.79086 22 2 20.2091 2 18C2 15.7909 3.79086 14 6 14C6.72857 14 7.41165 14.1948 8 14.5351V5.00001C8 4.51117 8.35341 4.09398 8.8356 4.01361L20.8356 2.01361C21.1256 1.96529 21.4221 2.04698 21.6464 2.23699ZM20 16C20 14.8954 19.1046 14 18 14C16.8954 14 16 14.8954 16 16C16 17.1046 16.8954 18 18 18C19.1046 18 20 17.1046 20 16ZM6 16C7.10457 16 8 16.8954 8 18C8 19.1046 7.10457 20 6 20C4.89543 20 4 19.1046 4 18C4 16.8954 4.89543 16 6 16Z" />
-                  </svg>
-                </div>
-                <p class="text-gray-900 font-medium">No audio posts yet</p>
-                <p class="text-sm text-gray-500 mt-1 max-w-sm mx-auto">Create your first audio post using the form on the right. Add a title, artwork, and links to YouTube and SoundCloud.</p>
-              </div>
-
-              {/* Audio posts list - hidden initially */}
-              <div id="audio-posts-list" class="hidden space-y-4">
-                {/* Audio posts will be rendered here dynamically */}
-              </div>
-            </div>
-          </div>
-
-          {/* Create/Edit Form - takes 1/3 of space */}
-          <div class="w-1/3 min-w-0 flex flex-col bg-white rounded-lg shadow-sm border border-gray-200 min-h-0">
-            <div class="px-6 py-4 border-b border-gray-200 shrink-0">
-              <h2 class="text-lg font-medium text-gray-900" id="form-title">New Audio Post</h2>
-            </div>
-            <div class="p-6 flex-1 min-h-0 overflow-auto">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Form */}
+            <div class="bg-[#1a1a1a] rounded-xl border border-[#333] p-6">
+              <h2 id="form-title" class="text-lg font-medium text-white mb-4">New Audio Post</h2>
+              
               <form id="audio-post-form" class="space-y-4">
                 <input type="hidden" id="post-id" name="postId" value="" />
 
-                {/* Title Field */}
+                {/* Title */}
                 <div>
-                  <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                  <label for="title" class="block text-sm font-medium text-gray-300 mb-1">Title</label>
                   <input
                     type="text"
                     id="title"
                     name="title"
                     required
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    placeholder="Enter track title..."
+                    class="w-full px-3 py-2 bg-[#222] border border-[#444] rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Track title"
                   />
                 </div>
 
-                {/* Audio File Field */}
+                {/* Audio File */}
                 <div>
-                  <label for="artwork" class="block text-sm font-medium text-gray-700 mb-1">Artwork</label>
-                  <div class="space-y-2">
-                    <input
-                      type="url"
-                      id="artwork"
-                      name="artwork"
-                      class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                      placeholder="https://..."
-                    />
-                    <div class="relative">
-                      <input
-                        type="file"
-                        id="artwork-file"
-                        name="artworkFile"
-                        accept="image/*"
-                        class="hidden"
-                      />
-                      <button
-                        type="button"
-                        id="upload-artwork-btn"
-                        class="w-full flex items-center justify-center gap-2 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        Upload Artwork
-                      </button>
-                    </div>
-                    {/* Artwork preview */}
-                    <div id="artwork-preview" class="hidden mt-2">
-                      <img src="" alt="Artwork preview" class="w-full h-32 object-cover rounded-md border border-gray-200" />
-                      <button
-                        type="button"
-                        id="remove-audio"
-                        class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                      >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
+                  <label class="block text-sm font-medium text-gray-300 mb-1">Audio File</label>
+                  <input type="hidden" id="audio-file" name="audioFile" value="" />
+                  <button
+                    type="button"
+                    id="choose-audio-btn"
+                    class="w-full flex items-center justify-center gap-2 px-3 py-2 bg-[#222] border border-[#444] rounded-md text-sm font-medium text-gray-300 hover:bg-[#333] hover:text-white transition-colors"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                    </svg>
+                    Select Audio File
+                  </button>
+                  <div id="audio-preview" class="hidden mt-2 flex items-center gap-2 p-2 bg-[#222] rounded-md">
+                    <svg class="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
+                      <path fill-rule="evenodd" clip-rule="evenodd" d="M21.6464 2.23699C21.8707 2.42699 22 2.70606 22 3.00001V16C22 18.2091 20.2091 20 18 20C15.7909 20 14 18.2091 14 16C14 13.7909 15.7909 12 18 12C18.7286 12 19.4117 12.1948 20 12.5351V4.18047L10 5.84713V18L9.99999 18.0032C9.99824 20.2109 8.20806 22 6 22C3.79086 22 2 20.2091 2 18C2 15.7909 3.79086 14 6 14C6.72857 14 7.41165 14.1948 8 14.5351V5.00001C8 4.51117 8.35341 4.09398 8.8356 4.01361L20.8356 2.01361C21.1256 1.96529 21.4221 2.04698 21.6464 2.23699ZM20 16C20 14.8954 19.1046 14 18 14C16.8954 14 16 14.8954 16 16C16 17.1046 16.8954 18 18 18C19.1046 18 20 17.1046 20 16ZM6 16C7.10457 16 8 16.8954 8 18C8 19.1046 7.10457 20 6 20C4.89543 20 4 19.1046 4 18C4 16.8954 4.89543 16 6 16Z" />
+                    </svg>
+                    <span id="audio-file-name" class="text-sm text-gray-300 flex-1 truncate"></span>
+                    <button type="button" id="remove-audio" class="text-xs text-red-400 hover:text-red-300">Remove</button>
                   </div>
                 </div>
 
-                {/* Artwork Field */}
+                {/* Artwork */}
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Artwork</label>
+                  <label class="block text-sm font-medium text-gray-300 mb-1">Artwork</label>
                   <input type="hidden" id="artwork" name="artwork" value="" />
                   <button
                     type="button"
                     id="choose-artwork-btn"
-                    class="w-full flex items-center justify-center gap-2 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="w-full flex items-center justify-center gap-2 px-3 py-2 bg-[#222] border border-[#444] rounded-md text-sm font-medium text-gray-300 hover:bg-[#333] hover:text-white transition-colors"
                   >
-                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M8 10C9.10457 10 10 9.10457 10 8C10 6.89543 9.10457 6 8 6C6.89543 6 6 6.89543 6 8C6 9.10457 6.89543 10 8 10Z" fill="currentColor"></path> <path fill-rule="evenodd" clip-rule="evenodd" d="M2 5C2 3.34315 3.34315 2 5 2H19C20.6569 2 22 3.34315 22 5V19C22 20.6569 20.6569 22 19 22H5C3.34315 22 2 20.6569 2 19V5ZM5 4C4.44772 4 4 4.44772 4 5V17.5857L9.29285 12.2928C9.68337 11.9023 10.3165 11.9023 10.7071 12.2928L12.5 14.0857L20 6.58569V5C20 4.44772 19.5523 4 19 4H5ZM20 9.41412L13.2071 16.2071C12.8165 16.5976 12.1834 16.5976 11.7928 16.2071L9.99995 14.4142L4.5308 19.8833C4.67072 19.9578 4.83043 20 5 20H19C19.5523 20 20 19.5523 20 19V9.41412Z" fill="currentColor"></path> </g></svg>
-                    Select
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Select Artwork
                   </button>
-                  {/* Artwork preview */}
                   <div id="artwork-preview" class="hidden mt-2">
-                    <img src="" alt="Artwork preview" class="w-full h-32 object-cover rounded-md border border-gray-200" />
-                    <button
-                      type="button"
-                      id="remove-artwork"
-                      class="mt-1 text-xs text-red-600 hover:text-red-800"
-                    >
-                      Remove artwork
-                    </button>
+                    <img id="artwork-preview-img" src="" alt="Artwork preview" class="w-full h-32 object-cover rounded-md border border-[#444]" />
+                    <button type="button" id="remove-artwork" class="mt-1 text-xs text-red-400 hover:text-red-300">Remove artwork</button>
                   </div>
                 </div>
 
-                {/* YouTube Link Field */}
+                {/* YouTube */}
                 <div>
-                  <label for="youtube-link" class="block text-sm font-medium text-gray-700 mb-1">YouTube Link</label>
-                  <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <svg class="h-4 w-4 text-red-600" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                      </svg>
-                    </div>
-                    <input
-                      type="url"
-                      id="youtube-link"
-                      name="youtubeLink"
-                      class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm"
-                      placeholder="https://youtube.com/watch?v=..."
-                    />
-                  </div>
+                  <label for="youtube-link" class="block text-sm font-medium text-gray-300 mb-1">YouTube Link</label>
+                  <input
+                    type="url"
+                    id="youtube-link"
+                    name="youtubeLink"
+                    class="w-full px-3 py-2 bg-[#222] border border-[#444] rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    placeholder="https://youtube.com/watch?v=..."
+                  />
                 </div>
 
-                {/* SoundCloud Link Field */}
+                {/* SoundCloud */}
                 <div>
-                  <label for="soundcloud-link" class="block text-sm font-medium text-gray-700 mb-1">SoundCloud Link</label>
-                  <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <svg class="h-4 w-4 text-orange-500" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M1.175 12.225c-.051 0-.094.046-.101.1l-.233 2.154.233 2.105c.007.058.05.098.101.098.05 0 .09-.04.099-.098l.255-2.105-.27-2.154c-.009-.06-.052-.1-.084-.1zm-.899.828c-.06 0-.091.037-.104.094L0 14.479l.165 1.308c.014.057.045.094.09.094s.089-.037.099-.094l.195-1.308-.21-1.332c-.009-.057-.045-.094-.063-.094zm1.83-1.229c-.061 0-.12.045-.12.104l-.21 2.563.225 2.458c0 .06.045.104.104.104.061 0 .12-.044.12-.104l.24-2.474-.255-2.547c0-.06-.058-.104-.104-.104zm.945-.089c-.075 0-.135.06-.15.135l-.193 2.64.21 2.544c.016.077.075.138.149.138.075 0 .135-.061.15-.138l.24-2.544-.24-2.635c-.015-.075-.06-.135-.166-.135zm.93-.424c-.09 0-.149.075-.165.165l-.18 2.82.195 2.535c.016.09.075.165.165.165.089 0 .164-.076.164-.165l.21-2.535-.21-2.82c0-.09-.075-.165-.179-.165zm.87-.413c-.105 0-.18.09-.195.195l-.165 3.03.18 2.52c.016.104.09.18.195.18.104 0 .179-.076.195-.18l.195-2.52-.195-3.03c-.016-.105-.09-.195-.21-.195zm.945-.404c-.12 0-.21.105-.225.225l-.15 3.39.165 2.505c.016.12.105.225.225.225.119 0 .225-.105.225-.225l.195-2.505-.195-3.39c-.015-.12-.105-.225-.24-.225zm.99-.36c-.135 0-.24.12-.255.255l-.15 3.63.165 2.49c.015.135.12.255.255.255.135 0 .255-.12.255-.255l.18-2.49-.18-3.63c-.015-.135-.12-.255-.27-.255zm1.005-.345c-.15 0-.27.135-.27.285l-.135 3.81.15 2.475c.015.15.135.285.285.285.149 0 .285-.135.285-.285l.165-2.475-.165-3.81c-.015-.15-.135-.285-.315-.285zm.99-.3c-.165 0-.3.15-.315.315l-.12 3.96.135 2.46c.015.165.15.315.315.315.164 0 .315-.15.315-.315l.15-2.46-.15-3.96c-.015-.165-.15-.315-.33-.315zm1.02-.27c-.18 0-.33.165-.345.345l-.105 4.08.12 2.445c.015.18.165.345.345.345.18 0 .345-.165.345-.345l.135-2.445-.135-4.08c-.015-.18-.165-.345-.36-.345zm1.02-.24c-.195 0-.36.18-.375.375l-.09 4.17.105 2.43c.015.195.18.375.375.375.194 0 .375-.18.375-.375l.12-2.43-.12-4.17c-.015-.195-.18-.375-.39-.375zm1.005-.21c-.21 0-.39.195-.405.405l-.075 4.245.09 2.415c.015.21.195.405.405.405.209 0 .405-.195.405-.405l.105-2.415-.105-4.245c-.015-.21-.195-.405-.42-.405zm1.02-.195c-.225 0-.42.21-.435.435l-.06 4.29.075 2.4c.015.225.21.435.435.435.224 0 .435-.21.435-.435l.09-2.4-.09-4.29c-.015-.225-.21-.435-.45-.435zm1.005-.18c-.24 0-.435.225-.45.465l-.045 4.32.06 2.385c.015.24.225.45.465.45.239 0 .45-.21.465-.45l.075-2.385-.075-4.32c-.015-.24-.225-.465-.48-.465zm1.02-.15c-.255 0-.465.24-.48.495l-.03 4.335.045 2.37c.015.255.24.495.495.495.254 0 .495-.24.495-.495l.06-2.37-.06-4.335c-.015-.255-.24-.495-.525-.495zm.99-.135c-.27 0-.495.255-.51.525l-.015 4.35.03 2.355c.015.27.255.525.525.525.269 0 .525-.255.525-.525l.045-2.355-.045-4.35c-.015-.27-.255-.525-.555-.525zm1.005-.12c-.285 0-.525.27-.54.555l0 4.35.015 2.34c.015.285.27.54.555.54.284 0 .54-.255.555-.54l.03-2.34-.03-4.35c-.015-.285-.27-.555-.585-.555zm.99-.09c-.3 0-.555.285-.57.585l.015 4.35.015 2.325c.015.3.285.57.585.57.299 0 .57-.27.585-.57l.015-2.325-.015-4.35c-.015-.3-.285-.585-.615-.585z"/>
-                      </svg>
-                    </div>
-                    <input
-                      type="url"
-                      id="soundcloud-link"
-                      name="soundcloudLink"
-                      class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
-                      placeholder="https://soundcloud.com/..."
-                    />
-                  </div>
+                  <label for="soundcloud-link" class="block text-sm font-medium text-gray-300 mb-1">SoundCloud Link</label>
+                  <input
+                    type="url"
+                    id="soundcloud-link"
+                    name="soundcloudLink"
+                    class="w-full px-3 py-2 bg-[#222] border border-[#444] rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    placeholder="https://soundcloud.com/..."
+                  />
                 </div>
 
-                {/* Form actions */}
+                {/* Actions */}
                 <div class="flex gap-3 pt-4">
                   <button
                     type="submit"
                     id="save-btn"
-                    class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                    class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
                   >
                     Save Post
                   </button>
                   <button
                     type="button"
                     id="cancel-btn"
-                    class="hidden px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+                    class="hidden px-4 py-2 bg-[#333] hover:bg-[#444] border border-[#444] rounded-md text-sm font-medium text-gray-300 transition-colors"
                   >
                     Cancel
                   </button>
                 </div>
               </form>
 
-              {/* Feedback message */}
               <div id="form-feedback" class="hidden mt-4 p-3 rounded-md text-sm"></div>
+            </div>
+
+            {/* Posts List */}
+            <div class="bg-[#1a1a1a] rounded-xl border border-[#333] p-6">
+              <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-medium text-white">Audio Posts</h2>
+                <span id="audio-count" class="text-sm text-gray-500">0 posts</span>
+              </div>
+
+              <div id="empty-state" class="text-center py-12">
+                <svg class="w-16 h-16 text-[#333] mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                </svg>
+                <p class="text-gray-400">No audio posts yet</p>
+                <p class="text-sm text-gray-500 mt-1">Create your first post</p>
+              </div>
+
+              <div id="audio-posts-list" class="hidden space-y-3"></div>
             </div>
           </div>
         </div>
+      </main>
+    </div>
+  </div>
+
+  {/* Artwork Selection Modal */}
+  <div id="artwork-modal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" id="artwork-modal-backdrop"></div>
+    <div class="absolute inset-4 md:inset-8 lg:inset-16 bg-[#1a1a1a] rounded-xl shadow-2xl flex flex-col overflow-hidden border border-[#333]">
+      <div class="flex items-center justify-between p-4 border-b border-[#333]">
+        <h3 class="text-lg font-medium text-white">Select Artwork</h3>
+        <button type="button" id="close-artwork-modal" class="text-gray-400 hover:text-white">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div class="flex-1 overflow-auto p-4">
+        <MediaSelector 
+          mediaType="image" 
+          onSelect="handleArtworkSelect"
+          client:load
+        />
       </div>
     </div>
   </div>
 
   {/* Audio Selection Modal */}
   <div id="audio-modal" class="fixed inset-0 z-50 hidden">
-    {/* Backdrop */}
-    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" id="audio-modal-backdrop"></div>
-    
-    {/* Modal content */}
-    <div class="absolute inset-4 md:inset-8 lg:inset-16 bg-white rounded-lg shadow-2xl flex flex-col overflow-hidden">
-      {/* Header */}
-      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 shrink-0">
-        <div>
-          <h2 class="text-lg font-medium text-gray-900">Select Audio File</h2>
-          <p class="text-sm text-gray-500 mt-0.5">Choose an audio file from your media library</p>
-        </div>
-        <button
-          type="button"
-          id="close-audio-modal-btn"
-          class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" id="audio-modal-backdrop"></div>
+    <div class="absolute inset-4 md:inset-8 lg:inset-16 bg-[#1a1a1a] rounded-xl shadow-2xl flex flex-col overflow-hidden border border-[#333]">
+      <div class="flex items-center justify-between p-4 border-b border-[#333]">
+        <h3 class="text-lg font-medium text-white">Select Audio File</h3>
+        <button type="button" id="close-audio-modal" class="text-gray-400 hover:text-white">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
       </div>
-      
-      {/* Audio list */}
-      <div id="modal-audio-content" class="flex-1 overflow-auto p-6">
-        {/* Audio files will be loaded here */}
-        <div id="modal-audio-loading" class="flex items-center justify-center h-full">
-          <div class="flex items-center gap-3 text-gray-500">
-            <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <span class="text-sm">Loading audio files...</span>
-          </div>
-        </div>
-        
-        <div id="modal-audio-empty" class="hidden flex flex-col items-center justify-center h-full text-center">
-          <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-3">
-            <svg class="w-8 h-8 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
-              <path fill-rule="evenodd" clip-rule="evenodd" d="M21.6464 2.23699C21.8707 2.42699 22 2.70606 22 3.00001V16C22 18.2091 20.2091 20 18 20C15.7909 20 14 18.2091 14 16C14 13.7909 15.7909 12 18 12C18.7286 12 19.4117 12.1948 20 12.5351V4.18047L10 5.84713V18L9.99999 18.0032C9.99824 20.2109 8.20806 22 6 22C3.79086 22 2 20.2091 2 18C2 15.7909 3.79086 14 6 14C6.72857 14 7.41165 14.1948 8 14.5351V5.00001C8 4.51117 8.35341 4.09398 8.8356 4.01361L20.8356 2.01361C21.1256 1.96529 21.4221 2.04698 21.6464 2.23699ZM20 16C20 14.8954 19.1046 14 18 14C16.8954 14 16 14.8954 16 16C16 17.1046 16.8954 18 18 18C19.1046 18 20 17.1046 20 16ZM6 16C7.10457 16 8 16.8954 8 18C8 19.1046 7.10457 20 6 20C4.89543 20 4 19.1046 4 18C4 16.8954 4.89543 16 6 16Z" />
-            </svg>
-          </div>
-          <p class="text-gray-900 font-medium">No audio files found</p>
-          <p class="text-sm text-gray-500 mt-1">Upload some audio files first in the Uploads section</p>
-        </div>
-        
-        <div id="modal-audio-list" class="hidden space-y-2">
-          {/* Audio files will be rendered here */}
-        </div>
-      </div>
-      
-      {/* Footer */}
-      <div class="px-6 py-4 border-t border-gray-200 shrink-0 flex items-center justify-between bg-gray-50">
-        <span id="modal-audio-info" class="text-sm text-gray-600">Click an audio file to select it</span>
-        <button
-          type="button"
-          id="cancel-audio-btn"
-          class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-md transition-colors"
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
-  </div>
-
-  {/* Media Gallery Modal */}
-  <div id="media-gallery-modal" class="fixed inset-0 z-50 hidden">
-    {/* Backdrop */}
-    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" id="modal-backdrop"></div>
-    
-    {/* Modal content */}
-    <div class="absolute inset-4 md:inset-8 lg:inset-16 bg-white rounded-lg shadow-2xl flex flex-col overflow-hidden">
-      {/* Header */}
-      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 shrink-0">
-        <div>
-          <h2 class="text-lg font-medium text-gray-900">Select Artwork</h2>
-          <p class="text-sm text-gray-500 mt-0.5">Choose an image from your media library</p>
-        </div>
-        <button
-          type="button"
-          id="close-modal-btn"
-          class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-
-      // Clear any pending upload
-      pendingUploadId = null;
-
-      // Remove pending indicator if exists
-      const pendingIndicator = document.getElementById('artwork-pending');
-      if (pendingIndicator) pendingIndicator.remove();
-          </svg>
-        </button>
-      </div>
-      
-      {/* Gallery grid */}
-      <div id="modal-gallery-content" class="flex-1 overflow-auto p-6">
-        {/* Images will be loaded here */}
-        <div id="modal-loading" class="flex items-center justify-center h-full">
-          <div class="flex items-center gap-3 text-gray-500">
-            <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <span class="text-sm">Loading media...</span>
-          </div>
-        </div>
-        
-        <div id="modal-empty" class="hidden flex flex-col items-center justify-center h-full text-center">
-          <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-          </div>
-          <p class="text-gray-900 font-medium">No images found</p>
-          <p class="text-sm text-gray-500 mt-1">Upload some images first in the Uploads section</p>
-        </div>
-        
-        <div id="modal-images" class="hidden grid grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
-          {/* Images will be rendered here */}
-        </div>
-      </div>
-      
-      {/* Footer */}
-      <div class="px-6 py-4 border-t border-gray-200 shrink-0 flex items-center justify-between bg-gray-50">
-        <span id="modal-selection-info" class="text-sm text-gray-600">Click an image to select it</span>
-        <button
-          type="button"
-          id="cancel-selection-btn"
-          class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-md transition-colors"
-        >
-          Cancel
-        </button>
+      <div class="flex-1 overflow-auto p-4">
+        <MediaSelector 
+          mediaType="audio" 
+          onSelect="handleAudioSelect"
+          client:load
+        />
       </div>
     </div>
   </div>
 
   <script is:inline define:vars={{ csrfToken: csrf.token }}>
     window.CSRF_TOKEN = csrfToken;
+    
+    // Global handlers for MediaSelector
+    window.handleArtworkSelect = function(media) {
+      const input = document.getElementById('artwork');
+      const img = document.getElementById('artwork-preview-img');
+      const preview = document.getElementById('artwork-preview');
+      const modal = document.getElementById('artwork-modal');
+      
+      if (media && media.variants?.lg?.url) {
+        input.value = media.variants.lg.url;
+        img.src = media.variants.lg.url;
+        preview.classList.remove('hidden');
+      } else if (media?.url) {
+        input.value = media.url;
+        img.src = media.url;
+        preview.classList.remove('hidden');
+      }
+      
+      modal?.classList.add('hidden');
+    };
+    
+    window.handleAudioSelect = function(media) {
+      const input = document.getElementById('audio-file');
+      const name = document.getElementById('audio-file-name');
+      const preview = document.getElementById('audio-preview');
+      const modal = document.getElementById('audio-modal');
+      
+      if (media?.url) {
+        input.value = media.url;
+        name.textContent = media.originalName || 'Audio file';
+        preview.classList.remove('hidden');
+      }
+      
+      modal?.classList.add('hidden');
+    };
   </script>
 
   <script>
-    // Admin navigation - bypass Astro View Transitions for full page reloads
+    // Navigation
     document.querySelectorAll('a[data-nav-link]').forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
-        e.stopPropagation();
         window.location.href = link.getAttribute('href') || '/';
       });
     });
 
-    // Logout functionality
     document.getElementById('admin-logout-btn')?.addEventListener('click', async () => {
       if (!confirm('Are you sure you want to logout?')) return;
       try {
         const res = await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' });
         if (res.ok) window.location.href = '/admin/login?logged_out=1';
-        else if (res.status === 401) window.location.href = '/admin/login?session=expired';
-        else alert('Logout failed. Please try again.');
+        else window.location.href = '/admin/login?session=expired';
       } catch {
-        alert('Logout failed. Please try again.');
+        alert('Logout failed');
       }
+    });
+
+    // Modal handlers
+    document.getElementById('choose-artwork-btn')?.addEventListener('click', () => {
+      document.getElementById('artwork-modal')?.classList.remove('hidden');
+    });
+    document.getElementById('close-artwork-modal')?.addEventListener('click', () => {
+      document.getElementById('artwork-modal')?.classList.add('hidden');
+    });
+    document.getElementById('artwork-modal-backdrop')?.addEventListener('click', () => {
+      document.getElementById('artwork-modal')?.classList.add('hidden');
+    });
+
+    document.getElementById('choose-audio-btn')?.addEventListener('click', () => {
+      document.getElementById('audio-modal')?.classList.remove('hidden');
+    });
+    document.getElementById('close-audio-modal')?.addEventListener('click', () => {
+      document.getElementById('audio-modal')?.classList.add('hidden');
+    });
+    document.getElementById('audio-modal-backdrop')?.addEventListener('click', () => {
+      document.getElementById('audio-modal')?.classList.add('hidden');
+    });
+
+    // Remove buttons
+    document.getElementById('remove-artwork')?.addEventListener('click', () => {
+      document.getElementById('artwork').value = '';
+      document.getElementById('artwork-preview').classList.add('hidden');
+    });
+    document.getElementById('remove-audio')?.addEventListener('click', () => {
+      document.getElementById('audio-file').value = '';
+      document.getElementById('audio-preview').classList.add('hidden');
     });
 
     // Audio posts management
-    interface AudioPost {
-      id: string;
-      title: string;
-      audioFile?: string;
-      artwork?: string;
-      youtubeLink?: string;
-      soundcloudLink?: string;
-      createdAt: string;
-      updatedAt: string;
+    let audioPosts = [];
+    let editingPostId = null;
+
+    const form = document.getElementById('audio-post-form');
+    const formTitle = document.getElementById('form-title');
+    const postIdInput = document.getElementById('post-id');
+    const cancelBtn = document.getElementById('cancel-btn');
+    const saveBtn = document.getElementById('save-btn');
+    const feedback = document.getElementById('form-feedback');
+    const emptyState = document.getElementById('empty-state');
+    const postsList = document.getElementById('audio-posts-list');
+    const audioCount = document.getElementById('audio-count');
+
+    function showFeedback(message, type) {
+      feedback.textContent = message;
+      feedback.className = `mt-4 p-3 rounded-md text-sm ${type === 'success' ? 'bg-green-900/30 text-green-400 border border-green-800' : 'bg-red-900/30 text-red-400 border border-red-800'}`;
+      feedback.classList.remove('hidden');
+      setTimeout(() => feedback.classList.add('hidden'), 3000);
     }
 
-    let audioPosts: AudioPost[] = [];
-    let editingPostId: string | null = null;
-
-    const form = document.getElementById('audio-post-form') as HTMLFormElement;
-    const formTitle = document.getElementById('form-title') as HTMLElement;
-    const postIdInput = document.getElementById('post-id') as HTMLInputElement;
-    const cancelBtn = document.getElementById('cancel-btn') as HTMLButtonElement;
-    const saveBtn = document.getElementById('save-btn') as HTMLButtonElement;
-    const feedback = document.getElementById('form-feedback') as HTMLElement;
-    const emptyState = document.getElementById('empty-state') as HTMLElement;
-    const postsList = document.getElementById('audio-posts-list') as HTMLElement;
-    const audioCount = document.getElementById('audio-count') as HTMLElement;
-
-    // Audio file handling
-    const audioFileInput = document.getElementById('audio-file') as HTMLInputElement;
-    const audioPreview = document.getElementById('audio-preview') as HTMLElement;
-    const audioFileName = document.getElementById('audio-file-name') as HTMLElement;
-    const chooseAudioBtn = document.getElementById('choose-audio-btn') as HTMLButtonElement;
-    const removeAudioBtn = document.getElementById('remove-audio') as HTMLButtonElement;
-
-    removeAudioBtn?.addEventListener('click', () => {
-      audioFileInput.value = '';
-      audioPreview.classList.add('hidden');
-      audioFileName.textContent = '';
-    });
-
-    // Artwork handling
-    const artworkUrlInput = document.getElementById('artwork') as HTMLInputElement;
-    const artworkPreview = document.getElementById('artwork-preview') as HTMLElement;
-    const artworkPreviewImg = artworkPreview?.querySelector('img') as HTMLImageElement;
-    const chooseArtworkBtn = document.getElementById('choose-artwork-btn') as HTMLButtonElement;
-    const removeArtworkBtn = document.getElementById('remove-artwork') as HTMLButtonElement;
-
-    removeArtworkBtn?.addEventListener('click', () => {
-      artworkUrlInput.value = '';
-      artworkPreview.classList.add('hidden');
-      artworkPreviewImg.src = '';
-    });
-
-    // Audio Selection Modal
-    const audioModal = document.getElementById('audio-modal') as HTMLElement;
-    const audioModalBackdrop = document.getElementById('audio-modal-backdrop') as HTMLElement;
-    const closeAudioModalBtn = document.getElementById('close-audio-modal-btn') as HTMLButtonElement;
-    const cancelAudioBtn = document.getElementById('cancel-audio-btn') as HTMLButtonElement;
-    const modalAudioLoading = document.getElementById('modal-audio-loading') as HTMLElement;
-    const modalAudioEmpty = document.getElementById('modal-audio-empty') as HTMLElement;
-    const modalAudioList = document.getElementById('modal-audio-list') as HTMLElement;
-
-    let processedAudio: Array<{id: string; variants: Record<string, {url: string}>; originalName: string; metadata: {duration?: number; format?: string}}> = [];
-
-    function openAudioModal() {
-      audioModal.classList.remove('hidden');
-      document.body.style.overflow = 'hidden';
-      loadAudioGallery();
-    }
-
-    function closeAudioModal() {
-      audioModal.classList.add('hidden');
-      document.body.style.overflow = '';
-    }
-
-    async function loadAudioGallery() {
-      modalAudioLoading.classList.remove('hidden');
-      modalAudioEmpty.classList.add('hidden');
-      modalAudioList.classList.add('hidden');
-
-      try {
-        // Fetch the media manifest directly
-        const res = await fetch('/data/media-manifest.json', { credentials: 'include' });
-        if (!res.ok) throw new Error('Failed to load media manifest');
-
-        const manifest = await res.json();
-        // Get all processed audio files from the manifest
-        processedAudio = Object.values(manifest.audio || {}).sort((a: typeof processedAudio[0], b: typeof processedAudio[0]) => {
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        });
-
-        renderModalAudio();
-      } catch (e) {
-        console.error('Error loading audio gallery:', e);
-        modalAudioLoading.classList.add('hidden');
-        modalAudioEmpty.classList.remove('hidden');
-      }
-    }
-
-    function formatDuration(seconds: number) {
-      const mins = Math.floor(seconds / 60);
-      const secs = Math.floor(seconds % 60);
-      return `${mins}:${secs.toString().padStart(2, '0')}`;
-    }
-
-    function renderModalAudio() {
-      modalAudioLoading.classList.add('hidden');
-
-      if (processedAudio.length === 0) {
-        modalAudioEmpty.classList.remove('hidden');
-        modalAudioList.classList.add('hidden');
-        return;
-      }
-
-      modalAudioEmpty.classList.add('hidden');
-      modalAudioList.classList.remove('hidden');
-
-      modalAudioList.innerHTML = processedAudio.map(audio => {
-        const audioUrl = audio.variants.original?.url;
-        const fullUrl = audioUrl?.startsWith('http') ? audioUrl : `${window.location.origin}${audioUrl}`;
-        const duration = audio.metadata?.duration || 0;
-        const format = audio.metadata?.format?.toUpperCase() || 'AUDIO';
-        
-        return `
-          <div 
-            class="group flex items-center gap-4 p-3 bg-blue-50 rounded-lg border-2 border-transparent hover:border-blue-500 cursor-pointer transition-all"
-            data-url="${fullUrl}"
-            data-id="${audio.id}"
-            data-name="${audio.originalName}"
-          >
-            <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white shrink-0">
-              <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                <path fill-rule="evenodd" clip-rule="evenodd" d="M21.6464 2.23699C21.8707 2.42699 22 2.70606 22 3.00001V16C22 18.2091 20.2091 20 18 20C15.7909 20 14 18.2091 14 16C14 13.7909 15.7909 12 18 12C18.7286 12 19.4117 12.1948 20 12.5351V4.18047L10 5.84713V18L9.99999 18.0032C9.99824 20.2109 8.20806 22 6 22C3.79086 22 2 20.2091 2 18C2 15.7909 3.79086 14 6 14C6.72857 14 7.41165 14.1948 8 14.5351V5.00001C8 4.51117 8.35341 4.09398 8.8356 4.01361L20.8356 2.01361C21.1256 1.96529 21.4221 2.04698 21.6464 2.23699ZM20 16C20 14.8954 19.1046 14 18 14C16.8954 14 16 14.8954 16 16C16 17.1046 16.8954 18 18 18C19.1046 18 20 17.1046 20 16ZM6 16C7.10457 16 8 16.8954 8 18C8 19.1046 7.10457 20 6 20C4.89543 20 4 19.1046 4 18C4 16.8954 4.89543 16 6 16Z" />
-              </svg>
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-gray-900 truncate">${audio.originalName}</p>
-              <p class="text-xs text-gray-500">${format} • ${formatDuration(duration)}</p>
-            </div>
-            <div class="opacity-0 group-hover:opacity-100 bg-blue-600 text-white px-3 py-1.5 rounded-full text-sm font-medium transition-opacity">
-              Select
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      // Attach click handlers to audio items
-      modalAudioList.querySelectorAll('[data-url]').forEach(el => {
-        el.addEventListener('click', () => {
-          const url = el.getAttribute('data-url');
-          const name = el.getAttribute('data-name');
-          if (url) {
-            audioFileInput.value = url;
-            audioFileName.textContent = name || 'Audio file';
-            audioPreview.classList.remove('hidden');
-            closeAudioModal();
-            showFeedback('Audio file selected', 'success');
-          }
-        });
-      });
-    }
-
-    chooseAudioBtn?.addEventListener('click', openAudioModal);
-    closeAudioModalBtn?.addEventListener('click', closeAudioModal);
-    cancelAudioBtn?.addEventListener('click', closeAudioModal);
-    audioModalBackdrop?.addEventListener('click', closeAudioModal);
-
-    // Media Gallery Modal
-    const mediaGalleryBtn = document.getElementById('choose-artwork-btn') as HTMLButtonElement;
-    const mediaGalleryModal = document.getElementById('media-gallery-modal') as HTMLElement;
-    const modalBackdrop = document.getElementById('modal-backdrop') as HTMLElement;
-    const closeModalBtn = document.getElementById('close-modal-btn') as HTMLButtonElement;
-    const cancelSelectionBtn = document.getElementById('cancel-selection-btn') as HTMLButtonElement;
-    const modalLoading = document.getElementById('modal-loading') as HTMLElement;
-    const modalEmpty = document.getElementById('modal-empty') as HTMLElement;
-    const modalImages = document.getElementById('modal-images') as HTMLElement;
-
-    interface ProcessedImage {
-      id: string;
-      variants: Record<string, {url: string}>;
-      originalName: string;
-      createdAt: string;
-    }
-
-    let processedImages: ProcessedImage[] = [];
-    let pendingUploadId: string | null = null;
-
-    function openModal() {
-      mediaGalleryModal.classList.remove('hidden');
-      document.body.style.overflow = 'hidden';
-      loadMediaGallery();
-    }
-
-    function closeModal() {
-      mediaGalleryModal.classList.add('hidden');
-      document.body.style.overflow = '';
-    }
-
-    async function loadMediaGallery() {
-      modalLoading.classList.remove('hidden');
-      modalEmpty.classList.add('hidden');
-      modalImages.classList.add('hidden');
-
-      try {
-        // Fetch the media manifest directly - same source as admin page gallery
-        const res = await fetch('/data/media-manifest.json', { credentials: 'include' });
-        if (!res.ok) throw new Error('Failed to load media manifest');
-
-        const manifest = await res.json();
-        // Get all processed images from the manifest - same as admin page
-        processedImages = Object.values(manifest.images || {}).sort((a: typeof processedImages[0], b: typeof processedImages[0]) => {
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        });
-
-        renderModalImages();
-      } catch (e) {
-        console.error('Error loading media gallery:', e);
-        modalLoading.classList.add('hidden');
-        modalEmpty.classList.remove('hidden');
-      }
-    }
-
-    function renderModalImages() {
-      modalLoading.classList.add('hidden');
-
-      if (processedImages.length === 0) {
-        modalEmpty.classList.remove('hidden');
-        modalImages.classList.add('hidden');
-
-      // Clear any pending upload
-      if (pendingUploadId) {
-        pendingUploadId = null;
-      }
-
-      // Remove pending indicator if exists
-      const pendingIndicator = document.getElementById('artwork-pending');
-      if (pendingIndicator) pendingIndicator.remove();
-        return;
-      }
-
-      modalEmpty.classList.add('hidden');
-      modalImages.classList.remove('hidden');
-
-      modalImages.innerHTML = processedImages.map(img => {
-        const imageUrl = img.variants.md?.url || img.variants.sm?.url || Object.values(img.variants)[0]?.url;
-        const fullUrl = imageUrl?.startsWith('http') ? imageUrl : `${window.location.origin}${imageUrl}`;
-        const lgUrl = img.variants.lg?.url || imageUrl;
-        const fullLgUrl = lgUrl?.startsWith('http') ? lgUrl : `${window.location.origin}${lgUrl}`;
-        
-        return `
-          <div 
-            class="group relative aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-transparent hover:border-blue-500 cursor-pointer transition-all"
-            data-url="${fullLgUrl}"
-            data-id="${img.id}"
-          >
-            <img 
-              src="${fullUrl}" 
-              alt="${img.originalName}"
-              class="w-full h-full object-cover"
-              loading="lazy"
-              onerror="this.style.display='none'; this.parentElement.querySelector('.fallback').style.display='flex';"
-            />
-            <div class="fallback hidden absolute inset-0 items-center justify-center text-gray-400 bg-gray-100">
-              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-              <div class="opacity-0 group-hover:opacity-100 bg-blue-600 text-white px-3 py-1.5 rounded-full text-sm font-medium transition-opacity">
-                Select
-              </div>
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      // Attach click handlers to images
-      modalImages.querySelectorAll('[data-url]').forEach(el => {
-        el.addEventListener('click', () => {
-          const url = el.getAttribute('data-url');
-          if (url) {
-            // Clear any pending upload since user selected an existing image
-            if (pendingUploadId) {
-              pendingUploadId = null;
-              const pendingIndicator = document.getElementById('artwork-pending');
-              if (pendingIndicator) pendingIndicator.remove();
-            }
-
-            artworkUrlInput.value = url;
-            artworkPreviewImg.src = url;
-            artworkPreview.classList.remove('hidden');
-            closeModal();
-            showFeedback('Artwork selected from gallery', 'success');
-          }
-        });
-      });
-    }
-
-    mediaGalleryBtn?.addEventListener('click', openModal);
-    closeModalBtn?.addEventListener('click', closeModal);
-    cancelSelectionBtn?.addEventListener('click', closeModal);
-    modalBackdrop?.addEventListener('click', closeModal);
-
-    // Close modal on Escape key
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        if (!audioModal.classList.contains('hidden')) {
-          closeAudioModal();
-        } else if (!mediaGalleryModal.classList.contains('hidden')) {
-          closeModal();
-        }
-      }
-    });
-
-    // Load audio posts
-    async function loadAudioPosts() {
-      try {
-        const res = await fetch('/api/admin/audio-posts', { credentials: 'include' });
-        if (!res.ok) throw new Error('Failed to load posts');
-
-        audioPosts = await res.json();
-        renderPosts();
-      } catch (e) {
-        showFeedback('Failed to load audio posts', 'error');
-      }
-    }
-
-    // Render posts list
     function renderPosts() {
       audioCount.textContent = `${audioPosts.length} post${audioPosts.length !== 1 ? 's' : ''}`;
 
@@ -798,62 +405,31 @@ const isActive = (href: string) => {
       postsList.classList.remove('hidden');
 
       postsList.innerHTML = audioPosts.map(post => `
-        <div class="group flex items-center gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-gray-300 transition-all" data-id="${post.id}">
+        <div class="flex items-center gap-4 p-4 bg-[#222] rounded-lg border border-[#333] hover:border-[#444] transition-all group" data-id="${post.id}">
           ${post.artwork ? `
             <img src="${post.artwork}" alt="" class="w-16 h-16 object-cover rounded-md shrink-0" />
           ` : `
-            <div class="w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-md flex items-center justify-center shrink-0">
-              <svg class="w-8 h-8 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
+            <div class="w-16 h-16 bg-[#333] rounded-md flex items-center justify-center shrink-0">
+              <svg class="w-8 h-8 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M21.6464 2.23699C21.8707 2.42699 22 2.70606 22 3.00001V16C22 18.2091 20.2091 20 18 20C15.7909 20 14 18.2091 14 16C14 13.7909 15.7909 12 18 12C18.7286 12 19.4117 12.1948 20 12.5351V4.18047L10 5.84713V18L9.99999 18.0032C9.99824 20.2109 8.20806 22 6 22C3.79086 22 2 20.2091 2 18C2 15.7909 3.79086 14 6 14C6.72857 14 7.41165 14.1948 8 14.5351V5.00001C8 4.51117 8.35341 4.09398 8.8356 4.01361L20.8356 2.01361C21.1256 1.96529 21.4221 2.04698 21.6464 2.23699ZM20 16C20 14.8954 19.1046 14 18 14C16.8954 14 16 14.8954 16 16C16 17.1046 16.8954 18 18 18C19.1046 18 20 17.1046 20 16ZM6 16C7.10457 16 8 16.8954 8 18C8 19.1046 7.10457 20 6 20C4.89543 20 4 19.1046 4 18C4 16.8954 4.89543 16 6 16Z" />
               </svg>
             </div>
           `}
           <div class="flex-1 min-w-0">
-            <h3 class="text-sm font-medium text-gray-900 truncate">${post.title}</h3>
-            <div class="flex items-center gap-3 mt-1">
-              ${post.audioFile ? `
-                <span class="text-xs text-blue-600 flex items-center gap-1">
-                  <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                    <path fill-rule="evenodd" clip-rule="evenodd" d="M21.6464 2.23699C21.8707 2.42699 22 2.70606 22 3.00001V16C22 18.2091 20.2091 20 18 20C15.7909 20 14 18.2091 14 16C14 13.7909 15.7909 12 18 12C18.7286 12 19.4117 12.1948 20 12.5351V4.18047L10 5.84713V18L9.99999 18.0032C9.99824 20.2109 8.20806 22 6 22C3.79086 22 2 20.2091 2 18C2 15.7909 3.79086 14 6 14C6.72857 14 7.41165 14.1948 8 14.5351V5.00001C8 4.51117 8.35341 4.09398 8.8356 4.01361L20.8356 2.01361C21.1256 1.96529 21.4221 2.04698 21.6464 2.23699ZM20 16C20 14.8954 19.1046 14 18 14C16.8954 14 16 14.8954 16 16C16 17.1046 16.8954 18 18 18C19.1046 18 20 17.1046 20 16ZM6 16C7.10457 16 8 16.8954 8 18C8 19.1046 7.10457 20 6 20C4.89543 20 4 19.1046 4 18C4 16.8954 4.89543 16 6 16Z" />
-                  </svg>
-                  Audio
-                </span>
-              ` : ''}
-              ${post.youtubeLink ? `
-                <a href="${post.youtubeLink}" target="_blank" class="text-xs text-red-600 hover:text-red-700 flex items-center gap-1">
-                  <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                  </svg>
-                  YouTube
-                </a>
-              ` : ''}
-              ${post.soundcloudLink ? `
-                <a href="${post.soundcloudLink}" target="_blank" class="text-xs text-orange-600 hover:text-orange-700 flex items-center gap-1">
-                  <svg class="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M1.175 12.225c-.051 0-.094.046-.101.1l-.233 2.154.233 2.105c.007.058.05.098.101.098.05 0 .09-.04.099-.098l.255-2.105-.27-2.154c-.009-.06-.052-.1-.084-.1zm-.899.828c-.06 0-.091.037-.104.094L0 14.479l.165 1.308c.014.057.045.094.09.094s.089-.037.099-.094l.195-1.308-.21-1.332c-.009-.057-.045-.094-.063-.094zm1.83-1.229c-.061 0-.12.045-.12.104l-.21 2.563.225 2.458c0 .06.045.104.104.104.061 0 .12-.044.12-.104l.24-2.474-.255-2.547c0-.06-.058-.104-.104-.104zm.945-.089c-.075 0-.135.06-.15.135l-.193 2.64.21 2.544c.016.077.075.138.149.138.075 0 .135-.061.15-.138l.24-2.544-.24-2.635c-.015-.075-.06-.135-.166-.135zm.93-.424c-.09 0-.149.075-.165.165l-.18 2.82.195 2.535c.016.09.075.165.165.165.089 0 .164-.076.164-.165l.21-2.535-.21-2.82c0-.09-.075-.165-.179-.165zm.87-.413c-.105 0-.18.09-.195.195l-.165 3.03.18 2.52c.016.104.09.18.195.18.104 0 .179-.076.195-.18l.195-2.52-.195-3.03c-.016-.105-.09-.195-.21-.195zm.945-.404c-.12 0-.21.105-.225.225l-.15 3.39.165 2.505c.016.12.105.225.225.225.119 0 .225-.105.225-.225l.195-2.505-.195-3.39c-.015-.12-.105-.225-.24-.225zm.99-.36c-.135 0-.24.12-.255.255l-.15 3.63.165 2.49c.015.135.12.255.255.255.135 0 .255-.12.255-.255l.18-2.49-.18-3.63c-.015-.135-.12-.255-.27-.255zm1.005-.345c-.15 0-.27.135-.27.285l-.135 3.81.15 2.475c.015.15.135.285.285.285.149 0 .285-.135.285-.285l.165-2.475-.165-3.81c-.015-.15-.135-.285-.315-.285z"/>
-                  </svg>
-                  SoundCloud
-                </a>
-              ` : ''}
+            <h3 class="text-sm font-medium text-white truncate">${post.title}</h3>
+            <div class="flex items-center gap-2 mt-1 text-xs text-gray-500">
+              ${post.audioFile ? '<span class="text-blue-400">● Audio</span>' : ''}
+              ${post.youtubeLink ? '<span class="text-red-400">● YouTube</span>' : ''}
+              ${post.soundcloudLink ? '<span class="text-orange-400">● SoundCloud</span>' : ''}
             </div>
           </div>
-          <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
-              type="button"
-              class="edit-btn p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-              data-id="${post.id}"
-              title="Edit"
-            >
+          <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button type="button" class="edit-btn p-2 text-gray-400 hover:text-white" data-id="${post.id}">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
             </button>
-            <button
-              type="button"
-              class="delete-btn p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
-              data-id="${post.id}"
-              title="Delete"
-            >
+            <button type="button" class="delete-btn p-2 text-gray-400 hover:text-red-400" data-id="${post.id}">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
@@ -862,174 +438,97 @@ const isActive = (href: string) => {
         </div>
       `).join('');
 
-      // Attach event listeners
+      // Attach handlers
       postsList.querySelectorAll('.edit-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const id = btn.getAttribute('data-id');
-          if (id) startEdit(id);
-        });
+        btn.addEventListener('click', () => editPost(btn.dataset.id));
       });
-
       postsList.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const id = btn.getAttribute('data-id');
-          if (id) deletePost(id);
-        });
+        btn.addEventListener('click', () => deletePost(btn.dataset.id));
       });
     }
 
-    // Show feedback message
-    function showFeedback(message: string, type: 'success' | 'error') {
-      feedback.textContent = message;
-      feedback.className = `mt-4 p-3 rounded-md text-sm ${type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`;
-      feedback.classList.remove('hidden');
-      setTimeout(() => feedback.classList.add('hidden'), 3000);
-    }
-
-    // Start editing a post
-    function startEdit(id: string) {
+    function editPost(id) {
       const post = audioPosts.find(p => p.id === id);
       if (!post) return;
 
       editingPostId = id;
       postIdInput.value = id;
+      document.getElementById('title').value = post.title;
+      document.getElementById('audio-file').value = post.audioFile || '';
+      document.getElementById('artwork').value = post.artwork || '';
+      document.getElementById('youtube-link').value = post.youtubeLink || '';
+      document.getElementById('soundcloud-link').value = post.soundcloudLink || '';
+
+      // Show previews
+      if (post.artwork) {
+        document.getElementById('artwork-preview-img').src = post.artwork;
+        document.getElementById('artwork-preview').classList.remove('hidden');
+      }
+      if (post.audioFile) {
+        document.getElementById('audio-file-name').textContent = 'Audio file';
+        document.getElementById('audio-preview').classList.remove('hidden');
+      }
+
       formTitle.textContent = 'Edit Audio Post';
       saveBtn.textContent = 'Update Post';
       cancelBtn.classList.remove('hidden');
-
-      (document.getElementById('title') as HTMLInputElement).value = post.title;
-      (document.getElementById('youtube-link') as HTMLInputElement).value = post.youtubeLink || '';
-      (document.getElementById('soundcloud-link') as HTMLInputElement).value = post.soundcloudLink || '';
-
-      // Load audio file
-      if (post.audioFile) {
-        audioFileInput.value = post.audioFile;
-        // Extract filename from URL
-        const fileName = post.audioFile.split('/').pop() || 'Audio file';
-        audioFileName.textContent = fileName;
-        audioPreview.classList.remove('hidden');
-      } else {
-        audioFileInput.value = '';
-        audioPreview.classList.add('hidden');
-        audioFileName.textContent = '';
-      }
-
-      // Load artwork
-      if (post.artwork) {
-        artworkUrlInput.value = post.artwork;
-        artworkPreviewImg.src = post.artwork;
-        artworkPreview.classList.remove('hidden');
-      } else {
-        artworkUrlInput.value = '';
-        artworkPreview.classList.add('hidden');
-        artworkPreviewImg.src = '';
-      }
     }
 
-    // Cancel editing
     function cancelEdit() {
       editingPostId = null;
+      form.reset();
       postIdInput.value = '';
+      document.getElementById('artwork-preview').classList.add('hidden');
+      document.getElementById('audio-preview').classList.add('hidden');
       formTitle.textContent = 'New Audio Post';
       saveBtn.textContent = 'Save Post';
       cancelBtn.classList.add('hidden');
-      form.reset();
-
-      // Clear audio file
-      audioFileInput.value = '';
-      audioPreview.classList.add('hidden');
-      audioFileName.textContent = '';
-
-      // Clear artwork
-      artworkPreview.classList.add('hidden');
-      artworkPreviewImg.src = '';
     }
 
-    // Delete a post
-    async function deletePost(id: string) {
-      if (!confirm('Are you sure you want to delete this audio post?')) return;
-
+    async function deletePost(id) {
+      if (!confirm('Delete this post?')) return;
+      
       const csrfMatch = document.cookie.match(/csrf_token=([^;]+)/);
       const csrfToken = csrfMatch ? csrfMatch[1] : '';
 
       try {
-        const res = await fetch(`/api/admin/audio-posts?id=${encodeURIComponent(id)}`, {
+        const res = await fetch(`/api/admin/audio-posts?id=${id}`, {
           method: 'DELETE',
           credentials: 'include',
           headers: { 'X-CSRF-Token': csrfToken }
         });
 
-        if (!res.ok) throw new Error('Delete failed');
-
-        audioPosts = audioPosts.filter(p => p.id !== id);
-        renderPosts();
-        showFeedback('Audio post deleted', 'success');
-
-        if (editingPostId === id) cancelEdit();
-      } catch (e) {
+        if (res.ok) {
+          audioPosts = audioPosts.filter(p => p.id !== id);
+          renderPosts();
+          showFeedback('Post deleted', 'success');
+        } else {
+          throw new Error('Delete failed');
+        }
+      } catch {
         showFeedback('Failed to delete post', 'error');
       }
     }
 
-    // Form submission
+    cancelBtn?.addEventListener('click', cancelEdit);
+
     form?.addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const csrfMatch = document.cookie.match(/csrf_token=([^;]+)/);
       const csrfToken = csrfMatch ? csrfMatch[1] : '';
 
-      // If there's a pending upload, process it first
-      let finalArtworkUrl = artworkUrlInput.value;
-
-      if (pendingUploadId) {
-        saveBtn.disabled = true;
-        saveBtn.textContent = 'Processing artwork...';
-
-        try {
-          // Process the pending upload
-          const processRes = await fetch('/api/admin/media/process-pending', {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'X-CSRF-Token': csrfToken }
-          });
-
-          if (!processRes.ok) throw new Error('Processing failed');
-
-          // Get the processed image URL
-          finalArtworkUrl = `${window.location.origin}/processed/images/${pendingUploadId}/lg.webp`;
-
-          // Update the preview with the processed URL
-          artworkPreviewImg.src = finalArtworkUrl;
-          artworkUrlInput.value = finalArtworkUrl;
-
-          // Remove pending indicator
-          const pendingIndicator = document.getElementById('artwork-pending');
-          if (pendingIndicator) pendingIndicator.remove();
-
-          // Clear pending upload
-          pendingUploadId = null;
-
-          showFeedback('Artwork processed successfully', 'success');
-        } catch (e) {
-          showFeedback('Failed to process artwork', 'error');
-          saveBtn.disabled = false;
-          saveBtn.textContent = editingPostId ? 'Update Post' : 'Save Post';
-          return;
-        }
-      }
-
-      const formData = new FormData(form);
       const data = {
         id: editingPostId,
-        title: formData.get('title') as string,
-        audioFile: formData.get('audioFile') as string || undefined,
-        artwork: formData.get('artwork') as string || undefined,
-        youtubeLink: formData.get('youtubeLink') as string || undefined,
-        soundcloudLink: formData.get('soundcloudLink') as string || undefined,
+        title: document.getElementById('title').value,
+        audioFile: document.getElementById('audio-file').value || undefined,
+        artwork: document.getElementById('artwork').value || undefined,
+        youtubeLink: document.getElementById('youtube-link').value || undefined,
+        soundcloudLink: document.getElementById('soundcloud-link').value || undefined,
       };
 
       saveBtn.disabled = true;
-      saveBtn.textContent = editingPostId ? 'Saving...' : 'Creating...';
+      saveBtn.textContent = editingPostId ? 'Updating...' : 'Saving...';
 
       try {
         const res = await fetch('/api/admin/audio-posts', {
@@ -1054,9 +553,9 @@ const isActive = (href: string) => {
         }
 
         renderPosts();
-        showFeedback(editingPostId ? 'Audio post updated' : 'Audio post created', 'success');
+        showFeedback(editingPostId ? 'Post updated' : 'Post created', 'success');
         cancelEdit();
-      } catch (e) {
+      } catch {
         showFeedback('Failed to save post', 'error');
       } finally {
         saveBtn.disabled = false;
@@ -1064,9 +563,18 @@ const isActive = (href: string) => {
       }
     });
 
-    cancelBtn?.addEventListener('click', cancelEdit);
+    // Load posts
+    async function loadPosts() {
+      try {
+        const res = await fetch('/api/admin/audio-posts', { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to load');
+        audioPosts = await res.json();
+        renderPosts();
+      } catch {
+        showFeedback('Failed to load posts', 'error');
+      }
+    }
 
-    // Load posts on page load
-    loadAudioPosts();
+    loadPosts();
   </script>
 </Layout>

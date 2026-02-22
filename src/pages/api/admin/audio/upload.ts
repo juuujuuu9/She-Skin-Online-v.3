@@ -9,7 +9,10 @@ import type { APIRoute } from 'astro';
 import { checkAdminAuth } from '@lib/admin-auth';
 import { uploadToBunny } from '@lib/bunny';
 import { createWork, addWorkMedia, insertAudioTrack } from '@lib/db/queries';
-import { loadManifest } from '@lib/media-process';
+import { db } from '@lib/db';
+import { media } from '@lib/db/schema';
+import { eq } from 'drizzle-orm';
+import { incrementRefCount } from '@lib/upload-service';
 
 export const POST: APIRoute = async ({ request }) => {
   const auth = await checkAdminAuth(request);
@@ -53,15 +56,18 @@ export const POST: APIRoute = async ({ request }) => {
 
     let coverUrl = '';
     if (coverMediaId) {
-      // Look up the media from manifest
-      const manifest = await loadManifest();
-      const mediaEntry = manifest.images[coverMediaId];
-      if (mediaEntry) {
+      // Look up the media from database
+      const mediaEntry = await db.query.media.findFirst({
+        where: eq(media.id, coverMediaId),
+      });
+      if (mediaEntry && mediaEntry.mediaType === 'image') {
         // Use the large variant or any available variant
-        const variant = mediaEntry.variants.lg || mediaEntry.variants.md || mediaEntry.variants.sm || Object.values(mediaEntry.variants)[0];
+        const variant = mediaEntry.variants?.lg || mediaEntry.variants?.md || mediaEntry.variants?.sm || { url: mediaEntry.url };
         if (variant) {
-          coverUrl = variant.url.startsWith('http') ? variant.url : `${request.headers.get('origin') || ''}${variant.url}`;
+          coverUrl = variant.url;
         }
+        // Increment ref count for the media
+        await incrementRefCount(coverMediaId);
       }
     } else if (coverFile) {
       const coverFilename = `audio/covers/${timestamp}-${safeTitle}.jpg`;

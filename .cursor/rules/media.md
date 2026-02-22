@@ -75,3 +75,59 @@ Long audio (20+ min) processes asynchronously:
 - Click "Process" to start compression
 - May take 30-60 seconds for long tracks
 - Page polls for completion
+
+---
+
+## Upload API Authentication Requirements
+
+When modifying upload-related API endpoints or components:
+
+### API Endpoints MUST Have:
+1. `export const prerender = false;` - Required for cookie access
+2. CSRF validation for all POST/DELETE/PUT/PATCH operations
+3. Admin auth check after CSRF validation
+
+Example:
+```typescript
+export const prerender = false;
+import { validateCsrfToken } from '@lib/csrf';
+import { requireAdminAuth } from '@lib/admin-auth';
+
+export const POST: APIRoute = async ({ request }) => {
+  // 1. CSRF first
+  if (!validateCsrfToken(request)) {
+    return new Response(JSON.stringify({ error: 'Invalid CSRF token' }), { status: 403 });
+  }
+  
+  // 2. Auth second
+  const authError = await requireAdminAuth(request);
+  if (authError) return authError;
+  
+  // ... handle request
+};
+```
+
+### Admin Pages MUST Have:
+1. CSRF cookie generation: `generateCsrfToken()`
+2. Set cookie header: `Astro.response.headers.set('Set-Cookie', csrf.cookie)`
+
+### Frontend Fetch MUST Include:
+1. `credentials: 'include'` - Sends auth cookies
+2. `X-CSRF-Token` header - Matches the csrf_token cookie
+
+Example:
+```typescript
+const res = await fetch('/api/admin/media', {
+  method: 'POST',
+  credentials: 'include',           // Required!
+  headers: { 'X-CSRF-Token': csrf },  // Required!
+  body: formData,
+});
+```
+
+### Common Failures:
+- **401 Unauthorized** - Missing `credentials: 'include'` or expired session
+- **403 Invalid CSRF** - Missing CSRF cookie on page or missing CSRF header in fetch
+- **"No cookie header"** - Missing `prerender = false` in API endpoint
+
+See `docs/UPLOAD_FIXES.md` for full documentation.

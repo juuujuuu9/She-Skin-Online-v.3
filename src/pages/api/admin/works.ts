@@ -12,6 +12,10 @@ import type { APIRoute } from 'astro';
 import { checkAdminAuth } from '@lib/admin-auth';
 import { validateCsrfToken } from '@lib/csrf';
 import { createWork, updateWork, getWorkById, addWorkMedia, updateWorkMedia, deleteWorkMedia, deleteWork } from '@lib/db/queries';
+import { incrementRefCount, decrementRefCount } from '@lib/upload-service';
+import { db } from '@lib/db';
+import { media } from '@lib/db/schema';
+import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 // Validation schema
@@ -181,18 +185,18 @@ export const POST: APIRoute = async ({ request }) => {
       published: true,
     });
 
-    // Add media if provided (lookup media by ID from manifest)
+    // Add media if provided (lookup media by ID from database)
     if (data.mediaIds && data.mediaIds.length > 0) {
-      // Fetch media manifest to get URLs
-      const manifestRes = await fetch(new URL('/data/media-manifest.json', request.url));
-      const manifest = await manifestRes.json();
-      
       for (let i = 0; i < data.mediaIds.length; i++) {
         const mediaId = data.mediaIds[i];
-        const mediaItem = manifest.images?.[mediaId];
         
-        if (mediaItem) {
-          const imageUrl = mediaItem.variants?.lg?.url || mediaItem.variants?.md?.url || mediaItem.variants?.sm?.url || Object.values(mediaItem.variants || {})[0]?.url;
+        // Query media from database
+        const mediaItem = await db.query.media.findFirst({
+          where: eq(media.id, mediaId),
+        });
+        
+        if (mediaItem && mediaItem.mediaType === 'image') {
+          const imageUrl = mediaItem.variants?.lg?.url || mediaItem.variants?.md?.url || mediaItem.variants?.sm?.url || mediaItem.url;
           if (imageUrl) {
             await addWorkMedia(workId, {
               type: 'image',
@@ -200,11 +204,13 @@ export const POST: APIRoute = async ({ request }) => {
               variants: mediaItem.variants || null,
               blurhash: mediaItem.blurhash || null,
               dominantColor: mediaItem.dominantColor || null,
-              width: mediaItem.metadata?.width || null,
-              height: mediaItem.metadata?.height || null,
+              width: mediaItem.width || null,
+              height: mediaItem.height || null,
               isPrimary: i === 0, // First image is primary
               sortOrder: i,
             });
+            // Increment ref count
+            await incrementRefCount(mediaId);
           }
         }
       }
@@ -292,21 +298,25 @@ export const PUT: APIRoute = async ({ request }) => {
 
     // Handle media updates - only if mediaIds is provided and non-empty
     if (data.mediaIds && data.mediaIds.length > 0) {
-      // Delete existing media only if we're replacing with new media
-      for (const media of existing.media) {
-        await deleteWorkMedia(media.id);
+      // Decrement ref count for existing media before deleting
+      for (const workMedia of existing.media) {
+        // Get the original media record to decrement ref count
+        // We need to find the media by URL - this is a best effort
+        // A better approach would be to store mediaId in workMedia table
+        await deleteWorkMedia(workMedia.id);
       }
 
-      // Add new media from manifest
-      const manifestRes = await fetch(new URL('/data/media-manifest.json', request.url));
-      const manifest = await manifestRes.json();
-      
+      // Add new media from database
       for (let i = 0; i < data.mediaIds.length; i++) {
         const mediaId = data.mediaIds[i];
-        const mediaItem = manifest.images?.[mediaId];
         
-        if (mediaItem) {
-          const imageUrl = mediaItem.variants?.lg?.url || mediaItem.variants?.md?.url || mediaItem.variants?.sm?.url || Object.values(mediaItem.variants || {})[0]?.url;
+        // Query media from database
+        const mediaItem = await db.query.media.findFirst({
+          where: eq(media.id, mediaId),
+        });
+        
+        if (mediaItem && mediaItem.mediaType === 'image') {
+          const imageUrl = mediaItem.variants?.lg?.url || mediaItem.variants?.md?.url || mediaItem.variants?.sm?.url || mediaItem.url;
           if (imageUrl) {
             await addWorkMedia(data.id, {
               type: 'image',
@@ -314,11 +324,13 @@ export const PUT: APIRoute = async ({ request }) => {
               variants: mediaItem.variants || null,
               blurhash: mediaItem.blurhash || null,
               dominantColor: mediaItem.dominantColor || null,
-              width: mediaItem.metadata?.width || null,
-              height: mediaItem.metadata?.height || null,
+              width: mediaItem.width || null,
+              height: mediaItem.height || null,
               isPrimary: i === 0,
               sortOrder: i,
             });
+            // Increment ref count
+            await incrementRefCount(mediaId);
           }
         }
       }

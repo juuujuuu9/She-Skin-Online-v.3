@@ -1,54 +1,64 @@
 /**
  * Media Processing Library
- * Handles manifest management for uploaded media files
+ * Handles image/audio/video processing for uploads
  */
 
 import { readFile, writeFile, mkdir, unlink } from 'fs/promises';
 import { join, extname, basename, dirname } from 'path';
+import { createHash } from 'node:crypto';
 import sharp from 'sharp';
 import ffmpeg from 'fluent-ffmpeg';
+import { encode } from 'blurhash';
 
 /**
- * Get media duration using FFmpeg
- * Returns duration in seconds
+ * Generate hash from file buffer
  */
-async function getMediaDuration(filePath: string): Promise<number> {
-  return new Promise((resolve, reject) => {
-    ffmpeg.ffprobe(filePath, (err, metadata) => {
-      if (err) {
-        console.error('FFprobe error:', err);
-        resolve(0);
-        return;
-      }
-      const duration = metadata.format?.duration || 0;
-      resolve(Math.round(duration));
-    });
-  });
+export async function getFileHash(buffer: Buffer): Promise<string> {
+  return createHash('md5').update(buffer).digest('hex').slice(0, 8);
 }
 
 /**
- * Get video dimensions using FFmpeg
+ * Generate blurhash from image buffer
  */
-async function getVideoDimensions(filePath: string): Promise<{ width: number; height: number } | null> {
-  return new Promise((resolve) => {
-    ffmpeg.ffprobe(filePath, (err, metadata) => {
-      if (err) {
-        resolve(null);
-        return;
-      }
-      const videoStream = metadata.streams.find(s => s.codec_type === 'video');
-      if (videoStream?.width && videoStream?.height) {
-        resolve({ width: videoStream.width, height: videoStream.height });
-      } else {
-        resolve(null);
-      }
-    });
-  });
+export async function generateBlurhash(buffer: Buffer): Promise<string> {
+  try {
+    const { data, info } = await sharp(buffer)
+      .resize(32, 32, { fit: 'fill' })
+      .raw()
+      .ensureAlpha()
+      .toBuffer({ resolveWithObject: true });
+    
+    return encode(new Uint8ClampedArray(data), info.width, info.height, 4, 4);
+  } catch (error) {
+    console.error('[generateBlurhash] Failed to generate blurhash:', error);
+    return '';
+  }
+}
+
+/**
+ * Get dominant color from image buffer
+ */
+export async function getDominantColor(buffer: Buffer): Promise<string> {
+  try {
+    const { data, info } = await sharp(buffer)
+      .resize(1, 1, { fit: 'fill' })
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    
+    const r = data[0];
+    const g = data[1];
+    const b = data[2];
+    
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  } catch (error) {
+    console.error('[getDominantColor] Failed to get dominant color:', error);
+    return '#000000';
+  }
 }
 
 // Media configuration
 export const MEDIA_CONFIG = {
-  maxSizeMB: 500, // Increased for video
+  maxSizeMB: 500,
   maxSizeBytes: 500 * 1024 * 1024,
   allowedTypes: {
     // Images
@@ -71,103 +81,46 @@ export const MEDIA_CONFIG = {
     'video/x-matroska': ['.mkv'],
     'video/avi': ['.avi'],
   },
+  // Image processing settings
+  sizes: {
+    sm: 640,
+    md: 1024,
+    lg: 1920,
+    xl: 2560,
+  },
+  imageQuality: 80,
 };
 
-// Types
-export interface PendingFile {
-  id: string;
-  originalName: string;
-  type: 'image' | 'audio' | 'video' | 'document';
-  folder: string;
+// Image variant type
+export interface ImageVariant {
+  url: string;
+  width: number;
+  height: number;
   size: number;
-  mimeType: string;
-  uploadedAt: string;
-  uploadedBy: string;
-  status: 'pending' | 'processing' | 'completed' | 'failed' | 'error';
-  error?: string;
-  originalPath?: string;
-  bunnyUrl?: string;
-  bunnyPath?: string;
 }
 
-export interface ProcessedMedia {
+// Processed image result
+export interface ProcessedImage {
   id: string;
-  type: 'image' | 'audio' | 'video';
   originalName: string;
-  variants: Record<string, {
-    url: string;
-    size: number;
-    width?: number;
-    height?: number;
-  }>;
+  hash: string;
+  variants: Record<string, ImageVariant>;
   metadata: {
-    width?: number;
-    height?: number;
-    duration?: number;
-    format?: string;
+    width: number;
+    height: number;
+    format: string;
   };
-  createdAt: string;
+  blurhash: string;
+  dominantColor: string;
 }
 
-export interface MediaManifest {
-  pending: PendingFile[];
-  images: Record<string, ProcessedMedia>;
-  audio: Record<string, ProcessedMedia>;
-  video: Record<string, ProcessedMedia>;
-}
-
-const MANIFEST_PATH = join(process.cwd(), 'data', 'media-manifest.json');
-
-/**
- * Load the media manifest from disk
- */
-export async function loadManifest(): Promise<MediaManifest> {
-  try {
-    const data = await readFile(MANIFEST_PATH, 'utf-8');
-    return JSON.parse(data);
-  } catch {
-    // Return empty manifest if file doesn't exist
-    return {
-      pending: [],
-      images: {},
-      audio: {},
-    };
-  }
-}
-
-/**
- * Save the media manifest to disk
- */
-export async function saveManifest(manifest: MediaManifest): Promise<void> {
-  const dir = join(process.cwd(), 'data');
-  await mkdir(dir, { recursive: true });
-  await writeFile(MANIFEST_PATH, JSON.stringify(manifest, null, 2), 'utf-8');
-}
-
-// Processing result type
-export interface ProcessingResult {
-  type: 'image' | 'audio';
-  data: ProcessedMedia;
-}
-
-// Public media directory
+// Public media directory (for temporary processing)
 const PUBLIC_MEDIA_DIR = join(process.cwd(), 'public', 'media');
 
-// Image processing config
-const IMAGE_CONFIG = {
-  sizes: {
-    sm: { width: 400, height: 400, fit: 'inside' as const },
-    md: { width: 800, height: 800, fit: 'inside' as const },
-    lg: { width: 1600, height: 1600, fit: 'inside' as const },
-  },
-  quality: 85,
-  effort: 6,
-};
-
 /**
- * Store file in public directory
+ * Store file in public directory (temporary during processing)
  */
-async function storeFile(buffer: Buffer, filename: string, contentType?: string): Promise<string> {
+async function storeFile(buffer: Buffer, filename: string): Promise<string> {
   const filePath = join(PUBLIC_MEDIA_DIR, filename);
   const dir = dirname(filePath);
   await mkdir(dir, { recursive: true });
@@ -179,8 +132,7 @@ async function storeFile(buffer: Buffer, filename: string, contentType?: string)
  * Delete a file from the public media directory
  */
 async function deleteFile(url: string): Promise<void> {
-  // Extract filename from URL (e.g., "/media/images/file.webp" -> "images/file.webp")
-  const filename = url.replace(/^\/media\//, '');
+  const filename = url.replace(/^\media\//, '');
   const filePath = join(PUBLIC_MEDIA_DIR, filename);
   try {
     await unlink(filePath);
@@ -191,303 +143,139 @@ async function deleteFile(url: string): Promise<void> {
 
 /**
  * Process image with Sharp - convert to WebP with multiple sizes
- */
-async function processImageWithSharp(
-  buffer: Buffer,
-  id: string
-): Promise<ProcessedMedia> {
-  const image = sharp(buffer);
-  const metadata = await image.metadata();
-
-  const variants: Record<string, { url: string; size: number; width?: number; height?: number }> = {};
-
-  // Generate WebP variants at different sizes
-  for (const [sizeName, sizeConfig] of Object.entries(IMAGE_CONFIG.sizes)) {
-    const processedBuffer = await image
-      .clone()
-      .resize(sizeConfig.width, sizeConfig.height, {
-        fit: sizeConfig.fit,
-        withoutEnlargement: true,
-      })
-      .webp({
-        quality: IMAGE_CONFIG.quality,
-        effort: IMAGE_CONFIG.effort,
-        smartSubsample: true,
-      })
-      .toBuffer();
-
-    const filename = `${id}-${sizeName}.webp`;
-    const url = await storeFile(processedBuffer, filename);
-
-    variants[sizeName] = {
-      url,
-      size: processedBuffer.length,
-      width: sizeConfig.width,
-      height: sizeConfig.height,
-    };
-  }
-
-  return {
-    id,
-    type: 'image',
-    originalName: `${id}.jpg`,
-    variants,
-    metadata: {
-      width: metadata.width || 0,
-      height: metadata.height || 0,
-      format: 'webp',
-    },
-    createdAt: new Date().toISOString(),
-  };
-}
-
-// ============================================================================
-// Legacy Image Processing (for media-list.ts compatibility)
-// ============================================================================
-
-export interface ProcessedImage {
-  id: string;
-  original: string;
-  hash: string;
-  variants: Record<string, { url: string; width: number; height: number; size: number }>;
-  blurhash: string;
-  dominantColor: string;
-  aspectRatio: number;
-  metadata: {
-    width: number;
-    height: number;
-    format: string;
-    hasAlpha: boolean;
-  };
-}
-
-/**
- * Process image buffer for legacy API compatibility
- * Used by media-list.ts to process uploaded images
+ * Stores temporarily in public directory for upload-service to read
  */
 export async function processImageBuffer(
   buffer: Buffer,
-  filename: string,
-  manifest: MediaManifest
-): Promise<{ result: ProcessedImage; replaced?: boolean }> {
+  filename: string
+): Promise<{ result: ProcessedImage }> {
   const id = basename(filename, extname(filename));
-  const hash = await getFileHash(buffer);
+  const image = sharp(buffer);
+  const metadata = await image.metadata();
+  const originalWidth = metadata.width || 0;
+  const originalHeight = metadata.height || 0;
 
-  // Check for existing
-  const existing = manifest.images[id];
-  if (existing && existing.hash === hash) {
-    return { result: existing };
-  }
+  const variants: Record<string, ImageVariant> = {};
 
-  const pipeline = sharp(buffer);
-  const metadata = await pipeline.metadata();
-  const blurhash = await generateBlurhash(buffer);
-  const dominantColor = await getDominantColor(buffer);
+  // Generate WebP variants at different sizes
+  for (const [sizeName, maxWidth] of Object.entries(MEDIA_CONFIG.sizes)) {
+    // Skip if original is smaller than this size
+    if (originalWidth < maxWidth * 0.5) continue;
 
-  const variants: ProcessedImage['variants'] = {};
-
-  // Generate WebP variants for each size
-  for (const [sizeName, width] of Object.entries(MEDIA_CONFIG.sizes)) {
-    if ((metadata.width || 0) < width) continue;
-
-    const processedBuffer = await pipeline
+    const processedBuffer = await image
       .clone()
-      .resize(width, undefined, { withoutEnlargement: true })
-      .webp({
+      .resize(maxWidth, null, { 
+        withoutEnlargement: true,
+        fit: 'inside'
+      })
+      .webp({ 
         quality: MEDIA_CONFIG.imageQuality,
-        effort: 6,
-        smartSubsample: true,
+        effort: 6 
       })
       .toBuffer();
 
-    const hashedFilename = `images/${id}-${hash}-${sizeName}.webp`;
-    const url = await storeFile(processedBuffer, hashedFilename, 'image/webp');
+    const variantFilename = `images/${id}-${sizeName}.webp`;
+    const url = await storeFile(processedBuffer, variantFilename);
 
-    const processedInfo = await sharp(processedBuffer).metadata();
+    // Get dimensions of resized image
+    const variantInfo = await sharp(processedBuffer).metadata();
 
     variants[sizeName] = {
       url,
-      width: processedInfo.width || width,
-      height: processedInfo.height || Math.round(width / (metadata.width! / metadata.height!)),
+      width: variantInfo.width || maxWidth,
+      height: variantInfo.height || Math.round((variantInfo.width || maxWidth) * (originalHeight / originalWidth)),
       size: processedBuffer.length,
     };
   }
 
+  // Generate metadata
+  const hash = await getFileHash(buffer);
+  const blurhash = await generateBlurhash(buffer);
+  const dominantColor = await getDominantColor(buffer);
+
   const result: ProcessedImage = {
     id,
-    original: filename,
+    originalName: filename,
     hash,
     variants,
+    metadata: {
+      width: originalWidth,
+      height: originalHeight,
+      format: 'webp',
+    },
     blurhash,
     dominantColor,
-    aspectRatio: (metadata.width || 1) / (metadata.height || 1),
-    metadata: {
-      width: metadata.width || 0,
-      height: metadata.height || 0,
-      format: metadata.format || 'unknown',
-      hasAlpha: metadata.hasAlpha || false,
-    },
   };
 
-  // Cleanup old variants
-  if (existing) {
-    for (const variant of Object.values(existing.variants)) {
-      await deleteFile(variant.url);
-    }
-  }
-
-  return { result, replaced: !!existing };
+  return { result };
 }
 
 /**
- * Process audio file - store original and extract metadata
+ * Get audio metadata using ffmpeg
  */
-async function processAudioFile(
-  buffer: Buffer,
-  id: string,
-  originalName: string
-): Promise<ProcessedMedia> {
-  const ext = extname(originalName).toLowerCase() || '.mp3';
-  const filename = `${id}${ext}`;
+export async function getAudioMetadata(buffer: Buffer, filename: string): Promise<{
+  duration: number;
+  format: string;
+  bitrate?: number;
+}> {
+  const ext = extname(filename).toLowerCase().slice(1) || 'mp3';
+  
+  // Store temporarily to analyze
+  const tempPath = join(process.cwd(), 'temp', `audio-${Date.now()}.${ext}`);
+  await mkdir(dirname(tempPath), { recursive: true });
+  await writeFile(tempPath, buffer);
 
-  // Write to temp file for FFprobe
-  const tmpDir = join(process.cwd(), 'tmp');
-  await mkdir(tmpDir, { recursive: true });
-  const tmpPath = join(tmpDir, filename);
-  await writeFile(tmpPath, buffer);
+  return new Promise((resolve, reject) => {
+    ffmpeg.ffprobe(tempPath, (err, metadata) => {
+      // Clean up temp file
+      unlink(tempPath).catch(() => {});
+      
+      if (err) {
+        reject(err);
+        return;
+      }
 
-  // Extract duration
-  let duration = 0;
-  try {
-    duration = await getMediaDuration(tmpPath);
-    console.log(`[processAudioFile] Duration: ${duration}s for ${id}`);
-  } catch (err) {
-    console.error(`[processAudioFile] Failed to get duration for ${id}:`, err);
-  }
-
-  // Store the file
-  const url = await storeFile(buffer, filename);
-
-  // Clean up temp file
-  try {
-    await unlink(tmpPath);
-  } catch {
-    // Ignore cleanup errors
-  }
-
-  return {
-    id,
-    type: 'audio',
-    originalName,
-    variants: {
-      original: { url, size: buffer.length },
-    },
-    metadata: {
-      format: ext.slice(1) || 'mp3',
-      duration,
-    },
-    createdAt: new Date().toISOString(),
-  };
+      const audioStream = metadata.streams.find(s => s.codec_type === 'audio');
+      resolve({
+        duration: metadata.format.duration || 0,
+        format: ext,
+        bitrate: metadata.format.bit_rate,
+      });
+    });
+  });
 }
 
 /**
- * Process video file - store original and extract metadata
+ * Get video metadata using ffmpeg
  */
-async function processVideoFile(
-  buffer: Buffer,
-  id: string,
-  originalName: string,
-  mimeType: string
-): Promise<ProcessedMedia> {
-  const ext = extname(originalName).toLowerCase() || '.mp4';
-  const filename = `${id}${ext}`;
+export async function getVideoMetadata(buffer: Buffer, filename: string): Promise<{
+  duration: number;
+  format: string;
+  width: number;
+  height: number;
+}> {
+  const ext = extname(filename).toLowerCase().slice(1) || 'mp4';
+  
+  const tempPath = join(process.cwd(), 'temp', `video-${Date.now()}.${ext}`);
+  await mkdir(dirname(tempPath), { recursive: true });
+  await writeFile(tempPath, buffer);
 
-  // Write to temp file for FFprobe
-  const tmpDir = join(process.cwd(), 'tmp');
-  await mkdir(tmpDir, { recursive: true });
-  const tmpPath = join(tmpDir, filename);
-  await writeFile(tmpPath, buffer);
+  return new Promise((resolve, reject) => {
+    ffmpeg.ffprobe(tempPath, (err, metadata) => {
+      unlink(tempPath).catch(() => {});
+      
+      if (err) {
+        reject(err);
+        return;
+      }
 
-  // Extract duration and dimensions
-  let duration = 0;
-  let width = 1920;
-  let height = 1080;
-
-  try {
-    duration = await getMediaDuration(tmpPath);
-    const dimensions = await getVideoDimensions(tmpPath);
-    if (dimensions) {
-      width = dimensions.width;
-      height = dimensions.height;
-    }
-    console.log(`[processVideoFile] Duration: ${duration}s, ${width}x${height} for ${id}`);
-  } catch (err) {
-    console.error(`[processVideoFile] Failed to get metadata for ${id}:`, err);
-  }
-
-  // Store the file
-  const url = await storeFile(buffer, filename);
-
-  // Clean up temp file
-  try {
-    await unlink(tmpPath);
-  } catch {
-    // Ignore cleanup errors
-  }
-
-  return {
-    id,
-    type: 'video',
-    originalName,
-    variants: {
-      original: { url, size: buffer.length },
-    },
-    metadata: {
-      format: ext.slice(1) || 'mp4',
-      duration,
-      width,
-      height,
-    },
-    createdAt: new Date().toISOString(),
-  };
-}
-
-/**
- * Process a media file (image, audio, or video)
- * Images are converted to WebP with multiple sizes for optimal performance
- */
-export async function processMediaFile(
-  buffer: Buffer,
-  filename: string,
-  mimeType: string,
-  manifest: MediaManifest
-): Promise<ProcessingResult> {
-  const ext = extname(filename).toLowerCase();
-  const id = filename.replace(/\.[^.]+$/, '');
-  const isImage = ['.jpg', '.jpeg', '.png', '.webp', '.tiff', '.tif', '.gif'].includes(ext);
-  const isAudio = ['.wav', '.aiff', '.flac', '.m4a', '.mp3', '.ogg'].includes(ext);
-  const isVideo = ['.mp4', '.m4v', '.webm', '.mov', '.mkv', '.avi'].includes(ext);
-
-  if (isImage) {
-    const result = await processImageWithSharp(buffer, id);
-
-    console.log(`[processMediaFile] Image processed: ${id}`);
-    console.log(`  Original size: ${(buffer.length / 1024).toFixed(1)}KB`);
-    console.log(`  WebP sizes: sm=${(result.variants.sm.size / 1024).toFixed(1)}KB, md=${(result.variants.md.size / 1024).toFixed(1)}KB, lg=${(result.variants.lg.size / 1024).toFixed(1)}KB`);
-
-    return { type: 'image', data: result };
-  }
-
-  if (isAudio) {
-    const result = await processAudioFile(buffer, id, filename);
-    return { type: 'audio', data: result };
-  }
-
-  if (isVideo) {
-    const result = await processVideoFile(buffer, id, filename, mimeType);
-    console.log(`[processMediaFile] Video stored: ${id} (${(buffer.length / 1024 / 1024).toFixed(1)}MB)`);
-    return { type: 'video', data: result };
-  }
-
-  throw new Error(`Unsupported file type: ${ext}`);
+      const videoStream = metadata.streams.find(s => s.codec_type === 'video');
+      resolve({
+        duration: metadata.format.duration || 0,
+        format: ext,
+        width: videoStream?.width || 0,
+        height: videoStream?.height || 0,
+      });
+    });
+  });
 }

@@ -1,85 +1,48 @@
 ---
-/**
- * Admin Dashboard - Main admin landing page
- */
-
 export const prerender = false;
 
 import Layout from '@layouts/Layout.astro';
 import { checkAdminAuth } from '@lib/admin-auth';
 import { generateCsrfToken } from '@lib/csrf';
-import { db } from '@lib/db';
-import { media } from '@lib/db/schema';
-import { isNull, desc } from 'drizzle-orm';
-import { loadManifest } from '@lib/media-process';
+import { listMedia } from '@lib/upload-service';
 
 // Generate and set CSRF token
 const csrf = generateCsrfToken();
 Astro.response.headers.set('Set-Cookie', csrf.cookie);
 
-// Debug: Log cookie header received
-const cookieHeader = Astro.request.headers.get('cookie');
-console.log('[admin/index] Cookie header:', cookieHeader ? 'present (length: ' + cookieHeader.length + ')' : 'MISSING');
-console.log('[admin/index] Cookie names:', cookieHeader ? cookieHeader.split(';').map(c => c.split('=')[0].trim()).join(', ') : 'none');
-
 // Check auth
 const auth = await checkAdminAuth(Astro.request);
-console.log('[admin/index] Auth result:', auth.valid ? 'valid' : 'invalid', auth.debug ? `(debug: ${auth.debug})` : '');
 if (!auth.valid) {
   const reason = auth.debug || 'unknown';
   return Astro.redirect(`/admin/login?session=expired&reason=${encodeURIComponent(reason)}`);
 }
 
-// Load manifest for status counts and processed media
-const manifest = await loadManifest();
-const pendingCount = manifest.pending.filter(p => p.status === 'pending').length;
-const processingCount = manifest.pending.filter(p => p.status === 'processing').length;
-const errorCount = manifest.pending.filter(p => p.status === 'error').length;
-// Sort by createdAt descending (most recent first)
-const sortByDate = (a: { createdAt: string }, b: { createdAt: string }) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+// Load media from database
+const { media: allMedia } = await listMedia({ limit: 100 });
 
-const processedImages = Object.values(manifest.images).sort(sortByDate);
-const processedAudio = Object.values(manifest.audio).sort(sortByDate);
-const processedVideo = Object.values(manifest.video || {}).sort(sortByDate);
+// Group by type
+const images = allMedia.filter(m => m.mediaType === 'image');
+const audio = allMedia.filter(m => m.mediaType === 'audio');
+const video = allMedia.filter(m => m.mediaType === 'video');
 
-// Get recent media from database
-const recentMedia = await db.query.media.findMany({
-  where: isNull(media.deletedAt),
-  orderBy: [desc(media.createdAt)],
-  limit: 12,
-});
-
-// Format bytes helper
+// Format helpers
 const formatBytes = (bytes: number) => {
   if (bytes < 1024) return bytes + ' B';
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
   return (bytes / 1024 / 1024).toFixed(1) + ' MB';
 };
 
-// Format duration helper
-const formatDuration = (seconds: number) => {
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
-};
-
-// Site URL for full media URLs
-const siteUrl = import.meta.env.SITE_URL || 'http://localhost:4321';
-const toFullUrl = (path: string) => {
-  if (!path) return '';
-  if (path.startsWith('http')) return path;
-  return `${siteUrl}${path}`;
-};
-
 const currentPath = Astro.url.pathname;
 const adminNavItems = [
   { href: '/admin', label: 'Uploads', icon: 'dashboard' },
+  { href: '/admin/media', label: 'Media Library', icon: 'media' },
   { href: '/admin/audio', label: 'ICT★SNU SOUND', icon: 'audio' },
   { href: '/admin/works', label: 'Works', icon: 'works' },
   { href: '/admin/products', label: 'Inventory', icon: 'products' },
 ];
 const iconPaths: Record<string, string> = {
   dashboard: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />`,
+  media: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />`,
   audio: `<path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M21.6464 2.23699C21.8707 2.42699 22 2.70606 22 3.00001V16C22 18.2091 20.2091 20 18 20C15.7909 20 14 18.2091 14 16C14 13.7909 15.7909 12 18 12C18.7286 12 19.4117 12.1948 20 12.5351V4.18047L10 5.84713V18L9.99999 18.0032C9.99824 20.2109 8.20806 22 6 22C3.79086 22 2 20.2091 2 18C2 15.7909 3.79086 14 6 14C6.72857 14 7.41165 14.1948 8 14.5351V5.00001C8 4.51117 8.35341 4.09398 8.8356 4.01361L20.8356 2.01361C21.1256 1.96529 21.4221 2.04698 21.6464 2.23699ZM20 16C20 14.8954 19.1046 14 18 14C16.8954 14 16 14.8954 16 16C16 17.1046 16.8954 18 18 18C19.1046 18 20 17.1046 20 16ZM6 16C7.10457 16 8 16.8954 8 18C8 19.1046 7.10457 20 6 20C4.89543 20 4 19.1046 4 18C4 16.8954 4.89543 16 6 16Z" />`,
   works: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />`,
   products: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />`,
@@ -91,10 +54,22 @@ const isActive = (href: string) => {
 ---
 
 <Layout title="Uploads - she_skin Admin">
-  <div class="h-dvh bg-gray-50 flex flex-col overflow-hidden">
+  <style>
+    @keyframes fadeInSlide {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+  <div class="h-dvh bg-[#0a0a0a] flex flex-col overflow-hidden">
     <div class="flex flex-row flex-1 min-h-0 items-stretch">
-      {/* Admin sidebar - in-page */}
-      <aside class="w-64 shrink-0 flex flex-col bg-[#0a0a0a] text-white self-stretch">
+      {/* Admin sidebar */}
+      <aside class="w-64 shrink-0 flex flex-col bg-[#0a0a0a] text-white self-stretch border-r border-white/10">
         <div class="flex items-center justify-between p-4 border-b border-white/10">
           <a href="/admin" class="text-lg font-bold tracking-tight text-white hover:text-white/90">
             she_skin
@@ -147,410 +122,188 @@ const isActive = (href: string) => {
           </ul>
         </nav>
       </aside>
-      <div class="px-4 sm:px-6 lg:px-8 py-4 flex-1 flex flex-col min-h-0 overflow-hidden">
-        <h1 class="text-2xl font-bold text-gray-900 mb-4 shrink-0">Uploads</h1>
 
-        <div class="flex-1 flex gap-6 min-h-0">
-          {/* Media Library - takes 2/3 of space */}
-          <div class="w-2/3 min-w-0 flex flex-col bg-white rounded-lg shadow-sm border border-gray-200 min-h-0">
-            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between shrink-0">
-              <div class="flex items-center gap-3">
-                <h2 class="text-lg font-medium text-gray-900">Media Gallery</h2>
-                <span class="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                  {processedImages.length + processedAudio.length + processedVideo.length} items
-                </span>
-                {/* Multi-select controls - hidden by default, shown when category active */}
-                <div id="multi-select-controls" class="hidden items-center gap-2 ml-4 pl-4 border-l border-gray-200">
-                  <button
-                    type="button"
-                    id="multi-select-btn"
-                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      {/* Main content */}
+      <main class="flex-1 min-w-0 bg-[#111] overflow-y-auto">
+        <div class="p-6 max-w-7xl mx-auto">
+          <header class="mb-6 flex items-center justify-between">
+            <div>
+              <h1 class="text-2xl font-semibold text-white">Uploads</h1>
+              <p class="text-gray-400 mt-1">Upload files to the Media Library</p>
+            </div>
+            <a href="/admin/media" class="text-sm text-blue-400 hover:text-blue-300">
+              View Full Media Library →
+            </a>
+          </header>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Upload Area */}
+            <div class="lg:col-span-1">
+              <div class="bg-[#1a1a1a] rounded-xl border border-[#333] p-6">
+                <h2 class="text-lg font-medium text-white mb-4">Upload Files</h2>
+                <div
+                  id="dashboard-dropzone"
+                  class="border-2 border-dashed border-[#444] rounded-lg p-8 text-center transition-colors hover:border-[#666] hover:bg-[#222] flex flex-col items-center justify-center min-h-[200px]"
+                >
+                  <input
+                    type="file"
+                    id="dashboard-file-input"
+                    class="absolute w-0 h-0 opacity-0"
+                    accept="image/*,audio/*,video/*"
+                    multiple
+                  />
+                  <label for="dashboard-file-input" class="cursor-pointer flex flex-col items-center justify-center w-full h-full">
+                    <svg class="w-12 h-12 text-[#666] mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                     </svg>
-                    <span>Select</span>
-                  </button>
-                  <button
-                    type="button"
-                    id="select-all-btn"
-                    class="hidden items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                    <span>Select All</span>
-                  </button>
-                  <button
-                    type="button"
-                    id="bulk-delete-btn"
-                    class="hidden items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                    <span>Delete</span>
-                    <span id="selected-count" class="ml-1 text-xs bg-red-100 px-1.5 py-0.5 rounded-full">0</span>
-                  </button>
+                    <p class="text-gray-400 font-medium">Drag & drop files here</p>
+                    <p class="text-sm text-gray-600 mt-1">or click to browse</p>
+                    <p class="text-xs text-gray-500 mt-3">Images, Audio, Video • Max 500MB</p>
+                  </label>
                 </div>
+                <div id="dashboard-upload-feedback" class="hidden mt-3 text-sm"></div>
               </div>
-              <div class="flex items-center gap-2 text-sm">
-                {processedImages.length > 0 && (
-                  <button
-                    type="button"
-                    class="gallery-filter-btn flex items-center gap-1 px-2 py-1 rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-all"
-                    data-filter="images"
-                    title="Show only images"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    {processedImages.length}
-                  </button>
-                )}
-                {processedAudio.length > 0 && (
-                  <button
-                    type="button"
-                    class="gallery-filter-btn flex items-center gap-1 px-2 py-1 rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-all"
-                    data-filter="audio"
-                    title="Show only audio"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                    </svg>
-                    {processedAudio.length}
-                  </button>
-                )}
-                {processedVideo.length > 0 && (
-                  <button
-                    type="button"
-                    class="gallery-filter-btn flex items-center gap-1 px-2 py-1 rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-all"
-                    data-filter="video"
-                    title="Show only video"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                    </svg>
-                    {processedVideo.length}
-                  </button>
-                )}
+
+              {/* Stats */}
+              <div class="bg-[#1a1a1a] rounded-xl border border-[#333] p-4 mt-4">
+                <div class="grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <div class="text-2xl font-semibold text-white">{images.length}</div>
+                    <div class="text-xs text-gray-500 uppercase">Images</div>
+                  </div>
+                  <div>
+                    <div class="text-2xl font-semibold text-white">{audio.length}</div>
+                    <div class="text-xs text-gray-500 uppercase">Audio</div>
+                  </div>
+                  <div>
+                    <div class="text-2xl font-semibold text-white">{video.length}</div>
+                    <div class="text-xs text-gray-500 uppercase">Video</div>
+                  </div>
+                </div>
               </div>
             </div>
-            <div class="p-6 flex-1 min-h-0 overflow-auto">
-              {/* Images Section */}
-              {processedImages.length > 0 && (
-                <div class="gallery-section mb-6" data-section="images">
-                  <h3 class="text-sm font-medium text-gray-700 mb-3 uppercase tracking-wide">Images</h3>
-                  <div class="grid grid-cols-4 gap-4">
-                    {processedImages.slice(0, 8).map((img) => (
-                      <div class="group relative bg-gray-100 rounded-lg overflow-hidden border border-gray-200 hover:border-gray-400 transition-all hover:shadow-md">
-                        {/* Delete button - top left */}
-                        <button
-                          class="delete-media-btn absolute top-2 left-2 z-10 p-1.5 bg-red-500/80 hover:bg-red-600 text-white rounded opacity-0 group-hover:opacity-100 transition-all"
-                          data-id={img.id}
-                          data-type="image"
-                          title="Delete image"
-                        >
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
 
-                        <div class="aspect-square cursor-pointer relative bg-gray-50 flex items-center justify-center overflow-hidden" onclick={`window.open('${img.variants.lg?.url || img.variants.md?.url || img.variants.sm?.url}', '_blank')`}>
-                          <img
-                            src={img.variants.sm?.url || img.variants.md?.url || Object.values(img.variants)[0]?.url}
-                            alt={img.originalName}
-                            class="max-w-full max-h-full object-contain transition-transform group-hover:scale-105"
-                            loading="lazy"
-                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-                          />
-                          <div class="hidden absolute inset-0 items-center justify-center text-gray-400 bg-gray-100">
-                            <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                          </div>
-                        </div>
-                        <div class="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/80 via-black/40 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-all">
-                          <div class="flex items-center gap-2">
-                            <button
-                              class="copy-media-url flex-1 text-xs text-white font-mono bg-white/20 hover:bg-white/30 rounded px-2 py-1.5 transition-colors text-left truncate"
-                              data-url={toFullUrl(img.variants.lg?.url || img.variants.md?.url || Object.values(img.variants)[0]?.url)}
-                              title="Click to copy URL"
-                            >
-                              {img.id}
-                            </button>
-                            <button
-                              class="p-1.5 bg-white/20 hover:bg-white/30 rounded text-white transition-colors"
-                              onclick={`window.open('${img.variants.lg?.url || img.variants.md?.url || Object.values(img.variants)[0]?.url}', '_blank')`}
-                              title="View full size"
-                            >
-                              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                              </svg>
-                            </button>
-                          </div>
-                        </div>
-                        <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <span class="text-xs text-white bg-black/50 rounded px-1.5 py-0.5">
-                            {img.metadata.width && img.metadata.height ? `${img.metadata.width}×${img.metadata.height}` : 'image'}
-                          </span>
-                          <span class="text-xs text-white bg-black/50 rounded px-1.5 py-0.5">
-                            {(Object.values(img.variants)[0]?.size / 1024 / 1024).toFixed(1)} MB
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  {processedImages.length > 8 && (
-                    <div class="mt-3 text-center">
-                      <button
-                        type="button"
-                        class="show-more-btn text-sm text-gray-500 hover:text-yellow-600 hover:underline transition-all"
-                        data-show="images"
-                      >
-                        +{processedImages.length - 8} more images
-                      </button>
-                    </div>
-                  )}
+            {/* Recent Media */}
+            <div class="lg:col-span-2">
+              <div class="bg-[#1a1a1a] rounded-xl border border-[#333] p-6 relative">
+                <div class="flex items-center justify-between mb-4">
+                  <h2 class="text-lg font-medium text-white">Recent Uploads</h2>
+                  <label class="flex items-center gap-2 cursor-pointer select-none">
+                    <input type="checkbox" id="select-all-recent" class="w-4 h-4 accent-blue-500">
+                    <span class="text-sm text-gray-400">Select All</span>
+                  </label>
                 </div>
-              )}
 
-              {/* Audio Section */}
-              {processedAudio.length > 0 && (
-                <div class="gallery-section" data-section="audio">
-                  <h3 class="text-sm font-medium text-gray-700 mb-3 uppercase tracking-wide">Audio</h3>
-                  <div class="grid grid-cols-2 gap-3">
-                    {processedAudio.map((track, index) => (
-                      <div class={`group relative bg-linear-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-200 hover:border-blue-300 transition-all p-4 ${index >= 4 ? 'gallery-item-extra hidden' : ''}`} data-media-id={track.id} data-media-type="audio">
-                        {/* Multi-select checkbox - top left (hidden by default) */}
-                        <label class="multi-select-checkbox hidden absolute top-2 left-2 z-20 flex items-center justify-center">
-                          <input type="checkbox" class="media-select-checkbox w-5 h-5 rounded border-gray-300 text-black focus:ring-black cursor-pointer" value={track.id} data-type="audio">
-                        </label>
-                        {/* Delete button - top left */}
-                        <button
-                          class="delete-media-btn absolute top-2 left-2 z-10 p-1.5 bg-red-500/80 hover:bg-red-600 text-white rounded opacity-0 group-hover:opacity-100 transition-all"
-                          data-id={track.id}
-                          data-type="audio"
-                          title="Delete audio"
-                        >
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-
-                        {/* Waveform visualization */}
-                        <div class="h-12 flex items-center gap-0.5 mb-3 opacity-60">
-                          {Array.from({ length: 20 }).map((_, i) => {
-                            const height = 20 + Math.random() * 60;
-                            return (
-                              <div
-                                class="flex-1 bg-blue-400 rounded-full transition-all group-hover:bg-blue-500"
-                                style={`height: ${height}%; min-height: 4px;`}
-                              />
-                            );
-                          })}
-                        </div>
-
-                        <div class="flex items-center gap-3">
-                          <button
-                            class="audio-play-btn w-10 h-10 bg-blue-500 hover:bg-blue-600 rounded-full flex items-center justify-center text-white shrink-0 shadow-sm transition-colors"
-                            data-url={toFullUrl(track.variants.original?.url)}
-                            data-id={track.id}
-                            aria-label="Play"
-                          >
-                            {/* Play icon */}
-                            <svg class="play-icon w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M8 5v14l11-7z"/>
-                            </svg>
-                            {/* Stop icon - hidden by default */}
-                            <svg class="stop-icon w-5 h-5 hidden" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M6 6h12v12H6z"/>
-                            </svg>
-                          </button>
-                          <div class="flex-1 min-w-0">
-                            <button
-                              class="copy-media-url text-sm font-mono text-gray-900 hover:text-blue-600 transition-colors truncate block text-left font-medium"
-                              data-url={toFullUrl(track.variants.original?.url)}
-                              title="Click to copy URL"
-                            >
-                              {track.id}
-                            </button>
-                            <div class="text-xs text-gray-500 flex items-center gap-2">
-                              <span>{formatDuration(track.metadata.duration || 0)}</span>
-                              <span>•</span>
-                              <span>{track.metadata.format?.toUpperCase() || 'AUDIO'} {formatBytes(track.variants.original?.size || 0)}</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Audio element - hidden */}
-                        <audio class="audio-player hidden" data-id={track.id} preload="none">
-                          <source src={toFullUrl(track.variants.original?.url)} type={`audio/${track.metadata.format || 'mpeg'}`} />
-                        </audio>
-                      </div>
-                    ))}
+                {/* Bulk actions bar */}
+                <div id="bulk-actions-bar" class="mb-4 p-3 bg-[#1a3a5c] rounded-lg border border-[#2a5a8c] items-center justify-between" style="display: none;">
+                  <span id="bulk-actions-text" class="text-sm text-white font-medium">0 items selected</span>
+                  <div class="flex items-center gap-2">
+                    <button id="bulk-cancel-btn" class="px-3 py-1.5 text-sm text-white border border-gray-500 rounded hover:bg-gray-700 transition-colors">
+                      Cancel
+                    </button>
+                    <button id="bulk-delete-btn" class="px-3 py-1.5 text-sm text-white bg-red-500 hover:bg-red-600 rounded transition-colors">
+                      Delete Selected
+                    </button>
                   </div>
-                  {processedAudio.length > 4 && (
-                    <div class="mt-3 text-center show-more-container" data-for="audio">
-                      <button
-                        type="button"
-                        class="show-more-btn text-sm text-gray-500 hover:text-yellow-600 hover:underline transition-all"
-                        data-show="audio"
-                      >
-                        +{processedAudio.length - 4} more audio files
-                      </button>
-                    </div>
-                  )}
                 </div>
-              )}
 
-              {/* Video Section */}
-              {processedVideo.length > 0 && (
-                <div class="gallery-section mb-6" data-section="video">
-                  <h3 class="text-sm font-medium text-gray-700 mb-3 uppercase tracking-wide">Video</h3>
-                  <div class="grid grid-cols-2 gap-4">
-                    {processedVideo.map((vid, index) => (
-                      <div class={`group relative bg-gray-900 rounded-lg overflow-hidden border border-gray-200 hover:border-gray-400 transition-all hover:shadow-md ${index >= 4 ? 'gallery-item-extra hidden' : ''}`} data-media-id={vid.id} data-media-type="video">
-                        {/* Multi-select checkbox - top left (hidden by default) */}
-                        <label class="multi-select-checkbox hidden absolute top-2 left-2 z-30 flex items-center justify-center">
-                          <input type="checkbox" class="media-select-checkbox w-5 h-5 rounded border-gray-300 text-black focus:ring-black cursor-pointer" value={vid.id} data-type="video">
-                        </label>
-                        {/* Delete button - top left */}
-                        <button
-                          class="delete-media-btn absolute top-2 left-2 z-20 p-1.5 bg-red-500/80 hover:bg-red-600 text-white rounded opacity-0 group-hover:opacity-100 transition-all"
-                          data-id={vid.id}
-                          data-type="video"
-                          title="Delete video"
-                        >
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-
-                        {/* Video thumbnail with play button */}
-                        <div class="video-thumbnail aspect-video relative bg-gray-800 cursor-pointer overflow-hidden" data-video-url={toFullUrl(vid.variants.original?.url)} data-video-id={vid.id}>
-                          {/* Video element as thumbnail - shows first frame */}
-                          <video
-                            class="video-poster w-full h-full object-cover transition-transform group-hover:scale-105"
-                            preload="metadata"
-                            muted
-                            playsinline
-                          >
-                            <source src={toFullUrl(vid.variants.original?.url)} type={`video/${vid.metadata.format === 'mov' ? 'quicktime' : vid.metadata.format || 'mp4'}`} />
-                          </video>
-
-                          {/* Play overlay button */}
-                          <div class="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <div class="w-14 h-14 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-lg transition-colors">
-                              <svg class="w-7 h-7 text-gray-900 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M8 5v14l11-7z"/>
-                              </svg>
-                            </div>
-                          </div>
-
-                          {/* Duration badge */}
-                          <div class="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                            {formatDuration(vid.metadata.duration || 0)}
-                          </div>
-                        </div>
-
-                        {/* Bottom overlay with info */}
-                        <div class="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/90 via-black/60 to-transparent p-4 pt-10 opacity-0 group-hover:opacity-100 transition-all">
-                          <div class="flex items-center gap-2">
-                            <button
-                              class="copy-media-url flex-1 text-xs text-white font-mono bg-white/20 hover:bg-white/30 rounded px-2 py-1.5 transition-colors text-left truncate"
-                              data-url={toFullUrl(vid.variants.original?.url)}
-                              title="Click to copy URL"
-                            >
-                              {vid.id}
-                            </button>
-                            <button
-                              class="p-1.5 bg-white/20 hover:bg-white/30 rounded text-white transition-colors"
-                              onclick={`window.open('${toFullUrl(vid.variants.original?.url)}', '_blank')`}
-                              title="View full video"
-                            >
-                              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                              </svg>
-                            </button>
-                          </div>
-                          <div class="mt-2 text-xs text-white/70 flex items-center gap-2">
-                            <span>{vid.metadata.format?.toUpperCase() || 'MP4'}</span>
-                            <span>•</span>
-                            <span>{formatBytes(vid.variants.original?.size || 0)}</span>
-                            {vid.metadata.width && vid.metadata.height && (
-                              <>
-                                <span>•</span>
-                                <span>{vid.metadata.width}×{vid.metadata.height}</span>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  {processedVideo.length > 4 && (
-                    <div class="mt-3 text-center show-more-container" data-for="video">
-                      <button
-                        type="button"
-                        class="show-more-btn text-sm text-gray-500 hover:text-yellow-600 hover:underline transition-all"
-                        data-show="video"
-                      >
-                        +{processedVideo.length - 4} more videos
-                      </button>
-                    </div>
-                  )}
+                {/* Upload Spinner Overlay */}
+                <div id="upload-spinner-overlay" class="absolute inset-0 bg-[#1a1a1a]/90 z-50 flex flex-col items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 rounded-xl">
+                  <div class="w-12 h-12 border-4 border-[#333] border-t-[#4a9eff] rounded-full animate-spin mb-4"></div>
+                  <p class="text-white font-medium mb-2">Uploading...</p>
+                  <p class="text-sm text-gray-400">Don't close this page until upload completes</p>
+                  <p id="upload-spinner-file" class="text-xs text-gray-500 mt-2 max-w-[80%] text-center truncate"></p>
                 </div>
-              )}
 
-              {processedImages.length === 0 && processedAudio.length === 0 && processedVideo.length === 0 && (
-                <div class="py-16 text-center">
-                  <div class="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-2xl flex items-center justify-center">
-                    <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {allMedia.length === 0 ? (
+                  <div id="media-empty-state" class="text-center py-12">
+                    <svg class="w-16 h-16 text-[#333] mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
+                    <p class="text-gray-400">No media yet</p>
+                    <p class="text-sm text-gray-500 mt-1">Upload files to see them here</p>
                   </div>
-                  <p class="text-gray-900 font-medium">No media yet</p>
-                  <p class="text-sm text-gray-500 mt-1 max-w-sm mx-auto">Upload images, audio, or video files using the dropzone on the right. They'll appear here with thumbnails.</p>
-                </div>
-              )}
-            </div>
-          </div>
+                ) : (
+                  <div id="media-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {allMedia.slice(0, 12).map((item) => (
+                      <div class="media-item group relative bg-[#222] rounded-lg overflow-hidden border border-[#333] hover:border-[#555] transition-all" data-id={item.id}>
+                        {/* Thumbnail */}
+                        <div class="aspect-square relative bg-[#1a1a1a] flex items-center justify-center overflow-hidden">
+                          {item.mediaType === 'image' ? (
+                            <img
+                              src={item.variants?.sm?.url || item.url}
+                              alt={item.originalName}
+                              class="w-full h-full object-cover"
+                              loading="lazy"
+                            />
+                          ) : item.mediaType === 'audio' ? (
+                            <div class="flex flex-col items-center justify-center text-[#666]">
+                              <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                              </svg>
+                              <span class="text-xs mt-2">Audio</span>
+                            </div>
+                          ) : (
+                            <div class="flex flex-col items-center justify-center text-[#666]">
+                              <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                              </svg>
+                              <span class="text-xs mt-2">Video</span>
+                            </div>
+                          )}
 
-          {/* Upload area - takes 1/3 of space */}
-          <div class="w-1/3 min-w-0 flex flex-col bg-white rounded-lg shadow-sm border border-gray-200 min-h-0 p-6">
-            <div
-              id="dashboard-dropzone"
-              class="flex-1 min-h-0 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center transition-colors cursor-pointer hover:border-gray-400 hover:bg-gray-50/50 data-dragover:border-black data-dragover:bg-gray-100 flex flex-col items-center justify-center"
-            >
-              <input
-                type="file"
-                id="dashboard-file-input"
-                class="hidden"
-                accept="image/jpeg,image/png,image/tiff,image/webp,image/gif,.jpg,.jpeg,.png,.tiff,.webp,.gif,audio/wav,audio/aiff,audio/flac,audio/x-m4a,audio/mpeg,audio/ogg,.wav,.aiff,.flac,.m4a,.mp3,.ogg,video/mp4,video/webm,video/quicktime,video/x-matroska,video/avi,.mp4,.m4v,.webm,.mov,.mkv,.avi"
-                multiple
-              />
-              <svg class="w-12 h-12 text-gray-400 mb-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-              </svg>
-              <p class="text-gray-600 font-medium">Drag and drop files here, or click to browse</p>
-              <p class="text-sm text-gray-500 mt-1">Images: JPG, PNG, WebP, TIFF, GIF • Audio: MP3, WAV, FLAC, M4A, OGG • Video: MP4, WebM, MOV, MKV, AVI • Max 500MB per file</p>
+                          {/* Checkbox for selection */}
+                          <label class="media-checkbox absolute top-2 right-2 p-1 bg-black/50 rounded cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
+                            <input type="checkbox" class="media-select w-5 h-5 accent-blue-500" data-id={item.id}>
+                          </label>
+
+                          {/* Delete button */}
+                          <button
+                            class="delete-btn absolute bottom-2 right-2 p-1.5 bg-red-500/80 hover:bg-red-600 text-white rounded opacity-0 group-hover:opacity-100 transition-all"
+                            data-id={item.id}
+                            title="Delete"
+                          >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+
+                          {/* Type badge */}
+                          <span class="absolute top-2 left-2 text-xs text-white bg-black/50 px-2 py-0.5 rounded uppercase">
+                            {item.mediaType}
+                          </span>
+                        </div>
+
+                        {/* Info */}
+                        <div class="p-3">
+                          <p class="text-sm text-white truncate" title={item.originalName}>{item.originalName}</p>
+                          <p class="text-xs text-gray-500 mt-1">{formatBytes(item.fileSize)}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {allMedia.length > 12 && (
+                  <div class="mt-4 text-center">
+                    <a href="/admin/media" class="text-sm text-blue-400 hover:text-blue-300">
+                      View all {allMedia.length} items →
+                    </a>
+                  </div>
+                )}
+              </div>
             </div>
-            <div id="dashboard-upload-feedback" class="hidden mt-3 text-sm text-gray-600 shrink-0"></div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   </div>
-  <script is:inline define:vars={{ csrfToken: csrf.token }}>
-    window.CSRF_TOKEN = csrfToken;
-  </script>
+
   <script>
-    // Admin navigation - bypass Astro View Transitions for full page reloads
+    // Navigation
     document.querySelectorAll('a[data-nav-link]').forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
-        e.stopPropagation();
         window.location.href = link.getAttribute('href') || '/';
       });
     });
@@ -560,719 +313,497 @@ const isActive = (href: string) => {
       try {
         const res = await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' });
         if (res.ok) window.location.href = '/admin/login?logged_out=1';
-        else if (res.status === 401) window.location.href = '/admin/login?session=expired';
-        else alert('Logout failed. Please try again.');
+        else window.location.href = '/admin/login?session=expired';
       } catch {
-        alert('Logout failed. Please try again.');
+        alert('Logout failed');
       }
     });
 
-    // Dashboard dropzone
+    // Upload
     const dropzone = document.getElementById('dashboard-dropzone');
     const fileInput = document.getElementById('dashboard-file-input') as HTMLInputElement;
     const feedback = document.getElementById('dashboard-upload-feedback');
 
-    if (dropzone && fileInput && feedback) {
-      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach((ev) => {
-        dropzone.addEventListener(ev, (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-        });
+    if (dropzone && fileInput) {
+      // Drag and drop handlers (click is handled natively by the label)
+      dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.classList.add('border-[#666]', 'bg-[#222]');
       });
-      ['dragenter', 'dragover'].forEach((ev) => {
-        dropzone.addEventListener(ev, () => dropzone.setAttribute('data-dragover', 'true'));
+      dropzone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('border-[#666]', 'bg-[#222]');
       });
-      ['dragleave', 'drop'].forEach((ev) => {
-        dropzone.addEventListener(ev, () => dropzone.removeAttribute('data-dragover'));
-      });
-
-      dropzone.addEventListener('click', () => fileInput.click());
       dropzone.addEventListener('drop', (e: DragEvent) => {
         e.preventDefault();
-        e.stopPropagation();
-        const files = e.dataTransfer?.files;
-        if (files && files.length > 0) {
-          console.log('[drop] Files dropped:', files.length);
-          handleFiles(files);
-        } else {
-          console.error('[drop] No files in drop event');
+        dropzone.classList.remove('border-[#666]', 'bg-[#222]');
+        if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
+          handleFiles(Array.from(e.dataTransfer.files));
         }
       });
       fileInput.addEventListener('change', () => {
         if (fileInput.files && fileInput.files.length > 0) {
-          console.log('[input] Files selected:', fileInput.files.length);
-          handleFiles(fileInput.files);
+          // Copy files to array before async processing
+          const filesArray = Array.from(fileInput.files);
+          handleFiles(filesArray);
         }
-        fileInput.value = '';
       });
+    }
 
-      async function uploadFile(file: File): Promise<{ id: string }> {
+    function uploadFileWithProgress(file: File, onProgress: (percent: number) => void): Promise<any> {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
         const formData = new FormData();
         formData.append('file', file);
 
-        // Get fresh CSRF token from cookie
-        const csrfMatch = document.cookie.match(/csrf_token=([^;]+)/);
-        const csrfToken = csrfMatch ? csrfMatch[1] : '';
-
-        // Debug logging
-        console.log('[upload] CSRF_TOKEN from cookie:', csrfToken.substring(0, 20) + '...');
-
-        const uploadUrl = new URL('/api/admin/media/upload', window.location.href).href;
-        console.log('[upload] Uploading to:', uploadUrl);
-
-        const res = await fetch(uploadUrl, {
-          method: 'POST',
-          body: formData,
-          credentials: 'include',
-          headers: {
-            'X-CSRF-Token': csrfToken
+        xhr.upload.addEventListener('progress', (event) => {
+          if (event.lengthComputable) {
+            const percentComplete = Math.round((event.loaded / event.total) * 100);
+            onProgress(percentComplete);
           }
         });
 
-        console.log('[upload] Response status:', res.status);
-
-        if (res.status === 401) {
-          const err = await res.json().catch(() => ({}));
-          console.log('[upload] Auth error:', err);
-          const reason = err?.reason || 'session_expired';
-          window.location.href = `/admin/login?session=expired&reason=${encodeURIComponent(reason)}`;
-          throw new Error('Session expired');
-        }
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          console.log('[upload] Error:', err);
-          throw new Error(err?.error || 'Upload failed');
-        }
-        return res.json();
-      }
-
-      async function handleFiles(fileList: FileList) {
-        if (!fileList || fileList.length === 0) {
-          console.error('No files provided');
-          return;
-        }
-
-        // Convert FileList to array
-        const files = Array.from(fileList);
-        console.log('[handleFiles] Processing', files.length, 'files:', files.map(f => f.name));
-
-        feedback?.classList.remove('hidden');
-        const total = files.length;
-        const uploadedIds: string[] = [];
-
-        // Phase 1: Upload all files
-        for (let i = 0; i < total; i++) {
-          const file = files[i];
-          if (!file) {
-            console.error(`File at index ${i} is undefined`);
-            continue;
-          }
-
-          if (feedback) {
-            feedback.innerHTML = `<span class="text-blue-600">Uploading ${i + 1}/${total}: "${file.name}"...</span>`;
-          }
-
-          try {
-            const result = await uploadFile(file);
-            uploadedIds.push(result.id);
-            console.log(`[upload] Success: ${file.name} -> ${result.id}`);
-          } catch (e) {
-            if (feedback) {
-              feedback.innerHTML = `<span class="text-red-600">Upload failed for "${file.name}": ${e instanceof Error ? e.message : 'Unknown error'}</span>`;
+        xhr.addEventListener('load', () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              const data = JSON.parse(xhr.responseText);
+              resolve(data.media);
+            } catch {
+              resolve(null);
             }
-            return;
-          }
-        }
-
-        // Phase 2: Process all pending files at once
-        if (uploadedIds.length > 0) {
-          if (feedback) {
-            feedback.innerHTML = `<span class="text-amber-600">Processing ${uploadedIds.length} file(s)...</span>`;
-          }
-
-          try {
-            const result = await processAllPending();
-            console.log('[process] Result:', result);
-          } catch (e) {
-            if (feedback) {
-              feedback.innerHTML = `<span class="text-red-600">Processing failed: ${e instanceof Error ? e.message : 'Unknown error'}</span>`;
-            }
-            return;
-          }
-        }
-
-        if (feedback) {
-          feedback.innerHTML = `<span class="text-green-600">${uploadedIds.length} file(s) uploaded and processed!</span>`;
-        }
-        setTimeout(() => window.location.reload(), 1000);
-      }
-
-      async function processAllPending(): Promise<{ processed: number; succeeded: number }> {
-        const csrfMatch = document.cookie.match(/csrf_token=([^;]+)/);
-        const csrfToken = csrfMatch ? csrfMatch[1] : '';
-
-        const res = await fetch('/api/admin/media/process-pending', {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'X-CSRF-Token': csrfToken
+          } else if (xhr.status === 401) {
+            window.location.href = '/admin/login?session=expired';
+            reject(new Error('Session expired'));
+          } else {
+            reject(new Error('Upload failed'));
           }
         });
 
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err?.error || 'Processing failed');
-        }
+        xhr.addEventListener('error', () => reject(new Error('Network error')));
+        xhr.addEventListener('abort', () => reject(new Error('Upload aborted')));
 
-        return res.json();
-      }
+        xhr.open('POST', '/api/admin/media/upload', true);
+        xhr.setRequestHeader('X-CSRF-Token', document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '');
+        xhr.withCredentials = true;
+        xhr.send(formData);
+      });
     }
 
-    // Copy media URL to clipboard
-    document.querySelectorAll('.copy-media-url').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const url = btn.getAttribute('data-url');
-        if (url) {
-          navigator.clipboard.writeText(url).then(() => {
-            const originalText = btn.textContent;
-            btn.textContent = 'URL copied!';
-            btn.classList.add('text-green-400');
-            setTimeout(() => {
-              btn.textContent = originalText;
-              btn.classList.remove('text-green-400');
-            }, 1500);
-          });
-        }
-      });
-    });
+    // Helper to format bytes
+    function formatBytes(bytes: number): string {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+    }
 
-    // Audio player controls
-    let currentlyPlaying: { id: string; btn: Element } | null = null;
+    // Create media item HTML
+    function createMediaItemElement(item: any): HTMLElement {
+      const div = document.createElement('div');
+      div.className = 'media-item group relative bg-[#222] rounded-lg overflow-hidden border border-[#333] hover:border-[#555] transition-all';
+      div.setAttribute('data-id', item.id);
 
-    document.querySelectorAll('.audio-play-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
+      let thumbnailHtml = '';
+      if (item.mediaType === 'image') {
+        thumbnailHtml = `<img src="${item.variants?.sm?.url || item.url}" alt="${item.originalName}" class="w-full h-full object-cover" loading="lazy" />`;
+      } else if (item.mediaType === 'audio') {
+        thumbnailHtml = `<div class="flex flex-col items-center justify-center text-[#666]"><svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" /></svg><span class="text-xs mt-2">Audio</span></div>`;
+      } else {
+        thumbnailHtml = `<div class="flex flex-col items-center justify-center text-[#666]"><svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg><span class="text-xs mt-2">Video</span></div>`;
+      }
 
-        const id = btn.getAttribute('data-id');
-        const url = btn.getAttribute('data-url');
-        if (!id || !url) return;
+      div.innerHTML = `
+        <div class="aspect-square relative bg-[#1a1a1a] flex items-center justify-center overflow-hidden">
+          ${thumbnailHtml}
+          <label class="media-checkbox absolute top-2 right-2 p-1 bg-black/50 rounded cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
+            <input type="checkbox" class="media-select w-5 h-5 accent-blue-500" data-id="${item.id}">
+          </label>
+          <button class="delete-btn absolute bottom-2 right-2 p-1.5 bg-red-500/80 hover:bg-red-600 text-white rounded opacity-0 group-hover:opacity-100 transition-all" data-id="${item.id}" title="Delete">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+          <span class="absolute top-2 left-2 text-xs text-white bg-black/50 px-2 py-0.5 rounded uppercase">${item.mediaType}</span>
+        </div>
+        <div class="p-3">
+          <p class="text-sm text-white truncate" title="${item.originalName}">${item.originalName}</p>
+          <p class="text-xs text-gray-500 mt-1">${formatBytes(item.fileSize)}</p>
+        </div>
+      `;
 
-        const playIcon = btn.querySelector('.play-icon');
-        const stopIcon = btn.querySelector('.stop-icon');
-
-        // If this is currently playing, stop it
-        if (currentlyPlaying?.id === id) {
-          const audio = document.querySelector(`.audio-player[data-id="${id}"]`) as HTMLAudioElement;
-          if (audio) {
-            audio.pause();
-            audio.currentTime = 0;
-          }
-          playIcon?.classList.remove('hidden');
-          stopIcon?.classList.add('hidden');
-          currentlyPlaying = null;
-          return;
-        }
-
-        // Stop any other playing audio first
-        if (currentlyPlaying) {
-          const otherAudio = document.querySelector(`.audio-player[data-id="${currentlyPlaying.id}"]`) as HTMLAudioElement;
-          if (otherAudio) {
-            otherAudio.pause();
-            otherAudio.currentTime = 0;
-          }
-          // Reset other button icons
-          const otherPlayIcon = currentlyPlaying.btn.querySelector('.play-icon');
-          const otherStopIcon = currentlyPlaying.btn.querySelector('.stop-icon');
-          otherPlayIcon?.classList.remove('hidden');
-          otherStopIcon?.classList.add('hidden');
-        }
-
-        // Start playing this audio
-        const audio = document.querySelector(`.audio-player[data-id="${id}"]`) as HTMLAudioElement;
-        if (audio) {
-          audio.play().then(() => {
-            playIcon?.classList.add('hidden');
-            stopIcon?.classList.remove('hidden');
-            currentlyPlaying = { id, btn };
-          }).catch((err) => {
-            console.error('Failed to play audio:', err);
-            alert('Failed to play audio');
-          });
-
-          // Handle audio ending naturally
-          audio.onended = () => {
-            playIcon?.classList.remove('hidden');
-            stopIcon?.classList.add('hidden');
-            if (currentlyPlaying?.id === id) {
-              currentlyPlaying = null;
+      // Add event listeners
+      const checkbox = div.querySelector('.media-select') as HTMLInputElement;
+      if (checkbox) {
+        checkbox.addEventListener('change', (e) => {
+          const cb = e.target as HTMLInputElement;
+          const id = cb.getAttribute('data-id');
+          if (id) {
+            if (cb.checked) {
+              selectedIds.add(id);
+            } else {
+              selectedIds.delete(id);
             }
-          };
-        }
-      });
-    });
-
-    // Video player - click poster to play/pause inline
-    let currentVideo: { id: string; container: Element } | null = null;
-
-    document.querySelectorAll('.video-thumbnail').forEach(poster => {
-      poster.addEventListener('click', (e) => {
-        // Don't trigger if clicking copy button
-        if ((e.target as Element).closest('.copy-media-url')) return;
-
-        const card = poster.closest('.group');
-        const url = poster.getAttribute('data-video-url');
-        const id = poster.getAttribute('data-video-id');
-        if (!url || !id || !card) return;
-
-        e.preventDefault();
-
-        // If this video is already playing, pause it
-        if (currentVideo?.id === id) {
-          const playingVideo = card.querySelector('.video-playing');
-          if (playingVideo) {
-            (playingVideo as HTMLVideoElement).pause();
-            playingVideo.remove();
-          }
-          const posterVideo = card.querySelector('.video-poster') as HTMLVideoElement;
-          if (posterVideo) posterVideo.style.display = '';
-          currentVideo = null;
-          return;
-        }
-
-        // Stop any other playing video
-        if (currentVideo) {
-          const otherCard = currentVideo.container;
-          const otherPlayingVideo = otherCard.querySelector('.video-playing');
-          if (otherPlayingVideo) {
-            (otherPlayingVideo as HTMLVideoElement).pause();
-            otherPlayingVideo.remove();
-          }
-          const otherPosterVideo = otherCard.querySelector('.video-poster') as HTMLVideoElement;
-          if (otherPosterVideo) otherPosterVideo.style.display = '';
-        }
-
-        // Hide poster video and create playing video
-        const posterVideo = card.querySelector('.video-poster') as HTMLVideoElement;
-        if (posterVideo) posterVideo.style.display = 'none';
-
-        const video = document.createElement('video');
-        video.className = 'video-playing absolute inset-0 w-full h-full bg-black';
-        video.controls = true;
-        video.autoplay = true;
-        video.innerHTML = `<source src="${url}" type="video/mp4">`;
-
-        // When video ends or is paused, show poster again
-        video.onended = () => {
-          if (posterVideo) posterVideo.style.display = '';
-          video.remove();
-          if (currentVideo?.id === id) currentVideo = null;
-        };
-
-        video.onpause = () => {
-          // Only remove if user clicked pause, not if it's buffering
-          setTimeout(() => {
-            if (video.paused) {
-              if (posterVideo) posterVideo.style.display = '';
-              video.remove();
-              if (currentVideo?.id === id) currentVideo = null;
-            }
-          }, 100);
-        };
-
-        poster.appendChild(video);
-        currentVideo = { id, container: card };
-      });
-    });
-
-    // Gallery filter functionality
-    const filterBtns = document.querySelectorAll('.gallery-filter-btn');
-    const gallerySections = document.querySelectorAll('.gallery-section');
-    let activeFilter: string | null = null;
-
-    filterBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const filter = btn.getAttribute('data-filter');
-        if (!filter) return;
-
-        // Toggle off if already active
-        if (activeFilter === filter) {
-          activeFilter = null;
-          // Show all sections
-          gallerySections.forEach(section => {
-            section.classList.remove('hidden');
-            // Re-hide extra items in all sections
-            const extraItems = section.querySelectorAll('.gallery-item-extra');
-            extraItems.forEach(item => item.classList.add('hidden'));
-            // Show the +more button for this section
-            const showMoreContainer = section.querySelector('.show-more-container');
-            if (showMoreContainer) showMoreContainer.classList.remove('hidden');
-          });
-          // Remove active styling from all buttons
-          filterBtns.forEach(b => {
-            b.classList.remove('active-filter');
-          });
-          return;
-        }
-
-        // Set new active filter
-        activeFilter = filter;
-
-        // Show only matching section, hide others
-        gallerySections.forEach(section => {
-          const sectionType = section.getAttribute('data-section');
-          if (sectionType === filter) {
-            section.classList.remove('hidden');
-            // Show all items including extra ones
-            const extraItems = section.querySelectorAll('.gallery-item-extra');
-            extraItems.forEach(item => item.classList.remove('hidden'));
-            // Hide the +more button for this active section
-            const showMoreContainer = section.querySelector('.show-more-container');
-            if (showMoreContainer) showMoreContainer.classList.add('hidden');
-          } else {
-            section.classList.add('hidden');
+            updateSelectionUI();
           }
         });
+      }
 
-        // Update button styling - remove active from all, add to clicked
-        filterBtns.forEach(b => {
-          b.classList.remove('active-filter');
+      const deleteBtn = div.querySelector('.delete-btn') as HTMLButtonElement;
+      if (deleteBtn) {
+        deleteBtn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const id = deleteBtn.getAttribute('data-id');
+          if (!id || !confirm('Delete this file?')) return;
+
+          const csrfMatch = document.cookie.match(/csrf_token=([^;]+)/);
+          const csrfToken = csrfMatch ? csrfMatch[1] : '';
+
+          try {
+            const res = await fetch('/api/admin/media/' + id, {
+              method: 'DELETE',
+              credentials: 'include',
+              headers: { 'X-CSRF-Token': csrfToken }
+            });
+
+            if (res.ok) {
+              div.remove();
+            } else if (res.status === 409) {
+              const forceDelete = confirm('This file is in use. Delete anyway?');
+              if (forceDelete) {
+                const forceRes = await fetch('/api/admin/media/' + id + '?force=true', {
+                  method: 'DELETE',
+                  credentials: 'include',
+                  headers: { 'X-CSRF-Token': csrfToken }
+                });
+                if (forceRes.ok) {
+                  div.remove();
+                } else {
+                  alert('Delete failed');
+                }
+              }
+            } else {
+              alert('Delete failed');
+            }
+          } catch {
+            alert('Delete failed');
+          }
         });
-        btn.classList.add('active-filter');
-      });
-    });
+      }
 
-    // Show more buttons (trigger filter and show all items)
-    document.querySelectorAll('.show-more-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const showType = btn.getAttribute('data-show');
-        if (!showType) return;
+      return div;
+    }
 
-        // Trigger the corresponding filter button click
-        const filterBtn = document.querySelector(`.gallery-filter-btn[data-filter="${showType}"]`);
-        if (filterBtn) {
-          filterBtn.click();
+    async function handleFiles(files: File[]) {
+      if (!files.length || !feedback) return;
+
+      const spinnerOverlay = document.getElementById('upload-spinner-overlay');
+      const spinnerFile = document.getElementById('upload-spinner-file');
+      const mediaGrid = document.getElementById('media-grid');
+
+      feedback.classList.remove('hidden');
+      const uploadedMedia: any[] = [];
+      const failedFiles: string[] = [];
+
+      // Show spinner overlay
+      if (spinnerOverlay) {
+        spinnerOverlay.classList.remove('opacity-0', 'pointer-events-none');
+        spinnerOverlay.classList.add('opacity-100', 'pointer-events-auto');
+      }
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+
+        // Update spinner text
+        if (spinnerFile) {
+          spinnerFile.textContent = `File ${i + 1} of ${files.length}: ${file.name}`;
         }
-      });
-    });
-
-    // Delete media
-    document.querySelectorAll('.delete-media-btn').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        const id = btn.getAttribute('data-id');
-        const type = btn.getAttribute('data-type');
-
-        if (!id) return;
-
-        if (!confirm(`Delete this ${type}? This cannot be undone.`)) return;
-
-        const csrfMatch = document.cookie.match(/csrf_token=([^;]+)/);
-        const csrfToken = csrfMatch ? csrfMatch[1] : '';
 
         try {
-          const res = await fetch(`/api/admin/media/delete?id=${encodeURIComponent(id)}&type=${encodeURIComponent(type || 'image')}`, {
-            method: 'POST',
-            credentials: 'include',
-            headers: {
-              'X-CSRF-Token': csrfToken
-            }
+          const media = await uploadFileWithProgress(file, () => {
+            // Progress callback - spinner shows indeterminate progress
           });
 
-          if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
-            throw new Error(err?.error || 'Delete failed');
+          if (media) {
+            uploadedMedia.push(media);
           }
-
-          // Remove the card from DOM
-          const card = btn.closest('.group');
-          if (card) {
-            card.style.opacity = '0';
-            card.style.transform = 'scale(0.9)';
-            setTimeout(() => card.remove(), 300);
-          }
-
-          alert(`${type} deleted successfully`);
+          feedback.innerHTML = `<span class="text-blue-400">Uploaded: ${file.name}</span>`;
         } catch (e) {
-          alert(`Failed to delete: ${e instanceof Error ? e.message : 'Unknown error'}`);
+          failedFiles.push(file.name);
+          feedback.innerHTML = `<span class="text-red-400">Failed: ${file.name}</span>`;
+          // Continue with next file instead of returning
+          continue;
+        }
+      }
+
+      // Hide spinner overlay
+      if (spinnerOverlay) {
+        spinnerOverlay.classList.remove('opacity-100', 'pointer-events-auto');
+        spinnerOverlay.classList.add('opacity-0', 'pointer-events-none');
+      }
+
+      // Add uploaded items to the grid
+      if (mediaGrid && uploadedMedia.length > 0) {
+        // Remove empty state if present
+        const emptyState = document.getElementById('media-empty-state');
+        if (emptyState) {
+          emptyState.remove();
+        }
+
+        // Add new items to the beginning of the grid
+        for (const item of uploadedMedia.reverse()) {
+          const itemElement = createMediaItemElement(item);
+          itemElement.style.animation = 'fadeInSlide 0.3s ease-out';
+          mediaGrid.insertBefore(itemElement, mediaGrid.firstChild);
+        }
+
+        // Update stats
+        updateStats();
+      }
+
+      // Show appropriate completion message
+      if (failedFiles.length > 0) {
+        if (failedFiles.length === files.length) {
+          feedback.innerHTML = `<span class="text-red-400">All uploads failed</span>`;
+        } else {
+          feedback.innerHTML = `<span class="text-yellow-400">${uploadedMedia.length} uploaded, ${failedFiles.length} failed</span>`;
+        }
+      } else {
+        feedback.innerHTML = `<span class="text-green-400">${uploadedMedia.length} file(s) uploaded!</span>`;
+      }
+
+      // Clear file input after all uploads complete
+      if (fileInput) {
+        fileInput.value = '';
+      }
+    }
+
+    // Update stats counters
+    function updateStats() {
+      const grid = document.getElementById('media-grid');
+      if (!grid) return;
+
+      const items = grid.querySelectorAll('.media-item');
+      let images = 0, audio = 0, video = 0;
+
+      items.forEach((item) => {
+        const typeBadge = item.querySelector('.aspect-square span.uppercase');
+        if (typeBadge) {
+          const type = typeBadge.textContent?.toLowerCase() || '';
+          if (type === 'image') images++;
+          else if (type === 'audio') audio++;
+          else if (type === 'video') video++;
         }
       });
-    });
+
+      // Update stat display if exists
+      const statContainer = document.querySelector('.grid.grid-cols-3');
+      if (statContainer) {
+        const counts = statContainer.querySelectorAll('.text-2xl');
+        if (counts.length >= 3) {
+          counts[0].textContent = String(images);
+          counts[1].textContent = String(audio);
+          counts[2].textContent = String(video);
+        }
+      }
+    }
 
     // Multi-select functionality
-    const multiSelectControls = document.getElementById('multi-select-controls');
-    const multiSelectBtn = document.getElementById('multi-select-btn');
-    const selectAllBtn = document.getElementById('select-all-btn');
+    const selectedIds = new Set<string>();
+    const selectAllCheckbox = document.getElementById('select-all-recent') as HTMLInputElement;
+    const bulkActionsBar = document.getElementById('bulk-actions-bar');
+    const bulkActionsText = document.getElementById('bulk-actions-text');
+    const bulkCancelBtn = document.getElementById('bulk-cancel-btn');
     const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
-    const selectedCountSpan = document.getElementById('selected-count');
-    let isMultiSelectMode = false;
-    let allSelected = false;
+    const mediaGrid = document.getElementById('media-grid');
 
-    // Show/hide multi-select controls based on active filter
-    function updateMultiSelectVisibility() {
-      if (activeFilter) {
-        multiSelectControls?.classList.remove('hidden');
-        multiSelectControls?.classList.add('flex');
-      } else {
-        multiSelectControls?.classList.add('hidden');
-        multiSelectControls?.classList.remove('flex');
-        // Exit multi-select mode when filter is cleared
-        if (isMultiSelectMode) {
-          toggleMultiSelectMode(false);
-        }
-      }
-    }
-
-    // Toggle multi-select mode
-    function toggleMultiSelectMode(enable: boolean) {
-      isMultiSelectMode = enable;
-
-      // Update button appearance
-      if (multiSelectBtn) {
-        if (enable) {
-          multiSelectBtn.innerHTML = `
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-            <span>Cancel</span>
-          `;
-          multiSelectBtn.classList.add('bg-gray-200');
-          selectAllBtn?.classList.remove('hidden');
-          selectAllBtn?.classList.add('flex');
-          bulkDeleteBtn?.classList.remove('hidden');
-          bulkDeleteBtn?.classList.add('flex');
-        } else {
-          multiSelectBtn.innerHTML = `
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-            <span>Select</span>
-          `;
-          multiSelectBtn.classList.remove('bg-gray-200');
-          selectAllBtn?.classList.add('hidden');
-          selectAllBtn?.classList.remove('flex');
-          bulkDeleteBtn?.classList.add('hidden');
-          bulkDeleteBtn?.classList.remove('flex');
-        }
-      }
-
-      // Reset select all state when entering/exiting mode
-      allSelected = false;
-      updateSelectAllButton();
-
-      // Show/hide checkboxes for the active category
-      const activeSection = document.querySelector(`.gallery-section[data-section="${activeFilter}"]`);
-      if (activeSection) {
-        const checkboxes = activeSection.querySelectorAll('.multi-select-checkbox');
-        const deleteButtons = activeSection.querySelectorAll('.delete-media-btn');
-
-        checkboxes.forEach((checkbox) => {
-          if (enable) {
-            checkbox.classList.remove('hidden');
-            checkbox.classList.add('flex');
-          } else {
-            checkbox.classList.add('hidden');
-            checkbox.classList.remove('flex');
-            // Uncheck all when exiting
-            const input = checkbox.querySelector('input');
-            if (input) input.checked = false;
-          }
-        });
-
-        // Hide individual delete buttons in multi-select mode
-        deleteButtons.forEach((btn) => {
-          if (enable) {
-            btn.classList.add('hidden');
-          } else {
-            btn.classList.remove('hidden');
-          }
-        });
-      }
-
-      updateSelectedCount();
-    }
-
-    // Update selected count display
-    function updateSelectedCount() {
-      const activeSection = document.querySelector(`.gallery-section[data-section="${activeFilter}"]`);
-      if (activeSection) {
-        const checkboxes = activeSection.querySelectorAll('.media-select-checkbox');
-        const checkedBoxes = activeSection.querySelectorAll('.media-select-checkbox:checked');
-        if (selectedCountSpan) {
-          selectedCountSpan.textContent = String(checkedBoxes.length);
-        }
-        // Disable delete button if nothing selected
-        if (bulkDeleteBtn) {
-          if (checkedBoxes.length === 0) {
-            bulkDeleteBtn.classList.add('opacity-50', 'cursor-not-allowed');
-          } else {
-            bulkDeleteBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-          }
-        }
-        // Update select all button state based on whether all are selected
-        allSelected = checkboxes.length > 0 && checkedBoxes.length === checkboxes.length;
-        updateSelectAllButton();
-      }
-    }
-
-    // Update select all button appearance
-    function updateSelectAllButton() {
-      if (!selectAllBtn) return;
-      if (allSelected) {
-        selectAllBtn.innerHTML = `
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
-          <span>Deselect All</span>
-        `;
-      } else {
-        selectAllBtn.innerHTML = `
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-          <span>Select All</span>
-        `;
-      }
-    }
-
-    // Handle select/cancel button click
-    multiSelectBtn?.addEventListener('click', () => {
-      toggleMultiSelectMode(!isMultiSelectMode);
-    });
-
-    // Handle select all/deselect all button click
-    selectAllBtn?.addEventListener('click', () => {
-      const activeSection = document.querySelector(`.gallery-section[data-section="${activeFilter}"]`);
-      if (!activeSection) return;
-
-      const checkboxes = activeSection.querySelectorAll('.media-select-checkbox');
-      const checkedBoxes = activeSection.querySelectorAll('.media-select-checkbox:checked');
-
-      // If all are selected, deselect all; otherwise select all
-      const shouldSelectAll = checkboxes.length !== checkedBoxes.length;
-
-      checkboxes.forEach((checkbox) => {
-        (checkbox as HTMLInputElement).checked = shouldSelectAll;
+    function updateSelectionUI() {
+      // Update checkboxes
+      document.querySelectorAll('.media-select').forEach((checkbox) => {
+        const cb = checkbox as HTMLInputElement;
+        const id = cb.getAttribute('data-id');
+        cb.checked = id ? selectedIds.has(id) : false;
       });
 
-      allSelected = shouldSelectAll;
-      updateSelectAllButton();
-      updateSelectedCount();
+      // Update select all checkbox
+      if (selectAllCheckbox) {
+        const allCheckboxes = document.querySelectorAll('.media-select');
+        if (selectedIds.size === 0) {
+          selectAllCheckbox.checked = false;
+          selectAllCheckbox.indeterminate = false;
+        } else if (selectedIds.size === allCheckboxes.length) {
+          selectAllCheckbox.checked = true;
+          selectAllCheckbox.indeterminate = false;
+        } else {
+          selectAllCheckbox.checked = false;
+          selectAllCheckbox.indeterminate = true;
+        }
+      }
+
+      // Update bulk actions bar
+      if (bulkActionsBar && bulkActionsText) {
+        if (selectedIds.size > 0) {
+          bulkActionsBar.style.display = 'flex';
+          bulkActionsText.textContent = `${selectedIds.size} item${selectedIds.size === 1 ? '' : 's'} selected`;
+        } else {
+          bulkActionsBar.style.display = 'none';
+        }
+      }
+
+      // Update visual selection state on items
+      document.querySelectorAll('.media-item').forEach((item) => {
+        const id = item.getAttribute('data-id');
+        if (id && selectedIds.has(id)) {
+          item.classList.add('ring-2', 'ring-blue-500', 'ring-opacity-50');
+          item.classList.remove('border-[#333]');
+          item.classList.add('border-blue-500');
+        } else {
+          item.classList.remove('ring-2', 'ring-blue-500', 'ring-opacity-50', 'border-blue-500');
+          item.classList.add('border-[#333]');
+        }
+      });
+
+      // Always show checkboxes when in selection mode
+      document.querySelectorAll('.media-checkbox').forEach((cb) => {
+        if (selectedIds.size > 0) {
+          cb.classList.remove('opacity-0');
+          cb.classList.add('opacity-100');
+        } else {
+          cb.classList.add('opacity-0');
+          cb.classList.remove('opacity-100');
+        }
+      });
+    }
+
+    // Individual item selection
+    document.querySelectorAll('.media-select').forEach((checkbox) => {
+      checkbox.addEventListener('change', (e) => {
+        const cb = e.target as HTMLInputElement;
+        const id = cb.getAttribute('data-id');
+        if (id) {
+          if (cb.checked) {
+            selectedIds.add(id);
+          } else {
+            selectedIds.delete(id);
+          }
+          updateSelectionUI();
+        }
+      });
     });
 
-    // Handle checkbox changes
-    document.querySelectorAll('.media-select-checkbox').forEach(checkbox => {
-      checkbox.addEventListener('change', updateSelectedCount);
+    // Select all checkbox
+    selectAllCheckbox?.addEventListener('change', () => {
+      if (selectAllCheckbox.checked) {
+        document.querySelectorAll('.media-select').forEach((checkbox) => {
+          const id = checkbox.getAttribute('data-id');
+          if (id) selectedIds.add(id);
+        });
+      } else {
+        selectedIds.clear();
+      }
+      updateSelectionUI();
     });
 
-    // Handle bulk delete
+    // Cancel selection
+    bulkCancelBtn?.addEventListener('click', () => {
+      selectedIds.clear();
+      updateSelectionUI();
+    });
+
+    // Bulk delete
     bulkDeleteBtn?.addEventListener('click', async () => {
-      const activeSection = document.querySelector(`.gallery-section[data-section="${activeFilter}"]`);
-      if (!activeSection) return;
+      if (selectedIds.size === 0) return;
 
-      const checkedBoxes = activeSection.querySelectorAll('.media-select-checkbox:checked');
-      if (checkedBoxes.length === 0) return;
+      const confirmed = confirm(`Delete ${selectedIds.size} selected item${selectedIds.size === 1 ? '' : 's'}?`);
+      if (!confirmed) return;
 
-      const itemsToDelete = Array.from(checkedBoxes).map(cb => ({
-        id: (cb as HTMLInputElement).value,
-        type: cb.getAttribute('data-type') || 'image'
-      }));
-
-      if (!confirm(`Delete ${itemsToDelete.length} item(s)? This cannot be undone.`)) return;
+      const forceDelete = confirm('Items that are in use will not be deleted. Click OK to force delete all items anyway.');
 
       const csrfMatch = document.cookie.match(/csrf_token=([^;]+)/);
       const csrfToken = csrfMatch ? csrfMatch[1] : '';
 
-      let successCount = 0;
-      let failCount = 0;
+      let deletedCount = 0;
+      let failedCount = 0;
 
-      for (const item of itemsToDelete) {
+      for (const id of selectedIds) {
         try {
-          const res = await fetch(`/api/admin/media/delete?id=${encodeURIComponent(item.id)}&type=${encodeURIComponent(item.type)}`, {
-            method: 'POST',
+          const res = await fetch(`/api/admin/media/${id}?force=${forceDelete}`, {
+            method: 'DELETE',
             credentials: 'include',
-            headers: {
-              'X-CSRF-Token': csrfToken
-            }
+            headers: { 'X-CSRF-Token': csrfToken }
           });
 
           if (res.ok) {
-            successCount++;
-            // Remove the card from DOM
-            const card = activeSection.querySelector(`[data-media-id="${item.id}"]`);
-            if (card) {
-              card.style.opacity = '0';
-              card.style.transform = 'scale(0.9)';
-              setTimeout(() => card.remove(), 300);
-            }
+            deletedCount++;
+            // Remove the item from the DOM
+            const item = document.querySelector(`.media-item[data-id="${id}"]`);
+            item?.remove();
+          } else if (res.status === 409) {
+            // Item is in use
+            failedCount++;
           } else {
-            failCount++;
+            failedCount++;
           }
         } catch {
-          failCount++;
+          failedCount++;
         }
       }
 
-      if (failCount > 0) {
-        alert(`Deleted ${successCount} item(s). ${failCount} failed.`);
+      selectedIds.clear();
+      updateSelectionUI();
+
+      if (failedCount > 0) {
+        alert(`${deletedCount} item(s) deleted. ${failedCount} item(s) could not be deleted (may be in use).`);
       } else {
-        alert(`Successfully deleted ${successCount} item(s).`);
+        // Show success feedback
+        const successMsg = document.createElement('div');
+        successMsg.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+        successMsg.textContent = `${deletedCount} item(s) deleted successfully`;
+        document.body.appendChild(successMsg);
+        setTimeout(() => successMsg.remove(), 3000);
       }
-
-      // Exit multi-select mode after bulk delete
-      toggleMultiSelectMode(false);
     });
 
-    // Update multi-select visibility when filter changes
-    // Hook into existing filter button click handlers
-    const originalFilterBtns = document.querySelectorAll('.gallery-filter-btn');
-    originalFilterBtns.forEach(btn => {
-      const originalClick = btn.onclick;
-      btn.addEventListener('click', () => {
-        // Small delay to let the activeFilter update
-        setTimeout(updateMultiSelectVisibility, 0);
-      });
-    });
+    // Individual delete
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const id = btn.getAttribute('data-id');
+        if (!id || !confirm('Delete this file?')) return;
 
-    // Also update when show-more buttons are clicked (they trigger filters)
-    document.querySelectorAll('.show-more-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        setTimeout(updateMultiSelectVisibility, 0);
+        const csrfMatch = document.cookie.match(/csrf_token=([^;]+)/);
+        const csrfToken = csrfMatch ? csrfMatch[1] : '';
+
+        try {
+          const res = await fetch(`/api/admin/media/${id}`, {
+            method: 'DELETE',
+            credentials: 'include',
+            headers: { 'X-CSRF-Token': csrfToken }
+          });
+
+          if (res.ok) {
+            const card = btn.closest('.media-item');
+            card?.remove();
+          } else if (res.status === 409) {
+            const forceDelete = confirm('This file is in use. Delete anyway?');
+            if (forceDelete) {
+              const forceRes = await fetch(`/api/admin/media/${id}?force=true`, {
+                method: 'DELETE',
+                credentials: 'include',
+                headers: { 'X-CSRF-Token': csrfToken }
+              });
+              if (forceRes.ok) {
+                const card = btn.closest('.media-item');
+                card?.remove();
+              } else {
+                alert('Delete failed');
+              }
+            }
+          } else {
+            alert('Delete failed');
+          }
+        } catch {
+          alert('Delete failed');
+        }
       });
     });
   </script>
-  <style>
-    .gallery-filter-btn.active-filter {
-      color: #fff;
-      background-color: #1a1a1a;
-      font-weight: 600;
-    }
-    .gallery-filter-btn.active-filter:hover {
-      background-color: #000;
-    }
-    /* Multi-select checkbox styles */
-    .media-select-checkbox {
-      accent-color: #000;
-    }
-    .media-select-checkbox:checked {
-      background-color: #000;
-      border-color: #000;
-    }
-    /* Highlight selected items in multi-select mode */
-    .media-select-checkbox:checked ~ .aspect-square,
-    .media-select-checkbox:checked ~ .video-thumbnail,
-    .media-select-checkbox:checked ~ div {
-      ring: 2px solid #000;
-    }
-    /* Ensure checkboxes are visible above other elements */
-    .multi-select-checkbox {
-      background: rgba(255, 255, 255, 0.9);
-      border-radius: 4px;
-      padding: 2px;
-    }
-  </style>
 </Layout>
