@@ -53,6 +53,8 @@ interface WorksGridProps {
   alignRowsCenter?: boolean;
   /** Category to determine special rendering (e.g. ear icon for physical) */
   category?: string;
+  /** Base path for work detail links (e.g. '/works/physical') */
+  basePath?: string;
 }
 
 function getDefaultCols(
@@ -71,6 +73,7 @@ export function WorksGrid({
   defaultColsMobile,
   alignRowsCenter,
   category,
+  basePath,
 }: WorksGridProps) {
   const overrides =
     defaultColsDesktop != null || defaultColsMobile != null
@@ -153,13 +156,20 @@ export function WorksGrid({
     6: 'grid-cols-6',
   }[effectiveCols];
 
+  // Helper to get the correct href for a work
+  const getWorkHref = (work: WorkGridItem): string => {
+    if (work.href) return work.href;
+    if (basePath) return `${basePath}/${work.slug}`;
+    return `/works/${work.slug}`;
+  };
+
   return (
     <>
       <div className={`grid ${gridColsClass} gap-6 ${alignRowsCenter ? 'items-center' : 'items-start'}`}>
         {works.map((work) => (
           <a
             key={work.slug}
-            href={work.href ?? `/works/${work.slug}`}
+            href={getWorkHref(work)}
             onClick={(e) => handleWorkClick(e, work)}
             className="group block"
             target={work.href && !extractYouTubeId(work.href) && isExternalUrl(work.href) ? '_blank' : undefined}

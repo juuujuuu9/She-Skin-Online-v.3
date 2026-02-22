@@ -1,0 +1,168 @@
+---
+/**
+ * Individual Work Detail Page
+ *
+ * Routes: /works/physical/[slug] | /works/digital/[slug] | /works/collaborations/[slug]
+ */
+
+export const prerender = false;
+
+import Layout from '@layouts/Layout.astro';
+import LightningImage from '@components/ui/LightningImage.astro';
+import { getWorkBySlug, type WorkCategory } from '@lib/db/queries';
+
+const { category, slug } = Astro.params;
+
+const validCategories = ['audio', 'physical', 'digital', 'collaborations'] as const;
+if (!category || !validCategories.includes(category as (typeof validCategories)[number])) {
+  return Astro.redirect('/404');
+}
+
+if (!slug) {
+  return Astro.redirect('/404');
+}
+
+const categoryProp = category as WorkCategory;
+
+// Fetch the work from database
+const work = await getWorkBySlug(slug);
+
+// If work not found, or category doesn't match, redirect to 404
+if (!work || work.category !== categoryProp) {
+  return Astro.redirect('/404');
+}
+
+// Get primary image and gallery images
+const primaryImage = work.media.find(m => m.isPrimary) || work.media.find(m => m.type === 'image') || work.media[0];
+const galleryImages = work.media.filter(m => m.type === 'image' && m.id !== primaryImage?.id);
+
+// Category display config
+const categoryConfig = {
+  audio: { title: 'ICT★SNU SOUND', backHref: '/audio' },
+  physical: { title: 'Physical Works', backHref: '/works/physical' },
+  digital: { title: 'Digital', backHref: '/works/digital' },
+  collaborations: { title: 'Collaborations', backHref: '/works/collaborations' },
+};
+
+const config = categoryConfig[categoryProp];
+---
+
+<Layout title={`${work.title} - ${config.title}`}>
+  <main class="min-h-screen bg-white">
+    {/* Back link */}
+    <div class="px-6 pt-16 pb-4">
+      <a href={config.backHref} class="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Back to {config.title}
+      </a>
+    </div>
+
+    <article class="px-6 pb-12">
+      {/* Title Section */}
+      <header class="mb-8">
+        <h1 class="text-2xl font-bold tracking-tight text-black mb-2">
+          {work.title}
+        </h1>
+        {work.year && (
+          <time class="text-sm text-gray-500">{work.year}</time>
+        )}
+      </header>
+
+      {/* Primary Image */}
+      {primaryImage && (
+        <div class="mb-8 overflow-hidden bg-gray-100">
+          <LightningImage
+            src={primaryImage.url}
+            alt={work.title}
+            variants={primaryImage.variants as unknown}
+            blurhash={primaryImage.blurhash ?? undefined}
+            dominantColor={primaryImage.dominantColor ?? undefined}
+            width={primaryImage.width ?? undefined}
+            height={primaryImage.height ?? undefined}
+            aspectRatio={primaryImage.width && primaryImage.height ? primaryImage.width / primaryImage.height : undefined}
+            objectFit="contain"
+            sizes="(max-width: 1024px) 100vw, 800px"
+            priority={true}
+            class="w-full"
+          />
+        </div>
+      )}
+
+      {/* Description */}
+      {work.description && (
+        <div class="prose prose-sm max-w-none mb-8">
+          <p class="text-gray-700 whitespace-pre-wrap">{work.description}</p>
+        </div>
+      )}
+
+      {/* External Link (for collaborations) */}
+      {work.externalUrl && (
+        <div class="mb-8">
+          <a
+            href={work.externalUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-black text-white text-sm font-medium rounded hover:bg-gray-800 transition-colors"
+          >
+            View Project
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </a>
+        </div>
+      )}
+
+      {/* For Sale Badge & Price */}
+      {work.forSale && (
+        <div class="mb-8 p-4 bg-green-50 rounded-lg border border-green-100">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="inline-block text-xs px-2 py-1 bg-green-100 text-green-700 rounded font-medium">
+                For Sale
+              </span>
+              {work.price && (
+                <span class="ml-2 text-lg font-semibold text-gray-900">${work.price}</span>
+              )}
+            </div>
+            <a
+              href={`/shop?work=${work.slug}`}
+              class="px-4 py-2 bg-black text-white text-sm font-medium rounded hover:bg-gray-800 transition-colors"
+            >
+              Inquire
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* Gallery Images */}
+      {galleryImages.length > 0 && (
+        <section class="mt-12">
+          <h2 class="text-sm font-medium text-gray-500 uppercase tracking-wider mb-6">
+            Gallery
+          </h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {galleryImages.map((image) => (
+              <div class="overflow-hidden bg-gray-100">
+                <LightningImage
+                  src={image.url}
+                  alt={`${work.title} - gallery image`}
+                  variants={image.variants as unknown}
+                  blurhash={image.blurhash ?? undefined}
+                  dominantColor={image.dominantColor ?? undefined}
+                  width={image.width ?? undefined}
+                  height={image.height ?? undefined}
+                  aspectRatio={image.width && image.height ? image.width / image.height : undefined}
+                  objectFit="contain"
+                  sizes="(max-width: 640px) 100vw, 50vw"
+                  class="w-full"
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+    </article>
+  </main>
+</Layout>

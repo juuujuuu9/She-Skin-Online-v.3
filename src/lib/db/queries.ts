@@ -6,7 +6,7 @@
 
 import { eq, and, desc, asc, inArray, isNull } from 'drizzle-orm';
 import { db } from './index';
-import { products, categories, productImages, productCategories, productAttributes, productSizeInventory, carts, cartItems } from './schema';
+import { products, categories, productImages, productCategories, productAttributes, productSizeInventory, carts, cartItems, siteSettings, media } from './schema';
 import type { Product, ProductCategory, Cart as AppCart, CartItem as AppCartItem } from '../types';
 import type { Product as DBProduct, ProductImage, ProductAttribute, ProductSizeInventory } from './schema';
 import type { Category } from './schema';
@@ -488,6 +488,7 @@ export interface CollaborationItem {
   id: string;
   slug: string;
   title: string;
+  year: number | null;
   forSale: boolean;
   externalUrl: string | null;
   image: {
@@ -776,4 +777,88 @@ export async function getAllWorks(includeDeleted = false) {
  */
 export async function hardDeleteWork(id: string): Promise<void> {
   await db.delete(works).where(eq(works.id, id));
+}
+
+// ============================================================
+// SITE SETTINGS QUERIES
+// ============================================================
+
+import type { Media } from './schema';
+
+export interface HomepageVideo {
+  mediaId: string;
+  url: string;
+  originalName: string;
+}
+
+/** Get the current homepage video */
+export async function getHomepageVideo(): Promise<HomepageVideo | null> {
+  const setting = await db
+    .select()
+    .from(siteSettings)
+    .where(eq(siteSettings.key, 'homepage_video'))
+    .limit(1);
+
+  if (setting.length === 0) return null;
+
+  try {
+    const data = JSON.parse(setting[0].value) as { mediaId: string };
+    if (!data.mediaId) return null;
+
+    // Fetch the media details
+    const mediaResult = await db
+      .select()
+      .from(media)
+      .where(eq(media.id, data.mediaId))
+      .limit(1);
+
+    if (mediaResult.length === 0) return null;
+
+    const video = mediaResult[0];
+    if (video.mediaType !== 'video') return null;
+
+    return {
+      mediaId: video.id,
+      url: video.url,
+      originalName: video.originalName,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** Set the homepage video */
+export async function setHomepageVideo(mediaId: string): Promise<boolean> {
+  try {
+    // Verify the media exists and is a video
+    const mediaResult = await db
+      .select()
+      .from(media)
+      .where(eq(media.id, mediaId))
+      .limit(1);
+
+    if (mediaResult.length === 0) return false;
+    if (mediaResult[0].mediaType !== 'video') return false;
+
+    const value = JSON.stringify({ mediaId });
+    const id = crypto.randomUUID();
+
+    // Upsert: try insert, if key exists do update
+    await db
+      .insert(siteSettings)
+      .values({ id, key: 'homepage_video', value })
+      .onConflictDoUpdate({
+        target: siteSettings.key,
+        set: { value, updatedAt: new Date() },
+      });
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Clear the homepage video */
+export async function clearHomepageVideo(): Promise<void> {
+  await db.delete(siteSettings).where(eq(siteSettings.key, 'homepage_video'));
 }

@@ -49,7 +49,7 @@ const CSP_DIRECTIVES = {
   'object-src': ["'none'"],
   'base-uri': ["'self'"],
   'form-action': ["'self'"],
-  'frame-ancestors': ["'none'"],  // Prevents clickjacking
+  // frame-ancestors set dynamically in middleware based on environment
   'upgrade-insecure-requests': [],  // Upgrade HTTP to HTTPS
 };
 
@@ -111,8 +111,13 @@ export const onRequest = defineMiddleware(async (context, next) => {
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
 
   // Add Content Security Policy
-  // Using standard header (not Report-Only) since we've configured it properly
-  const csp = buildCSP(CSP_DIRECTIVES);
+  // frame-ancestors: 'none' in production, 'self' in development
+  // (allows dev tools and preview environments to frame the page)
+  const cspDirectives = {
+    ...CSP_DIRECTIVES,
+    'frame-ancestors': import.meta.env.PROD ? ["'none'"] : ["'self'", 'http://localhost:*', 'https://localhost:*'],
+  };
+  const csp = buildCSP(cspDirectives);
   response.headers.set('Content-Security-Policy', csp);
 
   // Additional security headers

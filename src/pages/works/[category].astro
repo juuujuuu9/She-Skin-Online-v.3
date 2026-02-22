@@ -180,6 +180,7 @@ const featuredWorks: typeof gridItems = [];
           }
           defaultColsMobile={categoryProp === 'collaborations' ? 1 : categoryProp === 'digital' || categoryProp === 'physical' ? 3 : undefined}
           alignRowsCenter={categoryProp === 'digital' || categoryProp === 'physical' || categoryProp === 'collaborations'}
+          basePath={`/works/${categoryProp}`}
         />
       </div>
     </section>
