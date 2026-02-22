@@ -23,6 +23,24 @@ export interface WorkGridItem {
   href?: string;
 }
 
+// Helper to extract YouTube video ID from various YouTube URL formats
+function extractYouTubeId(url: string): string | null {
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/watch\?.*v=([a-zA-Z0-9_-]{11})/,
+  ];
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  return null;
+}
+
+// Helper to check if URL is external
+function isExternalUrl(url: string): boolean {
+  return url.startsWith('http://') || url.startsWith('https://');
+}
+
 interface WorksGridProps {
   works: WorkGridItem[];
   /** Optional class for the title label (e.g. text-[13px] for collaborations) */
@@ -59,6 +77,10 @@ export function WorksGrid({
     defaultColsDesktop ?? DEFAULT_COLS_DESKTOP
   );
   const [isMobile, setIsMobile] = useState(false);
+  const [youtubeModal, setYoutubeModal] = useState<{ isOpen: boolean; videoId: string | null; title?: string }>({
+    isOpen: false,
+    videoId: null,
+  });
 
   useEffect(() => {
     const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT_PX}px)`);
@@ -77,6 +99,44 @@ export function WorksGrid({
     };
   }, [defaultColsDesktop, defaultColsMobile]);
 
+  // Close modal on escape key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && youtubeModal.isOpen) {
+        setYoutubeModal({ isOpen: false, videoId: null });
+      }
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [youtubeModal.isOpen]);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (youtubeModal.isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [youtubeModal.isOpen]);
+
+  const handleWorkClick = (e: React.MouseEvent, work: WorkGridItem) => {
+    if (!work.href) return; // Let default behavior navigate to /works/{slug}
+
+    const youtubeId = extractYouTubeId(work.href);
+    if (youtubeId) {
+      e.preventDefault();
+      setYoutubeModal({ isOpen: true, videoId: youtubeId, title: work.title });
+    } else if (isExternalUrl(work.href)) {
+      // External non-YouTube link - let it open in new tab
+      e.preventDefault();
+      window.open(work.href, '_blank', 'noopener,noreferrer');
+    }
+    // Otherwise it's an internal link, let default behavior handle it
+  };
+
   const maxColsMobile = defaultColsMobile ?? 3;
   const effectiveCols = isMobile
     ? Math.max(1, Math.min(maxColsMobile, cols))
@@ -91,13 +151,17 @@ export function WorksGrid({
   }[effectiveCols];
 
   return (
-    <div className={`grid ${gridColsClass} gap-6 ${alignRowsCenter ? 'items-center' : 'items-start'}`}>
-      {works.map((work) => (
-        <a
-          key={work.slug}
-          href={work.href ?? `/works/${work.slug}`}
-          className="group block"
-        >
+    <>
+      <div className={`grid ${gridColsClass} gap-6 ${alignRowsCenter ? 'items-center' : 'items-start'}`}>
+        {works.map((work) => (
+          <a
+            key={work.slug}
+            href={work.href ?? `/works/${work.slug}`}
+            onClick={(e) => handleWorkClick(e, work)}
+            className="group block"
+            target={work.href && !extractYouTubeId(work.href) && isExternalUrl(work.href) ? '_blank' : undefined}
+            rel={work.href && !extractYouTubeId(work.href) && isExternalUrl(work.href) ? 'noopener noreferrer' : undefined}
+          >
           <div className="overflow-hidden bg-gray-100 mb-4">
             {work.image ? (
               <LightningImg
@@ -140,6 +204,47 @@ export function WorksGrid({
           )}
         </a>
       ))}
-    </div>
+      </div>
+
+      {/* YouTube Modal */}
+      {youtubeModal.isOpen && youtubeModal.videoId && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          onClick={() => setYoutubeModal({ isOpen: false, videoId: null })}
+        >
+          <div
+            className="relative w-full max-w-4xl mx-4 bg-black rounded-lg overflow-hidden shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-4 py-3 bg-gray-900">
+              <h3 className="text-white font-medium truncate">
+                {youtubeModal.title || 'Video'}
+              </h3>
+              <button
+                onClick={() => setYoutubeModal({ isOpen: false, videoId: null })}
+                className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-full transition-colors"
+                aria-label="Close modal"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* YouTube Embed */}
+            <div className="relative aspect-video">
+              <iframe
+                src={`https://www.youtube.com/embed/${youtubeModal.videoId}?autoplay=1&rel=0&modestbranding=1`}
+                title={youtubeModal.title || 'YouTube video'}
+                className="absolute inset-0 w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

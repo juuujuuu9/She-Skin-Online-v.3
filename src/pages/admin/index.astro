@@ -157,6 +157,40 @@ const isActive = (href: string) => {
                 <span class="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
                   {processedImages.length + processedAudio.length + processedVideo.length} items
                 </span>
+                {/* Multi-select controls - hidden by default, shown when category active */}
+                <div id="multi-select-controls" class="hidden items-center gap-2 ml-4 pl-4 border-l border-gray-200">
+                  <button
+                    type="button"
+                    id="multi-select-btn"
+                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    <span>Select</span>
+                  </button>
+                  <button
+                    type="button"
+                    id="select-all-btn"
+                    class="hidden items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                    <span>Select All</span>
+                  </button>
+                  <button
+                    type="button"
+                    id="bulk-delete-btn"
+                    class="hidden items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    <span>Delete</span>
+                    <span id="selected-count" class="ml-1 text-xs bg-red-100 px-1.5 py-0.5 rounded-full">0</span>
+                  </button>
+                </div>
               </div>
               <div class="flex items-center gap-2 text-sm">
                 {processedImages.length > 0 && (
@@ -166,9 +200,7 @@ const isActive = (href: string) => {
                     data-filter="images"
                     title="Show only images"
                   >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M8 10C9.10457 10 10 9.10457 10 8C10 6.89543 9.10457 6 8 6C6.89543 6 6 6.89543 6 8C6 9.10457 6.89543 10 8 10Z" fill="currentColor"></path> <path fill-rule="evenodd" clip-rule="evenodd" d="M2 5C2 3.34315 3.34315 2 5 2H19C20.6569 2 22 3.34315 22 5V19C22 20.6569 20.6569 22 19 22H5C3.34315 22 2 20.6569 2 19V5ZM5 4C4.44772 4 4 4.44772 4 5V17.5857L9.29285 12.2928C9.68337 11.9023 10.3165 11.9023 10.7071 12.2928L12.5 14.0857L20 6.58569V5C20 4.44772 19.5523 4 19 4H5ZM20 9.41412L13.2071 16.2071C12.8165 16.5976 12.1834 16.5976 11.7928 16.2071L9.99995 14.4142L4.5308 19.8833C4.67072 19.9578 4.83043 20 5 20H19C19.5523 20 20 19.5523 20 19V9.41412Z" fill="currentColor"></path> </g></svg>
                     {processedImages.length}
                   </button>
                 )}
@@ -207,7 +239,11 @@ const isActive = (href: string) => {
                   <h3 class="text-sm font-medium text-gray-700 mb-3 uppercase tracking-wide">Images</h3>
                   <div class="grid grid-cols-4 gap-4">
                     {processedImages.map((img, index) => (
-                      <div class={`group relative bg-gray-100 rounded-lg overflow-hidden border border-gray-200 hover:border-gray-400 transition-all hover:shadow-md ${index >= 8 ? 'gallery-item-extra hidden' : ''}`}>
+                      <div class={`group relative bg-gray-100 rounded-lg overflow-hidden border border-gray-200 hover:border-gray-400 transition-all hover:shadow-md ${index >= 8 ? 'gallery-item-extra hidden' : ''}`} data-media-id={img.id} data-media-type="image">
+                        {/* Multi-select checkbox - top left (hidden by default) */}
+                        <label class="multi-select-checkbox hidden absolute top-2 left-2 z-20 flex items-center justify-center">
+                          <input type="checkbox" class="media-select-checkbox w-5 h-5 rounded border-gray-300 text-black focus:ring-black cursor-pointer" value={img.id} data-type="image">
+                        </label>
                         {/* Delete button - top left */}
                         <button
                           class="delete-media-btn absolute top-2 left-2 z-10 p-1.5 bg-red-500/80 hover:bg-red-600 text-white rounded opacity-0 group-hover:opacity-100 transition-all"
@@ -285,7 +321,11 @@ const isActive = (href: string) => {
                   <h3 class="text-sm font-medium text-gray-700 mb-3 uppercase tracking-wide">Audio</h3>
                   <div class="grid grid-cols-2 gap-3">
                     {processedAudio.map((track, index) => (
-                      <div class={`group relative bg-linear-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-200 hover:border-blue-300 transition-all p-4 ${index >= 4 ? 'gallery-item-extra hidden' : ''}`}>
+                      <div class={`group relative bg-linear-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-200 hover:border-blue-300 transition-all p-4 ${index >= 4 ? 'gallery-item-extra hidden' : ''}`} data-media-id={track.id} data-media-type="audio">
+                        {/* Multi-select checkbox - top left (hidden by default) */}
+                        <label class="multi-select-checkbox hidden absolute top-2 left-2 z-20 flex items-center justify-center">
+                          <input type="checkbox" class="media-select-checkbox w-5 h-5 rounded border-gray-300 text-black focus:ring-black cursor-pointer" value={track.id} data-type="audio">
+                        </label>
                         {/* Delete button - top left */}
                         <button
                           class="delete-media-btn absolute top-2 left-2 z-10 p-1.5 bg-red-500/80 hover:bg-red-600 text-white rounded opacity-0 group-hover:opacity-100 transition-all"
@@ -370,7 +410,11 @@ const isActive = (href: string) => {
                   <h3 class="text-sm font-medium text-gray-700 mb-3 uppercase tracking-wide">Video</h3>
                   <div class="grid grid-cols-2 gap-4">
                     {processedVideo.map((vid, index) => (
-                      <div class={`group relative bg-gray-900 rounded-lg overflow-hidden border border-gray-200 hover:border-gray-400 transition-all hover:shadow-md ${index >= 4 ? 'gallery-item-extra hidden' : ''}`}>
+                      <div class={`group relative bg-gray-900 rounded-lg overflow-hidden border border-gray-200 hover:border-gray-400 transition-all hover:shadow-md ${index >= 4 ? 'gallery-item-extra hidden' : ''}`} data-media-id={vid.id} data-media-type="video">
+                        {/* Multi-select checkbox - top left (hidden by default) */}
+                        <label class="multi-select-checkbox hidden absolute top-2 left-2 z-30 flex items-center justify-center">
+                          <input type="checkbox" class="media-select-checkbox w-5 h-5 rounded border-gray-300 text-black focus:ring-black cursor-pointer" value={vid.id} data-type="video">
+                        </label>
                         {/* Delete button - top left */}
                         <button
                           class="delete-media-btn absolute top-2 left-2 z-20 p-1.5 bg-red-500/80 hover:bg-red-600 text-white rounded opacity-0 group-hover:opacity-100 transition-all"
@@ -949,17 +993,277 @@ const isActive = (href: string) => {
         }
       });
     });
+
+    // Multi-select functionality
+    const multiSelectControls = document.getElementById('multi-select-controls');
+    const multiSelectBtn = document.getElementById('multi-select-btn');
+    const selectAllBtn = document.getElementById('select-all-btn');
+    const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
+    const selectedCountSpan = document.getElementById('selected-count');
+    let isMultiSelectMode = false;
+    let allSelected = false;
+
+    // Show/hide multi-select controls based on active filter
+    function updateMultiSelectVisibility() {
+      if (activeFilter) {
+        multiSelectControls?.classList.remove('hidden');
+        multiSelectControls?.classList.add('flex');
+      } else {
+        multiSelectControls?.classList.add('hidden');
+        multiSelectControls?.classList.remove('flex');
+        // Exit multi-select mode when filter is cleared
+        if (isMultiSelectMode) {
+          toggleMultiSelectMode(false);
+        }
+      }
+    }
+
+    // Toggle multi-select mode
+    function toggleMultiSelectMode(enable: boolean) {
+      isMultiSelectMode = enable;
+
+      // Update button appearance
+      if (multiSelectBtn) {
+        if (enable) {
+          multiSelectBtn.innerHTML = `
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            <span>Cancel</span>
+          `;
+          multiSelectBtn.classList.add('bg-gray-200');
+          selectAllBtn?.classList.remove('hidden');
+          selectAllBtn?.classList.add('flex');
+          bulkDeleteBtn?.classList.remove('hidden');
+          bulkDeleteBtn?.classList.add('flex');
+        } else {
+          multiSelectBtn.innerHTML = `
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            <span>Select</span>
+          `;
+          multiSelectBtn.classList.remove('bg-gray-200');
+          selectAllBtn?.classList.add('hidden');
+          selectAllBtn?.classList.remove('flex');
+          bulkDeleteBtn?.classList.add('hidden');
+          bulkDeleteBtn?.classList.remove('flex');
+        }
+      }
+
+      // Reset select all state when entering/exiting mode
+      allSelected = false;
+      updateSelectAllButton();
+
+      // Show/hide checkboxes for the active category
+      const activeSection = document.querySelector(`.gallery-section[data-section="${activeFilter}"]`);
+      if (activeSection) {
+        const checkboxes = activeSection.querySelectorAll('.multi-select-checkbox');
+        const deleteButtons = activeSection.querySelectorAll('.delete-media-btn');
+
+        checkboxes.forEach((checkbox) => {
+          if (enable) {
+            checkbox.classList.remove('hidden');
+            checkbox.classList.add('flex');
+          } else {
+            checkbox.classList.add('hidden');
+            checkbox.classList.remove('flex');
+            // Uncheck all when exiting
+            const input = checkbox.querySelector('input');
+            if (input) input.checked = false;
+          }
+        });
+
+        // Hide individual delete buttons in multi-select mode
+        deleteButtons.forEach((btn) => {
+          if (enable) {
+            btn.classList.add('hidden');
+          } else {
+            btn.classList.remove('hidden');
+          }
+        });
+      }
+
+      updateSelectedCount();
+    }
+
+    // Update selected count display
+    function updateSelectedCount() {
+      const activeSection = document.querySelector(`.gallery-section[data-section="${activeFilter}"]`);
+      if (activeSection) {
+        const checkboxes = activeSection.querySelectorAll('.media-select-checkbox');
+        const checkedBoxes = activeSection.querySelectorAll('.media-select-checkbox:checked');
+        if (selectedCountSpan) {
+          selectedCountSpan.textContent = String(checkedBoxes.length);
+        }
+        // Disable delete button if nothing selected
+        if (bulkDeleteBtn) {
+          if (checkedBoxes.length === 0) {
+            bulkDeleteBtn.classList.add('opacity-50', 'cursor-not-allowed');
+          } else {
+            bulkDeleteBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+          }
+        }
+        // Update select all button state based on whether all are selected
+        allSelected = checkboxes.length > 0 && checkedBoxes.length === checkboxes.length;
+        updateSelectAllButton();
+      }
+    }
+
+    // Update select all button appearance
+    function updateSelectAllButton() {
+      if (!selectAllBtn) return;
+      if (allSelected) {
+        selectAllBtn.innerHTML = `
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+          <span>Deselect All</span>
+        `;
+      } else {
+        selectAllBtn.innerHTML = `
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+          <span>Select All</span>
+        `;
+      }
+    }
+
+    // Handle select/cancel button click
+    multiSelectBtn?.addEventListener('click', () => {
+      toggleMultiSelectMode(!isMultiSelectMode);
+    });
+
+    // Handle select all/deselect all button click
+    selectAllBtn?.addEventListener('click', () => {
+      const activeSection = document.querySelector(`.gallery-section[data-section="${activeFilter}"]`);
+      if (!activeSection) return;
+
+      const checkboxes = activeSection.querySelectorAll('.media-select-checkbox');
+      const checkedBoxes = activeSection.querySelectorAll('.media-select-checkbox:checked');
+
+      // If all are selected, deselect all; otherwise select all
+      const shouldSelectAll = checkboxes.length !== checkedBoxes.length;
+
+      checkboxes.forEach((checkbox) => {
+        (checkbox as HTMLInputElement).checked = shouldSelectAll;
+      });
+
+      allSelected = shouldSelectAll;
+      updateSelectAllButton();
+      updateSelectedCount();
+    });
+
+    // Handle checkbox changes
+    document.querySelectorAll('.media-select-checkbox').forEach(checkbox => {
+      checkbox.addEventListener('change', updateSelectedCount);
+    });
+
+    // Handle bulk delete
+    bulkDeleteBtn?.addEventListener('click', async () => {
+      const activeSection = document.querySelector(`.gallery-section[data-section="${activeFilter}"]`);
+      if (!activeSection) return;
+
+      const checkedBoxes = activeSection.querySelectorAll('.media-select-checkbox:checked');
+      if (checkedBoxes.length === 0) return;
+
+      const itemsToDelete = Array.from(checkedBoxes).map(cb => ({
+        id: (cb as HTMLInputElement).value,
+        type: cb.getAttribute('data-type') || 'image'
+      }));
+
+      if (!confirm(`Delete ${itemsToDelete.length} item(s)? This cannot be undone.`)) return;
+
+      const csrfMatch = document.cookie.match(/csrf_token=([^;]+)/);
+      const csrfToken = csrfMatch ? csrfMatch[1] : '';
+
+      let successCount = 0;
+      let failCount = 0;
+
+      for (const item of itemsToDelete) {
+        try {
+          const res = await fetch(`/api/admin/media/delete?id=${encodeURIComponent(item.id)}&type=${encodeURIComponent(item.type)}`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+              'X-CSRF-Token': csrfToken
+            }
+          });
+
+          if (res.ok) {
+            successCount++;
+            // Remove the card from DOM
+            const card = activeSection.querySelector(`[data-media-id="${item.id}"]`);
+            if (card) {
+              card.style.opacity = '0';
+              card.style.transform = 'scale(0.9)';
+              setTimeout(() => card.remove(), 300);
+            }
+          } else {
+            failCount++;
+          }
+        } catch {
+          failCount++;
+        }
+      }
+
+      if (failCount > 0) {
+        alert(`Deleted ${successCount} item(s). ${failCount} failed.`);
+      } else {
+        alert(`Successfully deleted ${successCount} item(s).`);
+      }
+
+      // Exit multi-select mode after bulk delete
+      toggleMultiSelectMode(false);
+    });
+
+    // Update multi-select visibility when filter changes
+    // Hook into existing filter button click handlers
+    const originalFilterBtns = document.querySelectorAll('.gallery-filter-btn');
+    originalFilterBtns.forEach(btn => {
+      const originalClick = btn.onclick;
+      btn.addEventListener('click', () => {
+        // Small delay to let the activeFilter update
+        setTimeout(updateMultiSelectVisibility, 0);
+      });
+    });
+
+    // Also update when show-more buttons are clicked (they trigger filters)
+    document.querySelectorAll('.show-more-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        setTimeout(updateMultiSelectVisibility, 0);
+      });
+    });
   </script>
   <style>
     .gallery-filter-btn.active-filter {
-      color: #eab308;
-      background-color: rgba(234, 179, 8, 0.15);
-      box-shadow: 0 0 12px rgba(234, 179, 8, 0.5), 0 0 20px rgba(234, 179, 8, 0.3);
+      color: #fff;
+      background-color: #1a1a1a;
       font-weight: 600;
     }
     .gallery-filter-btn.active-filter:hover {
-      background-color: rgba(234, 179, 8, 0.2);
-      box-shadow: 0 0 16px rgba(234, 179, 8, 0.6), 0 0 28px rgba(234, 179, 8, 0.4);
+      background-color: #000;
+    }
+    /* Multi-select checkbox styles */
+    .media-select-checkbox {
+      accent-color: #000;
+    }
+    .media-select-checkbox:checked {
+      background-color: #000;
+      border-color: #000;
+    }
+    /* Highlight selected items in multi-select mode */
+    .media-select-checkbox:checked ~ .aspect-square,
+    .media-select-checkbox:checked ~ .video-thumbnail,
+    .media-select-checkbox:checked ~ div {
+      ring: 2px solid #000;
+    }
+    /* Ensure checkboxes are visible above other elements */
+    .multi-select-checkbox {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 4px;
+      padding: 2px;
     }
   </style>
 </Layout>
