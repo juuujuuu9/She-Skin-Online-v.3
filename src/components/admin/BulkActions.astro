@@ -1,0 +1,114 @@
+---
+/**
+ * BulkActions - Bar for bulk selection operations
+ * Shows selected count with Cancel and Delete buttons
+ */
+interface Props {
+  /** Unique ID for this bulk actions instance */
+  id?: string;
+  /** Variant theme: dark (for dark backgrounds) or light (for light backgrounds) */
+  variant?: 'dark' | 'light';
+  /** Label for the delete button */
+  deleteLabel?: string;
+  /** Label for the cancel button */
+  cancelLabel?: string;
+  /** Item name (singular) for display text */
+  itemName?: string;
+}
+
+const {
+  id = 'bulk-actions',
+  variant = 'dark',
+  deleteLabel = 'Delete Selected',
+  cancelLabel = 'Cancel',
+  itemName = 'item',
+} = Astro.props;
+
+const isDark = variant === 'dark';
+const containerClasses = isDark
+  ? 'bg-[#1a3a5c] border-[#2a5a8c]'
+  : 'bg-blue-50 border-blue-200';
+const textClasses = isDark ? 'text-white' : 'text-blue-900';
+const cancelBtnClasses = isDark
+  ? 'text-white border-gray-500 hover:bg-gray-700'
+  : 'text-gray-700 border-gray-300 hover:bg-gray-100';
+const deleteBtnClasses = isDark
+  ? 'text-white bg-red-500 hover:bg-red-600'
+  : 'text-white bg-red-600 hover:bg-red-700';
+---
+
+<div
+  id={id}
+  class={`bulk-actions-bar hidden items-center justify-between p-3 rounded-lg border mb-4 ${containerClasses}`}
+  data-item-name={itemName}
+>
+  <span class={`selected-count text-sm font-medium ${textClasses}`}>0 {itemName}s selected</span>
+  <div class="flex items-center gap-2">
+    <button
+      type="button"
+      class={`cancel-btn px-3 py-1.5 text-sm border rounded transition-colors ${cancelBtnClasses}`}
+    >
+      {cancelLabel}
+    </button>
+    <button
+      type="button"
+      class={`delete-btn px-3 py-1.5 text-sm rounded transition-colors ${deleteBtnClasses}`}
+    >
+      {deleteLabel}
+    </button>
+  </div>
+</div>
+
+<script define:vars={{ id }}>
+  // Initialize bulk actions for this instance
+  (function() {
+    const bar = document.getElementById(id);
+    if (!bar) return;
+
+    const selectedCountEl = bar.querySelector('.selected-count');
+    const itemName = bar.dataset.itemName || 'item';
+
+    // Expose API for this bulk actions instance
+    const api = {
+      bar,
+      selectedCountEl,
+      itemName,
+
+      show(count) {
+        bar.classList.remove('hidden');
+        bar.classList.add('flex');
+        if (selectedCountEl) {
+          selectedCountEl.textContent = count + ' ' + itemName + (count === 1 ? '' : 's') + ' selected';
+        }
+      },
+
+      hide() {
+        bar.classList.add('hidden');
+        bar.classList.remove('flex');
+      },
+
+      onCancel(callback) {
+        const cancelBtn = bar.querySelector('.cancel-btn');
+        cancelBtn?.addEventListener('click', () => {
+          callback();
+        });
+      },
+
+      onDelete(callback) {
+        const deleteBtn = bar.querySelector('.delete-btn');
+        deleteBtn?.addEventListener('click', () => {
+          callback();
+        });
+      },
+    };
+
+    // Store API on the bar element for external access
+    bar['bulkActionsApi'] = api;
+
+    // Also register in a global registry for easier access
+    if (!window['__bulkActionsRegistry']) {
+      window['__bulkActionsRegistry'] = {};
+    }
+    window['__bulkActionsRegistry'][id] = api;
+  })();
+</script>
