@@ -63,15 +63,18 @@ export const $hasPrev = computed($audio, (state) =>
 // ============================================================================
 
 export function playTrack(track: Track, queue: Track[] = []) {
+  console.log('[audioStore] playTrack called:', track.title, track.id);
   const trackIndex = queue.findIndex(t => t.id === track.id);
-  $audio.set({
+  const newState = {
     ...$audio.get(),
     currentTrack: track,
     queue: queue.length > 0 ? queue : [track],
     currentIndex: trackIndex >= 0 ? trackIndex : 0,
     isPlaying: true,
     progress: 0,
-  });
+  };
+  console.log('[audioStore] Setting state:', { currentTrack: newState.currentTrack?.title, isPlaying: newState.isPlaying });
+  $audio.set(newState);
 }
 
 export function togglePlay() {

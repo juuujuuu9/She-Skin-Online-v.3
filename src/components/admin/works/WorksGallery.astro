@@ -39,13 +39,13 @@ const config = categoryConfig[category];
         <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={config.iconPath} />
         </svg>
-        <h3 class="text-sm font-medium text-gray-700 uppercase tracking-wide">{config.label}</h3>
-        <span class="text-xs text-gray-400">{works.length} works</span>
+        <h3 class="text-sm font-medium text-gray-300 uppercase tracking-wide">{config.label}</h3>
+        <span class="text-xs text-gray-500">{works.length} works</span>
       </div>
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {works.map((work, index) => (
           <div
-            class={`group relative bg-gray-100 rounded-lg overflow-hidden border border-gray-200 hover:border-gray-400 transition-all hover:shadow-md ${index >= 8 ? 'gallery-item-extra hidden' : ''}`}
+            class={`group relative bg-[#222] rounded-lg overflow-hidden border border-[#333] hover:border-[#555] transition-all hover:shadow-md ${index >= 8 ? 'gallery-item-extra hidden' : ''}`}
             data-id={work.id}
             data-category={category}
           >
@@ -53,12 +53,12 @@ const config = categoryConfig[category];
             <div class="work-checkbox-container hidden absolute top-2 left-2 z-10">
               <input
                 type="checkbox"
-                class="work-checkbox w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer shadow-sm"
+                class="work-checkbox w-5 h-5 rounded border-[#444] bg-[#222] text-blue-500 focus:ring-blue-500 cursor-pointer shadow-sm"
                 data-id={work.id}
                 data-title={work.title}
               />
             </div>
-            <div class="aspect-square relative bg-gray-50 flex items-center justify-center overflow-hidden">
+            <div class="aspect-square relative bg-[#1a1a1a] flex items-center justify-center overflow-hidden">
               {work.image?.src ? (
                 <img
                   src={work.image.src}
@@ -67,7 +67,7 @@ const config = categoryConfig[category];
                   loading="lazy"
                 />
               ) : (
-                <div class="flex items-center justify-center text-gray-400">
+                <div class="flex items-center justify-center text-gray-500">
                   <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       stroke-linecap="round"
@@ -86,7 +86,7 @@ const config = categoryConfig[category];
             <div class="work-actions absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <button
                 type="button"
-                class="edit-work-btn p-1.5 bg-white/90 hover:bg-blue-500 hover:text-white text-gray-700 rounded-md shadow-sm transition-colors"
+                class="edit-work-btn p-1.5 bg-[#1a1a1a]/90 hover:bg-blue-500 hover:text-white text-gray-300 rounded-md shadow-sm transition-colors"
                 data-id={work.id}
                 data-category={category}
                 title="Edit work"
@@ -102,7 +102,7 @@ const config = categoryConfig[category];
               </button>
               <button
                 type="button"
-                class="delete-work-btn p-1.5 bg-white/90 hover:bg-red-500 hover:text-white text-gray-700 rounded-md shadow-sm transition-colors"
+                class="delete-work-btn p-1.5 bg-[#1a1a1a]/90 hover:bg-red-500 hover:text-white text-gray-300 rounded-md shadow-sm transition-colors"
                 data-id={work.id}
                 title="Delete work"
               >
@@ -123,7 +123,7 @@ const config = categoryConfig[category];
         <div class="mt-3 text-center show-more-container" data-for={category}>
           <button
             type="button"
-            class="show-more-btn text-sm text-gray-500 hover:text-yellow-600 hover:underline transition-all"
+            class="show-more-btn text-sm text-gray-500 hover:text-yellow-500 hover:underline transition-all"
             data-show={category}
           >
             +{works.length - 8} more

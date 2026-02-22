@@ -1,15 +1,10 @@
 ---
 export const prerender = false;
 
-import Layout from '@layouts/Layout.astro';
+import AdminLayout from '@layouts/AdminLayout.astro';
 import { checkAdminAuth } from '@lib/admin-auth';
-import { generateCsrfToken } from '@lib/csrf';
 import { getHomepageVideo } from '@lib/db/queries';
 import { listMedia } from '@lib/upload-service';
-
-// Generate and set CSRF token
-const csrf = generateCsrfToken();
-Astro.response.headers.set('Set-Cookie', csrf.cookie);
 
 // Check auth
 const auth = await checkAdminAuth(Astro.request);
@@ -25,28 +20,6 @@ const currentVideo = await getHomepageVideo();
 const { media: allMedia } = await listMedia({ limit: 1000 });
 const videos = allMedia.filter(m => m.mediaType === 'video');
 
-const currentPath = Astro.url.pathname;
-const adminNavItems = [
-  { href: '/admin', label: 'Uploads', icon: 'dashboard' },
-  { href: '/admin/media', label: 'Media Library', icon: 'media' },
-  { href: '/admin/audio', label: 'ICT★SNU SOUND', icon: 'audio' },
-  { href: '/admin/works', label: 'Works', icon: 'works' },
-  { href: '/admin/products', label: 'Inventory', icon: 'products' },
-  { href: '/admin/homepage', label: 'Homepage', icon: 'home' },
-];
-const iconPaths: Record<string, string> = {
-  dashboard: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />`,
-  media: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />`,
-  audio: `<path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M21.6464 2.23699C21.8707 2.42699 22 2.70606 22 3.00001V16C22 18.2091 20.2091 20 18 20C15.7909 20 14 18.2091 14 16C14 13.7909 15.7909 12 18 12C18.7286 12 19.4117 12.1948 20 12.5351V4.18047L10 5.84713V18L9.99999 18.0032C9.99824 20.2109 8.20806 22 6 22C3.79086 22 2 20.2091 2 18C2 15.7909 3.79086 14 6 14C6.72857 14 7.41165 14.1948 8 14.5351V5.00001C8 4.51117 8.35341 4.09398 8.8356 4.01361L20.8356 2.01361C21.1256 1.96529 21.4221 2.04698 21.6464 2.23699ZM20 16C20 14.8954 19.1046 14 18 14C16.8954 14 16 14.8954 16 16C16 17.1046 16.8954 18 18 18C19.1046 18 20 17.1046 20 16ZM6 16C7.10457 16 8 16.8954 8 18C8 19.1046 7.10457 20 6 20C4.89543 20 4 19.1046 4 18C4 16.8954 4.89543 16 6 16Z" />`,
-  works: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />`,
-  products: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />`,
-  home: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />`,
-};
-const isActive = (href: string) => {
-  if (href === '/admin') return currentPath === '/admin' || currentPath === '/admin/';
-  return currentPath.startsWith(href);
-};
-
 const formatBytes = (bytes: number) => {
   if (bytes < 1024) return bytes + ' B';
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
@@ -54,184 +27,105 @@ const formatBytes = (bytes: number) => {
 };
 ---
 
-<Layout title="Homepage - she_skin Admin">
-  <div class="h-dvh bg-[#0a0a0a] flex flex-col overflow-hidden">
-    <div class="flex flex-row flex-1 min-h-0 items-stretch">
-      {/* Admin sidebar */}
-      <aside class="w-64 shrink-0 flex flex-col bg-[#0a0a0a] text-white self-stretch border-r border-white/10">
-        <div class="flex items-center justify-between p-4 border-b border-white/10">
-          <a href="/admin" class="text-lg font-bold tracking-tight text-white hover:text-white/90">
-            she_skin
-          </a>
-          <button
-            type="button"
-            id="admin-logout-btn"
-            class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium text-white/70 hover:bg-red-500/20 hover:text-red-400 transition-colors uppercase tracking-wider"
-          >
-            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            Logout
-          </button>
-        </div>
-        <nav class="flex-1 p-3 min-h-0 overflow-auto" id="admin-nav">
-          <ul class="space-y-0.5">
-            {adminNavItems.map((item) => (
-              <li>
-                <a
-                  href={item.href}
-                  data-nav-link
-                  class={`
-                    flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors
-                    ${isActive(item.href) ? 'bg-white text-black' : 'text-white/80 hover:bg-white/10 hover:text-white'}
-                  `}
-                >
-                  <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" set:html={iconPaths[item.icon] ?? ''} />
-                  <span>{item.label}</span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
-        <div class="mx-3 border-t border-white/10" />
-        <nav class="p-3" id="admin-view-site">
-          <ul class="space-y-0.5">
-            <li>
-              <a
-                href="/"
-                data-nav-link
-                class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm text-white/60 hover:bg-white/10 hover:text-white transition-colors"
-              >
-                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-                <span>View Site</span>
-              </a>
-            </li>
-          </ul>
-        </nav>
-      </aside>
+<AdminLayout title="Homepage - she_skin Admin">
+  <main class="flex-1 min-w-0 bg-[#111] overflow-y-auto">
+    <div class="p-6 max-w-7xl mx-auto">
+      <header class="mb-6">
+        <h1 class="text-2xl font-semibold text-white">Homepage</h1>
+        <p class="text-gray-400 mt-1">Select a background video for the homepage</p>
+      </header>
 
-      {/* Main content */}
-      <main class="flex-1 min-w-0 bg-[#111] overflow-y-auto">
-        <div class="p-6 max-w-7xl mx-auto">
-          <header class="mb-6">
-            <h1 class="text-2xl font-semibold text-white">Homepage</h1>
-            <p class="text-gray-400 mt-1">Select a background video for the homepage</p>
-          </header>
-
-          {/* Current Video */}
-          <div class="bg-[#1a1a1a] rounded-xl border border-[#333] p-6 mb-6">
-            <h2 class="text-lg font-medium text-white mb-4">Current Homepage Video</h2>
-            {currentVideo ? (
-              <div class="space-y-4">
-                <div class="aspect-video bg-black rounded-lg overflow-hidden max-w-2xl">
-                  <video
-                    src={currentVideo.url}
-                    class="w-full h-full object-cover"
-                    controls
-                    muted
-                  />
-                </div>
-                <div class="flex items-center justify-between max-w-2xl">
-                  <div>
-                    <p class="text-white font-medium">{currentVideo.originalName}</p>
-                    <p class="text-sm text-gray-500">ID: {currentVideo.mediaId}</p>
-                  </div>
-                  <button
-                    id="clear-video-btn"
-                    class="px-4 py-2 text-sm text-red-400 border border-red-500/50 rounded-lg hover:bg-red-500/10 transition-colors"
-                  >
-                    Remove Video
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div class="text-center py-12 border border-dashed border-[#444] rounded-lg max-w-2xl">
-                <svg class="w-12 h-12 text-[#555] mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                <p class="text-gray-400">No video selected</p>
-                <p class="text-sm text-gray-500 mt-1">Choose a video from the library below</p>
-              </div>
-            )}
-          </div>
-
-          {/* Video Library */}
-          <div class="bg-[#1a1a1a] rounded-xl border border-[#333] p-6">
-            <div class="flex items-center justify-between mb-4">
-              <h2 class="text-lg font-medium text-white">Select from Media Library</h2>
-              <span class="text-sm text-gray-500">{videos.length} video(s)</span>
+      {/* Current Video */}
+      <div class="bg-[#1a1a1a] rounded-xl border border-[#333] p-6 mb-6">
+        <h2 class="text-lg font-medium text-white mb-4">Current Homepage Video</h2>
+        {currentVideo ? (
+          <div class="space-y-4">
+            <div class="aspect-video bg-black rounded-lg overflow-hidden max-w-2xl">
+              <video
+                src={currentVideo.url}
+                class="w-full h-full object-cover"
+                controls
+                muted
+              />
             </div>
-
-            {videos.length === 0 ? (
-              <div class="text-center py-12">
-                <svg class="w-16 h-16 text-[#333] mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                <p class="text-gray-400">No videos in the media library</p>
-                <p class="text-sm text-gray-500 mt-2">
-                  <a href="/admin" class="text-blue-400 hover:text-blue-300">Upload a video first</a>
-                </p>
+            <div class="flex items-center justify-between max-w-2xl">
+              <div>
+                <p class="text-white font-medium">{currentVideo.originalName}</p>
+                <p class="text-sm text-gray-500">ID: {currentVideo.mediaId}</p>
               </div>
-            ) : (
-              <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {videos.map((video) => (
-                  <button
-                    class={`video-select-btn group relative bg-[#222] rounded-lg overflow-hidden border transition-all ${
-                      currentVideo?.mediaId === video.id
-                        ? 'border-blue-500 ring-2 ring-blue-500/50'
-                        : 'border-[#333] hover:border-[#555]'
-                    }`}
-                    data-id={video.id}
-                  >
-                    <div class="aspect-square relative bg-[#1a1a1a] flex items-center justify-center">
-                      <div class="flex flex-col items-center justify-center text-[#666]">
-                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                        </svg>
-                        <span class="text-xs mt-2">Video</span>
-                      </div>
-                      {currentVideo?.mediaId === video.id && (
-                        <div class="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
-                          Active
-                        </div>
-                      )}
-                    </div>
-                    <div class="p-3 text-left">
-                      <p class="text-sm text-white truncate" title={video.originalName}>{video.originalName}</p>
-                      <p class="text-xs text-gray-500 mt-1">{formatBytes(video.fileSize)}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
+              <button
+                id="clear-video-btn"
+                class="px-4 py-2 text-sm text-red-400 border border-red-500/50 rounded-lg hover:bg-red-500/10 transition-colors"
+              >
+                Remove Video
+              </button>
+            </div>
           </div>
+        ) : (
+          <div class="text-center py-12 border border-dashed border-[#444] rounded-lg max-w-2xl">
+            <svg class="w-12 h-12 text-[#555] mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            <p class="text-gray-400">No video selected</p>
+            <p class="text-sm text-gray-500 mt-1">Choose a video from the library below</p>
+          </div>
+        )}
+      </div>
+
+      {/* Video Library */}
+      <div class="bg-[#1a1a1a] rounded-xl border border-[#333] p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-medium text-white">Select from Media Library</h2>
+          <span class="text-sm text-gray-500">{videos.length} video(s)</span>
         </div>
-      </main>
+
+        {videos.length === 0 ? (
+          <div class="text-center py-12">
+            <svg class="w-16 h-16 text-[#333] mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            <p class="text-gray-400">No videos in the media library</p>
+            <p class="text-sm text-gray-500 mt-2">
+              <a href="/admin" class="text-blue-400 hover:text-blue-300">Upload a video first</a>
+            </p>
+          </div>
+        ) : (
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {videos.map((video) => (
+              <button
+                class={`video-select-btn group relative bg-[#222] rounded-lg overflow-hidden border transition-all ${
+                  currentVideo?.mediaId === video.id
+                    ? 'border-blue-500 ring-2 ring-blue-500/50'
+                    : 'border-[#333] hover:border-[#555]'
+                }`}
+                data-id={video.id}
+              >
+                <div class="aspect-square relative bg-[#1a1a1a] flex items-center justify-center">
+                  <div class="flex flex-col items-center justify-center text-[#666]">
+                    <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    <span class="text-xs mt-2">Video</span>
+                  </div>
+                  {currentVideo?.mediaId === video.id && (
+                    <div class="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                      Active
+                    </div>
+                  )}
+                </div>
+                <div class="p-3 text-left">
+                  <p class="text-sm text-white truncate" title={video.originalName}>{video.originalName}</p>
+                  <p class="text-xs text-gray-500 mt-1">{formatBytes(video.fileSize)}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
-  </div>
+  </main>
 
   <script>
-    // Navigation
-    document.querySelectorAll('a[data-nav-link]').forEach(link => {
-      link.addEventListener('click', (e) => {
-        e.preventDefault();
-        window.location.href = link.getAttribute('href') || '/';
-      });
-    });
-
-    document.getElementById('admin-logout-btn')?.addEventListener('click', async () => {
-      if (!confirm('Are you sure you want to logout?')) return;
-      try {
-        const res = await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' });
-        if (res.ok) window.location.href = '/admin/login?logged_out=1';
-        else window.location.href = '/admin/login?session=expired';
-      } catch {
-        alert('Logout failed');
-      }
-    });
-
     // Get CSRF token from cookie
     const getCsrfToken = () => {
       const match = document.cookie.match(/csrf_token=([^;]+)/);
@@ -294,4 +188,4 @@ const formatBytes = (bytes: number) => {
       }
     });
   </script>
-</Layout>
+</AdminLayout>

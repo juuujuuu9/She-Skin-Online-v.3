@@ -12,6 +12,8 @@ import { uploadToBunny, deleteFromBunny } from './bunny';
 import { nanoid } from './nanoid';
 import { processImageBuffer, type ProcessedImage } from './media-process';
 import type { Media } from './db/schema';
+import { unlink } from 'fs/promises';
+import { join } from 'path';
 
 // Upload configuration
 export const UPLOAD_CONFIG = {
@@ -117,10 +119,10 @@ async function processAndUploadImage(
 ): Promise<{ variants: ProcessedImage['variants']; width: number; height: number; blurhash: string; dominantColor: string; mainUrl: string }> {
   const filenameForProcessing = `${datePath}/${id}.webp`;
   const { result } = await processImageBuffer(buffer, filenameForProcessing);
-  
+
   // Upload variants to Bunny
   const variants: ProcessedImage['variants'] = {};
-  
+
   for (const [sizeName, variantData] of Object.entries(result.variants)) {
     // Get the file buffer from the processed result
     // The variant URL in result is local, we need to upload to Bunny
@@ -131,7 +133,7 @@ async function processAndUploadImage(
         `${datePath}/${id}-${sizeName}.webp`,
         { contentType: 'image/webp' }
       );
-      
+
       variants[sizeName] = {
         url: bunnyUrl,
         width: variantData.width,
@@ -140,9 +142,12 @@ async function processAndUploadImage(
       };
     }
   }
-  
+
   const mainUrl = variants.xl?.url || variants.lg?.url || variants.md?.url || variants.sm?.url || '';
-  
+
+  // Clean up temporary local files after successful upload
+  await cleanupTempFiles(result.variants);
+
   return {
     variants,
     width: result.metadata.width,
@@ -166,6 +171,22 @@ async function fetchVariantBuffer(url: string): Promise<Buffer | null> {
     return await readFile(filePath);
   } catch {
     return null;
+  }
+}
+
+/**
+ * Clean up temporary local files after upload to Bunny
+ */
+async function cleanupTempFiles(variants: ProcessedImage['variants']): Promise<void> {
+  for (const variantData of Object.values(variants)) {
+    try {
+      // URL is like "/media/images/file.webp" - convert to local path
+      const localPath = variantData.url.replace('/media/', '');
+      const filePath = join(process.cwd(), 'public', 'media', localPath);
+      await unlink(filePath);
+    } catch {
+      // Ignore errors (file may not exist or already deleted)
+    }
   }
 }
 

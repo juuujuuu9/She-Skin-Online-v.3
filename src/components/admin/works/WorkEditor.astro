@@ -36,9 +36,9 @@ const formTitle = isEditMode ? 'Edit Work' : 'New Work';
 const saveButtonText = isEditMode ? 'Update Work' : 'Save Work';
 ---
 
-<div class="w-1/3 min-w-0 flex flex-col bg-white rounded-lg shadow-sm border border-gray-200 min-h-0">
-  <div class="px-6 py-4 border-b border-gray-200 shrink-0">
-    <h2 class="text-lg font-medium text-gray-900" id="work-editor-title">{formTitle}</h2>
+<div class="w-1/3 min-w-0 flex flex-col bg-[#1a1a1a] rounded-lg shadow-sm border border-[#333] min-h-0">
+  <div class="px-6 py-4 border-b border-[#333] shrink-0">
+    <h2 class="text-lg font-medium text-white" id="work-editor-title">{formTitle}</h2>
   </div>
   <div class="p-6 flex-1 min-h-0 overflow-auto">
     <form id="work-form" class="space-y-4" data-edit-mode={isEditMode ? 'true' : 'false'}>
@@ -47,18 +47,18 @@ const saveButtonText = isEditMode ? 'Update Work' : 'Save Work';
 
       {/* Category Selector - shown when no category selected */}
       <div id="category-selector" class={initialCategory ? 'hidden' : ''}>
-        <label class="block text-sm font-medium text-gray-700 mb-2">Select a category to get started</label>
+        <label class="block text-sm font-medium text-gray-300 mb-2">Select a category to get started</label>
         <div class="space-y-2">
           {categoryOptions.map((cat) => (
             <button
               type="button"
-              class="category-option w-full flex items-center gap-2 px-4 py-3 rounded-md border border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all text-left"
+              class="category-option w-full flex items-center gap-2 px-4 py-3 rounded-md border border-[#444] hover:border-[#555] hover:bg-[#222] transition-all text-left"
               data-category={cat.value}
             >
-              <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={cat.icon} />
               </svg>
-              <span class="font-medium text-gray-700">{cat.label}</span>
+              <span class="font-medium text-gray-300">{cat.label}</span>
             </button>
           ))}
         </div>
@@ -71,7 +71,7 @@ const saveButtonText = isEditMode ? 'Update Work' : 'Save Work';
           <div class="flex items-center gap-2">
             <span id="active-category-icon">
               {initialCategory && (
-                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -81,14 +81,14 @@ const saveButtonText = isEditMode ? 'Update Work' : 'Save Work';
                 </svg>
               )}
             </span>
-            <span id="active-category-label" class="text-sm font-medium text-gray-900 capitalize">
+            <span id="active-category-label" class="text-sm font-medium text-white capitalize">
               {initialCategory || ''}
             </span>
           </div>
           <button
             type="button"
             id="change-category-btn"
-            class="text-xs text-gray-500 hover:text-gray-700 underline"
+            class="text-xs text-gray-400 hover:text-gray-300 underline"
           >
             Change
           </button>
@@ -96,26 +96,26 @@ const saveButtonText = isEditMode ? 'Update Work' : 'Save Work';
 
         {/* Title Field */}
         <div>
-          <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+          <label for="title" class="block text-sm font-medium text-gray-300 mb-1">Title</label>
           <input
             type="text"
             id="title"
             name="title"
             required
-            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            class="w-full px-3 py-2 bg-[#222] border border-[#444] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-white placeholder-gray-500"
             placeholder="Enter work title..."
           />
         </div>
 
         {/* Slug Field */}
         <div>
-          <label for="slug" class="block text-sm font-medium text-gray-700 mb-1">Slug</label>
+          <label for="slug" class="block text-sm font-medium text-gray-300 mb-1">Slug</label>
           <input
             type="text"
             id="slug"
             name="slug"
             required
-            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            class="w-full px-3 py-2 bg-[#222] border border-[#444] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-white placeholder-gray-500"
             placeholder="work-slug"
           />
           <p class="text-xs text-gray-500 mt-1">URL-friendly identifier (e.g., "my-artwork")</p>
@@ -123,26 +123,26 @@ const saveButtonText = isEditMode ? 'Update Work' : 'Save Work';
 
         {/* Description Field */}
         <div>
-          <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+          <label for="description" class="block text-sm font-medium text-gray-300 mb-1">Description</label>
           <textarea
             id="description"
             name="description"
             rows="3"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm resize-none"
+            class="w-full px-3 py-2 bg-[#222] border border-[#444] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-white placeholder-gray-500 resize-none"
             placeholder="Enter work description..."
           ></textarea>
         </div>
 
         {/* Year Field */}
         <div>
-          <label for="year" class="block text-sm font-medium text-gray-700 mb-1">Year</label>
+          <label for="year" class="block text-sm font-medium text-gray-300 mb-1">Year</label>
           <input
             type="number"
             id="year"
             name="year"
             min="1900"
             max="2099"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            class="w-full px-3 py-2 bg-[#222] border border-[#444] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-white placeholder-gray-500"
             placeholder="2024"
           />
         </div>
@@ -153,14 +153,14 @@ const saveButtonText = isEditMode ? 'Update Work' : 'Save Work';
             type="checkbox"
             id="for-sale"
             name="forSale"
-            class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            class="w-4 h-4 bg-[#222] border-[#444] text-blue-500 rounded focus:ring-blue-500"
           />
-          <label for="for-sale" class="text-sm font-medium text-gray-700">For Sale</label>
+          <label for="for-sale" class="text-sm font-medium text-gray-300">For Sale</label>
         </div>
 
         {/* Price Field - hidden by default */}
         <div id="price-field" class="hidden">
-          <label for="price" class="block text-sm font-medium text-gray-700 mb-1">Price</label>
+          <label for="price" class="block text-sm font-medium text-gray-300 mb-1">Price</label>
           <div class="relative">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <span class="text-gray-500 text-sm">$</span>
@@ -171,7 +171,7 @@ const saveButtonText = isEditMode ? 'Update Work' : 'Save Work';
               name="price"
               min="0"
               step="0.01"
-              class="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+              class="w-full pl-7 pr-3 py-2 bg-[#222] border border-[#444] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-white placeholder-gray-500"
               placeholder="0.00"
             />
           </div>
@@ -179,12 +179,12 @@ const saveButtonText = isEditMode ? 'Update Work' : 'Save Work';
 
         {/* External URL Field */}
         <div>
-          <label for="external-url" class="block text-sm font-medium text-gray-700 mb-1">External URL</label>
+          <label for="external-url" class="block text-sm font-medium text-gray-300 mb-1">External URL</label>
           <input
             type="url"
             id="external-url"
             name="externalUrl"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            class="w-full px-3 py-2 bg-[#222] border border-[#444] rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-white placeholder-gray-500"
             placeholder="https://..."
           />
           <p class="text-xs text-gray-500 mt-1">Optional link to external page</p>
@@ -192,12 +192,12 @@ const saveButtonText = isEditMode ? 'Update Work' : 'Save Work';
 
         {/* Media/Artwork Selection */}
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Media</label>
+          <label class="block text-sm font-medium text-gray-300 mb-1">Media</label>
           <input type="hidden" id="media-ids" name="mediaIds" value="" />
           <button
             type="button"
             id="choose-media-btn"
-            class="w-full flex items-center justify-center gap-2 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="w-full flex items-center justify-center gap-2 px-3 py-2 border border-[#444] rounded-md shadow-sm text-sm font-medium text-gray-300 bg-[#222] hover:bg-[#333] focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M8 10C9.10457 10 10 9.10457 10 8C10 6.89543 9.10457 6 8 6C6.89543 6 6 6.89543 6 8C6 9.10457 6.89543 10 8 10Z" fill="currentColor"/>
@@ -211,7 +211,7 @@ const saveButtonText = isEditMode ? 'Update Work' : 'Save Work';
             <button
               type="button"
               id="clear-media"
-              class="mt-2 text-xs text-red-600 hover:text-red-800"
+              class="mt-2 text-xs text-red-400 hover:text-red-300"
             >
               Clear all media
             </button>
@@ -223,14 +223,14 @@ const saveButtonText = isEditMode ? 'Update Work' : 'Save Work';
           <button
             type="submit"
             id="save-btn"
-            class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+            class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 focus:ring-offset-[#1a1a1a] transition-colors"
           >
             {saveButtonText}
           </button>
           <button
             type="button"
             id="cancel-btn"
-            class={`px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors ${isEditMode ? '' : 'hidden'}`}
+            class={`px-4 py-2 border border-[#444] rounded-md text-sm font-medium text-gray-300 hover:bg-[#222] focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-0 focus:ring-offset-[#1a1a1a] transition-colors ${isEditMode ? '' : 'hidden'}`}
           >
             Cancel
           </button>
@@ -250,13 +250,8 @@ const saveButtonText = isEditMode ? 'Update Work' : 'Save Work';
     <div id="media-selector-container" class="flex-1 overflow-auto">
       <MediaSelector
         mediaType="image"
-        onSelect={(media) => {
-          window.dispatchEvent(new CustomEvent('mediaSelected', { detail: media }));
-        }}
-        onCancel={() => {
-          document.getElementById('media-modal')?.classList.add('hidden');
-          document.body.style.overflow = '';
-        }}
+        onSelect="handleWorkMediaSelect"
+        onCancel="handleWorkMediaCancel"
         client:load
       />
     </div>
@@ -264,298 +259,172 @@ const saveButtonText = isEditMode ? 'Update Work' : 'Save Work';
 </div>
 
 <script>
-  // Work Editor client-side logic
-  let selectedMediaIds: string[] = [];
-  let selectedMediaItems: Array<{id: string; url: string; type: string}> = [];
-  let editingWorkId: string | null = null;
+  // Work Editor client-side logic - wrapped in init function for proper re-initialization
+  function initWorkEditor() {
+    let selectedMediaIds: string[] = [];
+    let selectedMediaItems: Array<{id: string; url: string; type: string}> = [];
+    let editingWorkId: string | null = null;
 
-  // DOM elements
-  const form = document.getElementById('work-form') as HTMLFormElement;
-  const formTitle = document.getElementById('work-editor-title') as HTMLElement;
-  const workIdInput = document.getElementById('work-id') as HTMLInputElement;
-  const cancelBtn = document.getElementById('cancel-btn') as HTMLButtonElement;
-  const saveBtn = document.getElementById('save-btn') as HTMLButtonElement;
-  const feedback = document.getElementById('form-feedback') as HTMLElement;
-  const forSaleCheckbox = document.getElementById('for-sale') as HTMLInputElement;
-  const priceField = document.getElementById('price-field') as HTMLElement;
-  const titleInput = document.getElementById('title') as HTMLInputElement;
-  const slugInput = document.getElementById('slug') as HTMLInputElement;
-  const categoryInput = document.getElementById('category') as HTMLInputElement;
-  const categorySelector = document.getElementById('category-selector') as HTMLElement;
-  const formFields = document.getElementById('form-fields') as HTMLElement;
-  const activeCategoryLabel = document.getElementById('active-category-label') as HTMLElement;
-  const activeCategoryIcon = document.getElementById('active-category-icon') as HTMLElement;
-  const mediaModal = document.getElementById('media-modal') as HTMLElement;
-  const mediaModalBackdrop = document.getElementById('media-modal-backdrop') as HTMLElement;
-  const chooseMediaBtn = document.getElementById('choose-media-btn') as HTMLButtonElement;
-  const mediaPreview = document.getElementById('media-preview') as HTMLElement;
-  const mediaPreviewGrid = document.getElementById('media-preview-grid') as HTMLElement;
-  const clearMediaBtn = document.getElementById('clear-media') as HTMLButtonElement;
+    // DOM elements
+    const form = document.getElementById('work-form') as HTMLFormElement;
+    const formTitle = document.getElementById('work-editor-title') as HTMLElement;
+    const workIdInput = document.getElementById('work-id') as HTMLInputElement;
+    const cancelBtn = document.getElementById('cancel-btn') as HTMLButtonElement;
+    const saveBtn = document.getElementById('save-btn') as HTMLButtonElement;
+    const feedback = document.getElementById('form-feedback') as HTMLElement;
+    const forSaleCheckbox = document.getElementById('for-sale') as HTMLInputElement;
+    const priceField = document.getElementById('price-field') as HTMLElement;
+    const titleInput = document.getElementById('title') as HTMLInputElement;
+    const slugInput = document.getElementById('slug') as HTMLInputElement;
+    const categoryInput = document.getElementById('category') as HTMLInputElement;
+    const categorySelector = document.getElementById('category-selector') as HTMLElement;
+    const formFields = document.getElementById('form-fields') as HTMLElement;
+    const activeCategoryLabel = document.getElementById('active-category-label') as HTMLElement;
+    const activeCategoryIcon = document.getElementById('active-category-icon') as HTMLElement;
+    const mediaModal = document.getElementById('media-modal') as HTMLElement;
+    const mediaModalBackdrop = document.getElementById('media-modal-backdrop') as HTMLElement;
+    const chooseMediaBtn = document.getElementById('choose-media-btn') as HTMLButtonElement;
+    const mediaPreview = document.getElementById('media-preview') as HTMLElement;
+    const mediaPreviewGrid = document.getElementById('media-preview-grid') as HTMLElement;
+    const clearMediaBtn = document.getElementById('clear-media') as HTMLButtonElement;
 
-  // Icon paths for categories
-  const iconPaths: Record<string, string> = {
-    physical: `<svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>`,
-    collaborations: `<svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>`,
-    digital: `<svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>`,
-  };
+    // Only initialize if form exists (page has WorkEditor)
+    if (!form) return;
 
-  // Check if in edit mode on load
-  if (form?.dataset.editMode === 'true' && workIdInput?.value) {
-    editingWorkId = workIdInput.value;
-  }
-
-  // Category selection
-  document.querySelectorAll('.category-option').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const category = btn.getAttribute('data-category');
-      if (category) setFormCategory(category);
-    });
-  });
-
-  // Change category button
-  document.getElementById('change-category-btn')?.addEventListener('click', () => {
-    setFormCategory(null);
-  });
-
-  function setFormCategory(category: string | null) {
-    if (category) {
-      categoryInput.value = category;
-      categorySelector?.classList.add('hidden');
-      formFields?.classList.remove('hidden');
-      if (activeCategoryLabel) activeCategoryLabel.textContent = category;
-      if (activeCategoryIcon) activeCategoryIcon.innerHTML = iconPaths[category] || '';
-    } else {
-      categoryInput.value = '';
-      categorySelector?.classList.remove('hidden');
-      formFields?.classList.add('hidden');
-      if (activeCategoryLabel) activeCategoryLabel.textContent = '';
-      if (activeCategoryIcon) activeCategoryIcon.innerHTML = '';
-    }
-  }
-
-  // Auto-generate slug from title
-  function generateSlug(title: string): string {
-    return title
-      .toLowerCase()
-      .trim()
-      .replace(/[^\w\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-');
-  }
-
-  titleInput?.addEventListener('input', () => {
-    if (editingWorkId) return;
-    const currentSlug = slugInput?.value || '';
-    const currentTitle = titleInput?.value || '';
-    const expectedSlug = generateSlug(currentTitle);
-    const previousExpectedSlug = generateSlug(titleInput.dataset.previousTitle || '');
-
-    if (currentSlug === '' || currentSlug === previousExpectedSlug) {
-      slugInput.value = expectedSlug;
-    }
-    titleInput.dataset.previousTitle = currentTitle;
-  });
-
-  // Show/hide price field
-  forSaleCheckbox?.addEventListener('change', () => {
-    if (forSaleCheckbox.checked) {
-      priceField?.classList.remove('hidden');
-    } else {
-      priceField?.classList.add('hidden');
-    }
-  });
-
-  // Media modal
-  function openMediaModal() {
-    mediaModal?.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-  }
-
-  function closeMediaModal() {
-    mediaModal?.classList.add('hidden');
-    document.body.style.overflow = '';
-  }
-
-  chooseMediaBtn?.addEventListener('click', openMediaModal);
-  mediaModalBackdrop?.addEventListener('click', closeMediaModal);
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !mediaModal?.classList.contains('hidden')) {
-      closeMediaModal();
-    }
-  });
-
-  // Media selection handler
-  window.addEventListener('mediaSelected', ((e: CustomEvent) => {
-    const media = e.detail;
-    if (!media) return;
-
-    const id = media.id;
-    const url = media.variants?.sm?.url || media.variants?.md?.url || media.url;
-
-    if (selectedMediaIds.includes(id)) {
-      selectedMediaIds = selectedMediaIds.filter(mid => mid !== id);
-      selectedMediaItems = selectedMediaItems.filter(item => item.id !== id);
-    } else {
-      selectedMediaIds.push(id);
-      selectedMediaItems.push({ id, url, type: 'image' });
-    }
-
-    updateMediaPreview();
-  }) as EventListener);
-
-  function updateMediaPreview() {
-    if (selectedMediaItems.length === 0) {
-      mediaPreview?.classList.add('hidden');
-      return;
-    }
-
-    mediaPreview?.classList.remove('hidden');
-    if (mediaPreviewGrid) {
-      mediaPreviewGrid.innerHTML = selectedMediaItems.map(item => `
-        <div class="aspect-square rounded-md overflow-hidden border border-gray-200">
-          <img src="${item.url}" alt="" class="w-full h-full object-cover" />
-        </div>
-      `).join('');
-    }
-  }
-
-  function clearMediaSelection() {
-    selectedMediaIds = [];
-    selectedMediaItems = [];
-    updateMediaPreview();
-  }
-
-  clearMediaBtn?.addEventListener('click', clearMediaSelection);
-
-  // Feedback helper
-  function showFeedback(message: string, type: 'success' | 'error') {
-    if (!feedback) return;
-    feedback.textContent = message;
-    feedback.className = `mt-4 p-3 rounded-md text-sm ${type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`;
-    feedback.classList.remove('hidden');
-    setTimeout(() => feedback.classList.add('hidden'), 3000);
-  }
-
-  // Cancel edit
-  cancelBtn?.addEventListener('click', () => {
-    editingWorkId = null;
-    if (workIdInput) workIdInput.value = '';
-    if (formTitle) formTitle.textContent = 'New Work';
-    if (saveBtn) saveBtn.textContent = 'Save Work';
-    cancelBtn?.classList.add('hidden');
-    form?.reset();
-    priceField?.classList.add('hidden');
-    clearMediaSelection();
-    setFormCategory(null);
-  });
-
-  // Form submission
-  form?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const csrfMatch = document.cookie.match(/csrf_token=([^;]+)/);
-    const csrfToken = csrfMatch ? csrfMatch[1] : '';
-
-    const formData = new FormData(form);
-    const data = {
-      id: workIdInput?.value || undefined,
-      category: formData.get('category') as string,
-      title: formData.get('title') as string,
-      slug: formData.get('slug') as string,
-      description: formData.get('description') as string || undefined,
-      year: formData.get('year') ? parseInt(formData.get('year') as string) : undefined,
-      forSale: formData.get('forSale') === 'on',
-      price: formData.get('price') ? (formData.get('price') as string) : undefined,
-      externalUrl: formData.get('externalUrl') as string || undefined,
-      mediaIds: selectedMediaIds,
+    // Icon paths for categories
+    const iconPaths: Record<string, string> = {
+      physical: `<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>`,
+      collaborations: `<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>`,
+      digital: `<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>`,
     };
 
-    if (saveBtn) {
-      saveBtn.disabled = true;
-      saveBtn.textContent = workIdInput?.value ? 'Updating...' : 'Creating...';
+    // Check if in edit mode on load
+    if (form?.dataset.editMode === 'true' && workIdInput?.value) {
+      editingWorkId = workIdInput.value;
     }
 
-    try {
-      const res = await fetch('/api/admin/works', {
-        method: workIdInput?.value ? 'PUT' : 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-Token': csrfToken
-        },
-        credentials: 'include',
-        body: JSON.stringify(data)
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || 'Save failed');
+    // Category selection using event delegation
+    document.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      const btn = target.closest('.category-option') as HTMLElement;
+      if (btn && document.contains(btn)) {
+        const category = btn.getAttribute('data-category');
+        if (category && document.contains(categorySelector)) {
+          e.stopPropagation();
+          setFormCategory(category);
+        }
       }
+    });
 
-      showFeedback(workIdInput?.value ? 'Work updated' : 'Work created', 'success');
-      setTimeout(() => window.location.reload(), 500);
-    } catch (e) {
-      showFeedback(e instanceof Error ? e.message : 'Failed to save work', 'error');
-    } finally {
-      if (saveBtn) {
-        saveBtn.disabled = false;
-        saveBtn.textContent = workIdInput?.value ? 'Update Work' : 'Save Work';
+    // Change category button
+    document.getElementById('change-category-btn')?.addEventListener('click', () => {
+      setFormCategory(null);
+    });
+
+    function setFormCategory(category: string | null) {
+      if (category) {
+        categoryInput.value = category;
+        categorySelector?.classList.add('hidden');
+        formFields?.classList.remove('hidden');
+        if (activeCategoryLabel) activeCategoryLabel.textContent = category;
+        if (activeCategoryIcon) activeCategoryIcon.innerHTML = iconPaths[category] || '';
+      } else {
+        categoryInput.value = '';
+        categorySelector?.classList.remove('hidden');
+        formFields?.classList.add('hidden');
+        if (activeCategoryLabel) activeCategoryLabel.textContent = '';
+        if (activeCategoryIcon) activeCategoryIcon.innerHTML = '';
       }
     }
-  });
 
-  // Expose functions for external use (e.g., from works-page.ts)
-  (window as any).WorkEditor = {
-    setFormCategory,
-    clearMediaSelection,
-    loadWorkForEdit: async (id: string, category: string) => {
-      try {
-        const res = await fetch(`/api/admin/works?id=${encodeURIComponent(id)}`, { credentials: 'include' });
-        if (!res.ok) throw new Error('Failed to load work');
+    // Auto-generate slug from title
+    function generateSlug(title: string): string {
+      return title
+        .toLowerCase()
+        .trim()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-');
+    }
 
-        const work = await res.json();
-        editingWorkId = id;
-        if (workIdInput) workIdInput.value = id;
-        if (formTitle) formTitle.textContent = 'Edit Work';
-        if (saveBtn) saveBtn.textContent = 'Update Work';
-        cancelBtn?.classList.remove('hidden');
+    titleInput?.addEventListener('input', () => {
+      if (editingWorkId) return;
+      const currentSlug = slugInput?.value || '';
+      const currentTitle = titleInput?.value || '';
+      const expectedSlug = generateSlug(currentTitle);
+      const previousExpectedSlug = generateSlug(titleInput.dataset.previousTitle || '');
 
-        setFormCategory(category);
-
-        (document.getElementById('title') as HTMLInputElement).value = work.title || '';
-        (document.getElementById('slug') as HTMLInputElement).value = work.slug || '';
-        (document.getElementById('description') as HTMLTextAreaElement).value = work.description || '';
-        (document.getElementById('year') as HTMLInputElement).value = work.year ? String(work.year) : '';
-        (document.getElementById('external-url') as HTMLInputElement).value = work.externalUrl || '';
-
-        const forSaleCb = document.getElementById('for-sale') as HTMLInputElement;
-        forSaleCb.checked = work.forSale || false;
-        if (work.forSale) {
-          priceField?.classList.remove('hidden');
-          (document.getElementById('price') as HTMLInputElement).value = work.price || '';
-        } else {
-          priceField?.classList.add('hidden');
-        }
-
-        if (work.media && work.media.length > 0) {
-          selectedMediaIds = work.media.map((m: any) => m.id);
-          selectedMediaItems = work.media.map((m: any) => ({
-            id: m.id,
-            url: m.variants?.sm?.url || m.variants?.md?.url || m.url,
-            type: m.mediaType || 'image'
-          }));
-          updateMediaPreview();
-        } else {
-          clearMediaSelection();
-        }
-
-        showFeedback('Work loaded for editing', 'success');
-      } catch (e) {
-        showFeedback('Failed to load work for editing', 'error');
-        console.error(e);
+      if (currentSlug === '' || currentSlug === previousExpectedSlug) {
+        slugInput.value = expectedSlug;
       }
-    },
-    cancelEdit: () => {
+      titleInput.dataset.previousTitle = currentTitle;
+    });
+
+    // Show/hide price field
+    forSaleCheckbox?.addEventListener('change', () => {
+      if (forSaleCheckbox.checked) {
+        priceField?.classList.remove('hidden');
+      } else {
+        priceField?.classList.add('hidden');
+      }
+    });
+
+    // Media modal
+    function openMediaModal() {
+      mediaModal?.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeMediaModal() {
+      mediaModal?.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    chooseMediaBtn?.addEventListener('click', openMediaModal);
+    mediaModalBackdrop?.addEventListener('click', closeMediaModal);
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !mediaModal?.classList.contains('hidden')) {
+        closeMediaModal();
+      }
+    });
+
+
+    function updateMediaPreview() {
+      if (selectedMediaItems.length === 0) {
+        mediaPreview?.classList.add('hidden');
+        return;
+      }
+
+      mediaPreview?.classList.remove('hidden');
+      if (mediaPreviewGrid) {
+        mediaPreviewGrid.innerHTML = selectedMediaItems.map(item => `
+          <div class="aspect-square rounded-md overflow-hidden border border-[#333]">
+            <img src="${item.url}" alt="" class="w-full h-full object-cover" />
+          </div>
+        `).join('');
+      }
+    }
+
+    function clearMediaSelection() {
+      selectedMediaIds = [];
+      selectedMediaItems = [];
+      updateMediaPreview();
+    }
+
+    clearMediaBtn?.addEventListener('click', clearMediaSelection);
+
+    // Feedback helper
+    function showFeedback(message: string, type: 'success' | 'error') {
+      if (!feedback) return;
+      feedback.textContent = message;
+      feedback.className = `mt-4 p-3 rounded-md text-sm ${type === 'success' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}`;
+      feedback.classList.remove('hidden');
+      setTimeout(() => feedback.classList.add('hidden'), 3000);
+    }
+
+    // Cancel edit
+    cancelBtn?.addEventListener('click', () => {
       editingWorkId = null;
       if (workIdInput) workIdInput.value = '';
       if (formTitle) formTitle.textContent = 'New Work';
@@ -565,6 +434,161 @@ const saveButtonText = isEditMode ? 'Update Work' : 'Save Work';
       priceField?.classList.add('hidden');
       clearMediaSelection();
       setFormCategory(null);
-    }
-  };
+    });
+
+    // Form submission
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const csrfMatch = document.cookie.match(/csrf_token=([^;]+)/);
+      const csrfToken = csrfMatch ? csrfMatch[1] : '';
+
+      const formData = new FormData(form);
+      const data = {
+        id: workIdInput?.value || undefined,
+        category: formData.get('category') as string,
+        title: formData.get('title') as string,
+        slug: formData.get('slug') as string,
+        description: formData.get('description') as string || undefined,
+        year: formData.get('year') ? parseInt(formData.get('year') as string) : undefined,
+        forSale: formData.get('forSale') === 'on',
+        price: formData.get('price') ? (formData.get('price') as string) : undefined,
+        externalUrl: formData.get('externalUrl') as string || undefined,
+        mediaIds: selectedMediaIds,
+      };
+
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = workIdInput?.value ? 'Updating...' : 'Creating...';
+      }
+
+      try {
+        const res = await fetch('/api/admin/works', {
+          method: workIdInput?.value ? 'PUT' : 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': csrfToken
+          },
+          credentials: 'include',
+          body: JSON.stringify(data)
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || 'Save failed');
+        }
+
+        showFeedback(workIdInput?.value ? 'Work updated' : 'Work created', 'success');
+        setTimeout(() => window.location.reload(), 500);
+      } catch (e) {
+        showFeedback(e instanceof Error ? e.message : 'Failed to save work', 'error');
+      } finally {
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.textContent = workIdInput?.value ? 'Update Work' : 'Save Work';
+        }
+      }
+    });
+
+    // Expose functions for external use (e.g., from works-page.ts)
+    (window as any).WorkEditor = {
+      setFormCategory,
+      clearMediaSelection,
+      loadWorkForEdit: async (id: string, category: string) => {
+        try {
+          const res = await fetch(`/api/admin/works?id=${encodeURIComponent(id)}`, { credentials: 'include' });
+          if (!res.ok) throw new Error('Failed to load work');
+
+          const work = await res.json();
+          editingWorkId = id;
+          if (workIdInput) workIdInput.value = id;
+          if (formTitle) formTitle.textContent = 'Edit Work';
+          if (saveBtn) saveBtn.textContent = 'Update Work';
+          cancelBtn?.classList.remove('hidden');
+
+          setFormCategory(category);
+
+          (document.getElementById('title') as HTMLInputElement).value = work.title || '';
+          (document.getElementById('slug') as HTMLInputElement).value = work.slug || '';
+          (document.getElementById('description') as HTMLTextAreaElement).value = work.description || '';
+          (document.getElementById('year') as HTMLInputElement).value = work.year ? String(work.year) : '';
+          (document.getElementById('external-url') as HTMLInputElement).value = work.externalUrl || '';
+
+          const forSaleCb = document.getElementById('for-sale') as HTMLInputElement;
+          forSaleCb.checked = work.forSale || false;
+          if (work.forSale) {
+            priceField?.classList.remove('hidden');
+            (document.getElementById('price') as HTMLInputElement).value = work.price || '';
+          } else {
+            priceField?.classList.add('hidden');
+          }
+
+          if (work.media && work.media.length > 0) {
+            selectedMediaIds = work.media.map((m: any) => m.mediaId).filter(Boolean);
+            selectedMediaItems = work.media.map((m: any) => ({
+              id: m.mediaId,
+              url: m.variants?.sm?.url || m.variants?.md?.url || m.url,
+              type: m.type || 'image'
+            })).filter((m: any) => m.id);
+            updateMediaPreview();
+          } else {
+            clearMediaSelection();
+          }
+
+          showFeedback('Work loaded for editing', 'success');
+        } catch (e) {
+          showFeedback('Failed to load work for editing', 'error');
+          console.error(e);
+        }
+      },
+      cancelEdit: () => {
+        editingWorkId = null;
+        if (workIdInput) workIdInput.value = '';
+        if (formTitle) formTitle.textContent = 'New Work';
+        if (saveBtn) saveBtn.textContent = 'Save Work';
+        cancelBtn?.classList.add('hidden');
+        form?.reset();
+        priceField?.classList.add('hidden');
+        clearMediaSelection();
+        setFormCategory(null);
+      }
+    };
+
+    // Global handler for MediaSelector - required because client:load can't serialize arrow functions
+    (window as any).handleWorkMediaSelect = function(media: any) {
+      if (!media) return;
+
+      const id = media.id;
+      const url = media.variants?.sm?.url || media.variants?.md?.url || media.url;
+
+      if (selectedMediaIds.includes(id)) {
+        selectedMediaIds = selectedMediaIds.filter((mid: string) => mid !== id);
+        selectedMediaItems = selectedMediaItems.filter((item: any) => item.id !== id);
+      } else {
+        selectedMediaIds.push(id);
+        selectedMediaItems.push({ id, url, type: 'image' });
+      }
+
+      updateMediaPreview();
+
+      // Close the modal after selection
+      document.getElementById('media-modal')?.classList.add('hidden');
+      document.body.style.overflow = '';
+    };
+
+    (window as any).handleWorkMediaCancel = function() {
+      document.getElementById('media-modal')?.classList.add('hidden');
+      document.body.style.overflow = '';
+    };
+  }
+
+  // Initialize on DOM ready and after Astro page transitions
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initWorkEditor);
+  } else {
+    initWorkEditor();
+  }
+  
+  // Re-initialize after Astro view transitions
+  document.addEventListener('astro:page-load', initWorkEditor);
 </script>

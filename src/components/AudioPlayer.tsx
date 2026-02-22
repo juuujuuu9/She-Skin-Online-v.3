@@ -27,6 +27,11 @@ export function AudioPlayer() {
   const [isManualOverlay, setIsManualOverlay] = useState(false);
   const progressRef = useRef<HTMLDivElement>(null);
 
+  // Debug logging
+  useEffect(() => {
+    console.log('[AudioPlayer] playerVisible:', playerVisible, 'currentTrack:', audio.currentTrack?.title);
+  }, [playerVisible, audio.currentTrack]);
+
   // When song starts from grid: show overlay, no X, fade after 1s. When opened via click: show X, persist.
   useEffect(() => {
     if (!playerVisible || !audio.currentTrack) return;

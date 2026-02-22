@@ -33,6 +33,7 @@ export default function MediaSelector({
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   // Resolve onSelect handler (supports function or global function name string)
   const resolveOnSelect = useCallback((media: Media) => {
@@ -45,6 +46,18 @@ export default function MediaSelector({
       onSelect(media);
     }
   }, [onSelect]);
+
+  // Resolve onCancel handler (supports function or global function name string)
+  const resolveOnCancel = useCallback(() => {
+    if (typeof onCancel === 'string') {
+      const globalHandler = (window as unknown as Record<string, () => void>)[onCancel];
+      if (typeof globalHandler === 'function') {
+        globalHandler();
+      }
+    } else if (typeof onCancel === 'function') {
+      onCancel();
+    }
+  }, [onCancel]);
 
   // Get CSRF token from cookie
   const getCsrfToken = () => {
@@ -104,12 +117,18 @@ export default function MediaSelector({
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.media) {
-          resolveOnSelect(data.media);
+          // Refresh gallery, switch to it, and show success
+          await fetchMedia();
+          setError(null);
+          setSuccess(`"${data.media.filename}" uploaded successfully. Click it to select.`);
+          setActiveTab('gallery');
         } else {
+          setSuccess(null);
           setError(data.error || 'Upload failed');
         }
       } else {
         const data = await response.json();
+        setSuccess(null);
         setError(data.error || 'Upload failed');
       }
     } catch (err) {
@@ -146,7 +165,7 @@ export default function MediaSelector({
     }
     // Placeholder icons for audio/video
     if (mediaItem.mediaType === 'audio') {
-      return 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23666"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>';
+      return "data:image/svg+xml,%3Csvg fill='%23434343' viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M211.44824,52.50586l-80-24A12.00045,12.00045,0,0,0,116,40V87.73047q-.00587.27539,0,.54785V140.2168A51.97764,51.97764,0,1,0,140,184V104.12842l64.55176,19.36572A12.00045,12.00045,0,0,0,220,112V64A11.99994,11.99994,0,0,0,211.44824,52.50586ZM88,212a28,28,0,1,1,28-28A28.03146,28.03146,0,0,1,88,212ZM196,95.87158,140,79.07129V56.12842l56,16.80029Z'/%3E%3C/svg%3E";
     }
     if (mediaItem.mediaType === 'video') {
       return 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23666"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>';
@@ -160,7 +179,7 @@ export default function MediaSelector({
       <div style={styles.header}>
         <h3 style={styles.title}>Select Media</h3>
         {onCancel && (
-          <button onClick={onCancel} style={styles.closeButton}>
+          <button onClick={resolveOnCancel} style={styles.closeButton}>
             &times;
           </button>
         )}
@@ -169,7 +188,10 @@ export default function MediaSelector({
       {/* Tabs */}
       <div style={styles.tabs}>
         <button
-          onClick={() => setActiveTab('gallery')}
+          onClick={() => {
+            setActiveTab('gallery');
+            setSuccess(null);
+          }}
           style={{
             ...styles.tab,
             ...(activeTab === 'gallery' ? styles.tabActive : {}),
@@ -178,7 +200,10 @@ export default function MediaSelector({
           Gallery
         </button>
         <button
-          onClick={() => setActiveTab('upload')}
+          onClick={() => {
+            setActiveTab('upload');
+            setSuccess(null);
+          }}
           style={{
             ...styles.tab,
             ...(activeTab === 'upload' ? styles.tabActive : {}),
@@ -193,6 +218,16 @@ export default function MediaSelector({
         <div style={styles.error}>
           {error}
           <button onClick={() => setError(null)} style={styles.errorClose}>
+            &times;
+          </button>
+        </div>
+      )}
+
+      {/* Success message */}
+      {success && (
+        <div style={styles.success}>
+          {success}
+          <button onClick={() => setSuccess(null)} style={styles.successClose}>
             &times;
           </button>
         </div>
@@ -232,7 +267,7 @@ export default function MediaSelector({
                     <img
                       src={getThumbnail(item)}
                       alt={item.altText || item.filename}
-                      style={styles.thumbnail}
+                      style={item.mediaType === 'image' ? styles.thumbnail : styles.thumbnailIcon}
                     />
                     <span style={styles.typeBadge}>
                       {getMediaTypeLabel(item.mediaType)}
@@ -318,8 +353,8 @@ const styles: Record<string, React.CSSProperties> = {
     background: '#1a1a1a',
     borderRadius: '8px',
     color: '#fff',
-    maxWidth: '800px',
-    maxHeight: '80vh',
+    width: '100%',
+    height: '100%',
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',
@@ -411,6 +446,15 @@ const styles: Record<string, React.CSSProperties> = {
     width: '100%',
     height: '100%',
     objectFit: 'cover',
+  },
+  thumbnailIcon: {
+    width: '60%',
+    height: '60%',
+    objectFit: 'contain',
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
   },
   typeBadge: {
     position: 'absolute',
@@ -511,6 +555,24 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'none',
     border: 'none',
     color: '#ff6666',
+    fontSize: '18px',
+    cursor: 'pointer',
+  },
+  success: {
+    background: '#22c55e22',
+    border: '1px solid #22c55e',
+    color: '#4ade80',
+    padding: '12px 16px',
+    margin: '8px 20px 0 20px',
+    borderRadius: '6px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  successClose: {
+    background: 'none',
+    border: 'none',
+    color: '#4ade80',
     fontSize: '18px',
     cursor: 'pointer',
   },

@@ -329,7 +329,7 @@ export default function MediaManager({ initialMedia = [] }: MediaManagerProps) {
       return mediaItem.variants?.sm?.url || mediaItem.url;
     }
     if (mediaItem.mediaType === 'audio') {
-      return 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23666"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>';
+      return "data:image/svg+xml,%3Csvg fill='%23434343' viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M211.44824,52.50586l-80-24A12.00045,12.00045,0,0,0,116,40V87.73047q-.00587.27539,0,.54785V140.2168A51.97764,51.97764,0,1,0,140,184V104.12842l64.55176,19.36572A12.00045,12.00045,0,0,0,220,112V64A11.99994,11.99994,0,0,0,211.44824,52.50586ZM88,212a28,28,0,1,1,28-28A28.03146,28.03146,0,0,1,88,212ZM196,95.87158,140,79.07129V56.12842l56,16.80029Z'/%3E%3C/svg%3E";
     }
     if (mediaItem.mediaType === 'video') {
       return 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23666"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>';
@@ -518,7 +518,7 @@ export default function MediaManager({ initialMedia = [] }: MediaManagerProps) {
                 <img
                   src={getThumbnail(item)}
                   alt={item.altText || item.filename}
-                  style={styles.thumbnail}
+                  style={item.mediaType === 'image' ? styles.thumbnail : styles.thumbnailIcon}
                   loading="lazy"
                 />
                 <span
@@ -589,7 +589,7 @@ export default function MediaManager({ initialMedia = [] }: MediaManagerProps) {
                 <img
                   src={getThumbnail(item)}
                   alt={item.altText || item.filename}
-                  style={styles.listThumbnailImg}
+                  style={item.mediaType === 'image' ? styles.listThumbnailImg : styles.listThumbnailIcon}
                   loading="lazy"
                 />
               </div>
@@ -962,6 +962,15 @@ const styles: Record<string, React.CSSProperties> = {
     height: '100%',
     objectFit: 'cover',
   },
+  thumbnailIcon: {
+    width: '60%',
+    height: '60%',
+    objectFit: 'contain',
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+  },
   typeBadge: {
     position: 'absolute',
     top: '8px',
@@ -1049,6 +1058,15 @@ const styles: Record<string, React.CSSProperties> = {
     width: '100%',
     height: '100%',
     objectFit: 'cover',
+  },
+  listThumbnailIcon: {
+    width: '70%',
+    height: '70%',
+    objectFit: 'contain',
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
   },
   listInfo: {
     flex: 1,

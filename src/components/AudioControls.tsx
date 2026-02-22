@@ -26,13 +26,16 @@ export function PlayButton({
   const isPlaying = isCurrentTrack && audio.isPlaying;
 
   const handleClick = () => {
+    console.log('[PlayButton] Clicked:', track.title, 'isCurrent:', isCurrentTrack);
     // If clicking the currently playing track, toggle play/pause
     if (isCurrentTrack) {
+      console.log('[PlayButton] Toggling play/pause');
       togglePlay();
     } else {
       // Start playing this track with the provided queue
       // If no queue provided, just play this single track
       const trackQueue = queue.length > 0 ? queue : [track];
+      console.log('[PlayButton] Playing track:', track.id, 'src:', track.src?.slice(0, 50), 'queue length:', trackQueue.length);
       playTrack(track, trackQueue);
     }
   };

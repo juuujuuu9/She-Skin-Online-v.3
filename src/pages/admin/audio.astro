@@ -1,14 +1,9 @@
 ---
 export const prerender = false;
 
-import Layout from '@layouts/Layout.astro';
+import AdminLayout from '@layouts/AdminLayout.astro';
 import { checkAdminAuth } from '@lib/admin-auth';
-import { generateCsrfToken } from '@lib/csrf';
 import MediaSelector from '@components/admin/MediaSelector';
-
-// Generate and set CSRF token
-const csrf = generateCsrfToken();
-Astro.response.headers.set('Set-Cookie', csrf.cookie);
 
 // Check auth
 const auth = await checkAdminAuth(Astro.request);
@@ -16,228 +11,146 @@ if (!auth.valid) {
   const reason = auth.debug || 'unknown';
   return Astro.redirect(`/admin/login?session=expired&reason=${encodeURIComponent(reason)}`);
 }
-
-const currentPath = Astro.url.pathname;
-const adminNavItems = [
-  { href: '/admin', label: 'Uploads', icon: 'dashboard' },
-  { href: '/admin/media', label: 'Media Library', icon: 'media' },
-  { href: '/admin/audio', label: 'ICT★SNU SOUND', icon: 'audio' },
-  { href: '/admin/works', label: 'Works', icon: 'works' },
-  { href: '/admin/products', label: 'Inventory', icon: 'products' },
-  { href: '/admin/homepage', label: 'Homepage', icon: 'home' },
-];
-const iconPaths: Record<string, string> = {
-  dashboard: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />`,
-  media: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />`,
-  audio: `<path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M21.6464 2.23699C21.8707 2.42699 22 2.70606 22 3.00001V16C22 18.2091 20.2091 20 18 20C15.7909 20 14 18.2091 14 16C14 13.7909 15.7909 12 18 12C18.7286 12 19.4117 12.1948 20 12.5351V4.18047L10 5.84713V18L9.99999 18.0032C9.99824 20.2109 8.20806 22 6 22C3.79086 22 2 20.2091 2 18C2 15.7909 3.79086 14 6 14C6.72857 14 7.41165 14.1948 8 14.5351V5.00001C8 4.51117 8.35341 4.09398 8.8356 4.01361L20.8356 2.01361C21.1256 1.96529 21.4221 2.04698 21.6464 2.23699ZM20 16C20 14.8954 19.1046 14 18 14C16.8954 14 16 14.8954 16 16C16 17.1046 16.8954 18 18 18C19.1046 18 20 17.1046 20 16ZM6 16C7.10457 16 8 16.8954 8 18C8 19.1046 7.10457 20 6 20C4.89543 20 4 19.1046 4 18C4 16.8954 4.89543 16 6 16Z" />`,
-  works: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />`,
-  products: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />`,
-  home: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />`,
-};
-const isActive = (href: string) => {
-  if (href === '/admin') return currentPath === '/admin' || currentPath === '/admin/';
-  return currentPath.startsWith(href);
-};
 ---
 
-<Layout title="ICT★SNU SOUND - she_skin Admin">
-  <div class="h-dvh bg-[#0a0a0a] flex flex-col overflow-hidden">
-    <div class="flex flex-row flex-1 min-h-0 items-stretch">
-      {/* Admin sidebar */}
-      <aside class="w-64 shrink-0 flex flex-col bg-[#0a0a0a] text-white self-stretch border-r border-white/10">
-        <div class="flex items-center justify-between p-4 border-b border-white/10">
-          <a href="/admin" class="text-lg font-bold tracking-tight text-white hover:text-white/90">
-            she_skin
-          </a>
-          <button
-            type="button"
-            id="admin-logout-btn"
-            class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium text-white/70 hover:bg-red-500/20 hover:text-red-400 transition-colors uppercase tracking-wider"
-          >
-            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            Logout
-          </button>
-        </div>
-        <nav class="flex-1 p-3 min-h-0 overflow-auto" id="admin-nav">
-          <ul class="space-y-0.5">
-            {adminNavItems.map((item) => (
-              <li>
-                <a
-                  href={item.href}
-                  data-nav-link
-                  class={`
-                    flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors
-                    ${isActive(item.href) ? 'bg-white text-black' : 'text-white/80 hover:bg-white/10 hover:text-white'}
-                  `}
-                >
-                  <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" set:html={iconPaths[item.icon] ?? ''} />
-                  <span>{item.label}</span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
-        <div class="mx-3 border-t border-white/10" />
-        <nav class="p-3" id="admin-view-site">
-          <ul class="space-y-0.5">
-            <li>
-              <a
-                href="/"
-                data-nav-link
-                class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm text-white/60 hover:bg-white/10 hover:text-white transition-colors"
+<AdminLayout title="ICT★SNU SOUND - she_skin Admin">
+  <main class="flex-1 min-w-0 bg-[#111] overflow-y-auto">
+    <div class="p-6 max-w-7xl mx-auto">
+      <header class="mb-6">
+        <h1 class="text-2xl font-semibold text-white">ICT★SNU SOUND</h1>
+        <p class="text-gray-400 mt-1">Manage audio posts with artwork, YouTube, and SoundCloud links</p>
+      </header>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Form */}
+        <div class="bg-[#1a1a1a] rounded-xl border border-[#333] p-6">
+          <h2 id="form-title" class="text-lg font-medium text-white mb-4">New Audio Post</h2>
+          
+          <form id="audio-post-form" class="space-y-4">
+            <input type="hidden" id="post-id" name="postId" value="" />
+
+            {/* Title */}
+            <div>
+              <label for="title" class="block text-sm font-medium text-gray-300 mb-1">Title</label>
+              <input
+                type="text"
+                id="title"
+                name="title"
+                required
+                class="w-full px-3 py-2 bg-[#222] border border-[#444] rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Track title"
+              />
+            </div>
+
+            {/* Audio File */}
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-1">Audio File</label>
+              <input type="hidden" id="audio-file" name="audioFile" value="" />
+              <button
+                type="button"
+                id="choose-audio-btn"
+                class="w-full flex items-center justify-center gap-2 px-3 py-2 bg-[#222] border border-[#444] rounded-md text-sm font-medium text-gray-300 hover:bg-[#333] hover:text-white transition-colors"
               >
-                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                 </svg>
-                <span>View Site</span>
-              </a>
-            </li>
-          </ul>
-        </nav>
-      </aside>
-
-      {/* Main content */}
-      <main class="flex-1 min-w-0 bg-[#111] overflow-y-auto">
-        <div class="p-6 max-w-7xl mx-auto">
-          <header class="mb-6">
-            <h1 class="text-2xl font-semibold text-white">ICT★SNU SOUND</h1>
-            <p class="text-gray-400 mt-1">Manage audio posts with artwork, YouTube, and SoundCloud links</p>
-          </header>
-
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Form */}
-            <div class="bg-[#1a1a1a] rounded-xl border border-[#333] p-6">
-              <h2 id="form-title" class="text-lg font-medium text-white mb-4">New Audio Post</h2>
-              
-              <form id="audio-post-form" class="space-y-4">
-                <input type="hidden" id="post-id" name="postId" value="" />
-
-                {/* Title */}
-                <div>
-                  <label for="title" class="block text-sm font-medium text-gray-300 mb-1">Title</label>
-                  <input
-                    type="text"
-                    id="title"
-                    name="title"
-                    required
-                    class="w-full px-3 py-2 bg-[#222] border border-[#444] rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Track title"
-                  />
-                </div>
-
-                {/* Audio File */}
-                <div>
-                  <label class="block text-sm font-medium text-gray-300 mb-1">Audio File</label>
-                  <input type="hidden" id="audio-file" name="audioFile" value="" />
-                  <button
-                    type="button"
-                    id="choose-audio-btn"
-                    class="w-full flex items-center justify-center gap-2 px-3 py-2 bg-[#222] border border-[#444] rounded-md text-sm font-medium text-gray-300 hover:bg-[#333] hover:text-white transition-colors"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                    </svg>
-                    Select Audio File
-                  </button>
-                  <div id="audio-preview" class="hidden mt-2 flex items-center gap-2 p-2 bg-[#222] rounded-md">
-                    <svg class="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
-                      <path fill-rule="evenodd" clip-rule="evenodd" d="M21.6464 2.23699C21.8707 2.42699 22 2.70606 22 3.00001V16C22 18.2091 20.2091 20 18 20C15.7909 20 14 18.2091 14 16C14 13.7909 15.7909 12 18 12C18.7286 12 19.4117 12.1948 20 12.5351V4.18047L10 5.84713V18L9.99999 18.0032C9.99824 20.2109 8.20806 22 6 22C3.79086 22 2 20.2091 2 18C2 15.7909 3.79086 14 6 14C6.72857 14 7.41165 14.1948 8 14.5351V5.00001C8 4.51117 8.35341 4.09398 8.8356 4.01361L20.8356 2.01361C21.1256 1.96529 21.4221 2.04698 21.6464 2.23699ZM20 16C20 14.8954 19.1046 14 18 14C16.8954 14 16 14.8954 16 16C16 17.1046 16.8954 18 18 18C19.1046 18 20 17.1046 20 16ZM6 16C7.10457 16 8 16.8954 8 18C8 19.1046 7.10457 20 6 20C4.89543 20 4 19.1046 4 18C4 16.8954 4.89543 16 6 16Z" />
-                    </svg>
-                    <span id="audio-file-name" class="text-sm text-gray-300 flex-1 truncate"></span>
-                    <button type="button" id="remove-audio" class="text-xs text-red-400 hover:text-red-300">Remove</button>
-                  </div>
-                </div>
-
-                {/* Artwork */}
-                <div>
-                  <label class="block text-sm font-medium text-gray-300 mb-1">Artwork</label>
-                  <input type="hidden" id="artwork" name="artwork" value="" />
-                  <button
-                    type="button"
-                    id="choose-artwork-btn"
-                    class="w-full flex items-center justify-center gap-2 px-3 py-2 bg-[#222] border border-[#444] rounded-md text-sm font-medium text-gray-300 hover:bg-[#333] hover:text-white transition-colors"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    Select Artwork
-                  </button>
-                  <div id="artwork-preview" class="hidden mt-2">
-                    <img id="artwork-preview-img" src="" alt="Artwork preview" class="w-full h-32 object-cover rounded-md border border-[#444]" />
-                    <button type="button" id="remove-artwork" class="mt-1 text-xs text-red-400 hover:text-red-300">Remove artwork</button>
-                  </div>
-                </div>
-
-                {/* YouTube */}
-                <div>
-                  <label for="youtube-link" class="block text-sm font-medium text-gray-300 mb-1">YouTube Link</label>
-                  <input
-                    type="url"
-                    id="youtube-link"
-                    name="youtubeLink"
-                    class="w-full px-3 py-2 bg-[#222] border border-[#444] rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                    placeholder="https://youtube.com/watch?v=..."
-                  />
-                </div>
-
-                {/* SoundCloud */}
-                <div>
-                  <label for="soundcloud-link" class="block text-sm font-medium text-gray-300 mb-1">SoundCloud Link</label>
-                  <input
-                    type="url"
-                    id="soundcloud-link"
-                    name="soundcloudLink"
-                    class="w-full px-3 py-2 bg-[#222] border border-[#444] rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    placeholder="https://soundcloud.com/..."
-                  />
-                </div>
-
-                {/* Actions */}
-                <div class="flex gap-3 pt-4">
-                  <button
-                    type="submit"
-                    id="save-btn"
-                    class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                  >
-                    Save Post
-                  </button>
-                  <button
-                    type="button"
-                    id="cancel-btn"
-                    class="hidden px-4 py-2 bg-[#333] hover:bg-[#444] border border-[#444] rounded-md text-sm font-medium text-gray-300 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-
-              <div id="form-feedback" class="hidden mt-4 p-3 rounded-md text-sm"></div>
+                Select Audio File
+              </button>
+              <div id="audio-preview" class="hidden mt-2 flex items-center gap-2 p-2 bg-[#222] rounded-md">
+                <svg class="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M21.6464 2.23699C21.8707 2.42699 22 2.70606 22 3.00001V16C22 18.2091 20.2091 20 18 20C15.7909 20 14 18.2091 14 16C14 13.7909 15.7909 12 18 12C18.7286 12 19.4117 12.1948 20 12.5351V4.18047L10 5.84713V18L9.99999 18.0032C9.99824 20.2109 8.20806 22 6 22C3.79086 22 2 20.2091 2 18C2 15.7909 3.79086 14 6 14C6.72857 14 7.41165 14.1948 8 14.5351V5.00001C8 4.51117 8.35341 4.09398 8.8356 4.01361L20.8356 2.01361C21.1256 1.96529 21.4221 2.04698 21.6464 2.23699ZM20 16C20 14.8954 19.1046 14 18 14C16.8954 14 16 14.8954 16 16C16 17.1046 16.8954 18 18 18C19.1046 18 20 17.1046 20 16ZM6 16C7.10457 16 8 16.8954 8 18C8 19.1046 7.10457 20 6 20C4.89543 20 4 19.1046 4 18C4 16.8954 4.89543 16 6 16Z" />
+                </svg>
+                <span id="audio-file-name" class="text-sm text-gray-300 flex-1 truncate"></span>
+                <button type="button" id="remove-audio" class="text-xs text-red-400 hover:text-red-300">Remove</button>
+              </div>
             </div>
 
-            {/* Posts List */}
-            <div class="bg-[#1a1a1a] rounded-xl border border-[#333] p-6">
-              <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-medium text-white">Audio Posts</h2>
-                <span id="audio-count" class="text-sm text-gray-500">0 posts</span>
-              </div>
-
-              <div id="empty-state" class="text-center py-12">
-                <svg class="w-16 h-16 text-[#333] mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+            {/* Artwork */}
+            <div>
+              <label class="block text-sm font-medium text-gray-300 mb-1">Artwork</label>
+              <input type="hidden" id="artwork" name="artwork" value="" />
+              <button
+                type="button"
+                id="choose-artwork-btn"
+                class="w-full flex items-center justify-center gap-2 px-3 py-2 bg-[#222] border border-[#444] rounded-md text-sm font-medium text-gray-300 hover:bg-[#333] hover:text-white transition-colors"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                <p class="text-gray-400">No audio posts yet</p>
-                <p class="text-sm text-gray-500 mt-1">Create your first post</p>
+                Select Artwork
+              </button>
+              <div id="artwork-preview" class="hidden mt-2">
+                <img id="artwork-preview-img" src="" alt="Artwork preview" class="w-full h-32 object-cover rounded-md border border-[#444]" />
+                <button type="button" id="remove-artwork" class="mt-1 text-xs text-red-400 hover:text-red-300">Remove artwork</button>
               </div>
-
-              <div id="audio-posts-list" class="hidden space-y-3"></div>
             </div>
-          </div>
+
+            {/* YouTube */}
+            <div>
+              <label for="youtube-link" class="block text-sm font-medium text-gray-300 mb-1">YouTube Link</label>
+              <input
+                type="url"
+                id="youtube-link"
+                name="youtubeLink"
+                class="w-full px-3 py-2 bg-[#222] border border-[#444] rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                placeholder="https://youtube.com/watch?v=..."
+              />
+            </div>
+
+            {/* SoundCloud */}
+            <div>
+              <label for="soundcloud-link" class="block text-sm font-medium text-gray-300 mb-1">SoundCloud Link</label>
+              <input
+                type="url"
+                id="soundcloud-link"
+                name="soundcloudLink"
+                class="w-full px-3 py-2 bg-[#222] border border-[#444] rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="https://soundcloud.com/..."
+              />
+            </div>
+
+            {/* Actions */}
+            <div class="flex gap-3 pt-4">
+              <button
+                type="submit"
+                id="save-btn"
+                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Save Post
+              </button>
+              <button
+                type="button"
+                id="cancel-btn"
+                class="hidden px-4 py-2 bg-[#333] hover:bg-[#444] border border-[#444] rounded-md text-sm font-medium text-gray-300 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+
+          <div id="form-feedback" class="hidden mt-4 p-3 rounded-md text-sm"></div>
         </div>
-      </main>
+
+        {/* Posts List */}
+        <div class="bg-[#1a1a1a] rounded-xl border border-[#333] p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-medium text-white">Audio Posts</h2>
+            <span id="audio-count" class="text-sm text-gray-500">0 posts</span>
+          </div>
+
+          <div id="empty-state" class="text-center py-12">
+            <svg class="w-16 h-16 text-[#333] mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+            </svg>
+            <p class="text-gray-400">No audio posts yet</p>
+            <p class="text-sm text-gray-500 mt-1">Create your first post</p>
+          </div>
+
+          <div id="audio-posts-list" class="hidden space-y-3"></div>
+        </div>
+      </div>
     </div>
-  </div>
+  </main>
 
   {/* Artwork Selection Modal */}
   <div id="artwork-modal" class="fixed inset-0 z-50 hidden">
@@ -283,9 +196,7 @@ const isActive = (href: string) => {
     </div>
   </div>
 
-  <script is:inline define:vars={{ csrfToken: csrf.token }}>
-    window.CSRF_TOKEN = csrfToken;
-    
+  <script is:inline>
     // Global handlers for MediaSelector
     window.handleArtworkSelect = function(media) {
       const input = document.getElementById('artwork');
@@ -323,260 +234,264 @@ const isActive = (href: string) => {
   </script>
 
   <script>
-    // Navigation
-    document.querySelectorAll('a[data-nav-link]').forEach(link => {
-      link.addEventListener('click', (e) => {
+    // Audio admin page initialization - wrapped in function for proper re-initialization
+    function initAudioAdmin() {
+      // Check if we're on the audio admin page
+      const form = document.getElementById('audio-post-form');
+      if (!form) return; // Not on audio page
+
+      // Modal handlers
+      document.getElementById('choose-artwork-btn')?.addEventListener('click', () => {
+        document.getElementById('artwork-modal')?.classList.remove('hidden');
+      });
+      document.getElementById('close-artwork-modal')?.addEventListener('click', () => {
+        document.getElementById('artwork-modal')?.classList.add('hidden');
+      });
+      document.getElementById('artwork-modal-backdrop')?.addEventListener('click', () => {
+        document.getElementById('artwork-modal')?.classList.add('hidden');
+      });
+
+      document.getElementById('choose-audio-btn')?.addEventListener('click', () => {
+        document.getElementById('audio-modal')?.classList.remove('hidden');
+      });
+      document.getElementById('close-audio-modal')?.addEventListener('click', () => {
+        document.getElementById('audio-modal')?.classList.add('hidden');
+      });
+      document.getElementById('audio-modal-backdrop')?.addEventListener('click', () => {
+        document.getElementById('audio-modal')?.classList.add('hidden');
+      });
+
+      // Remove buttons
+      document.getElementById('remove-artwork')?.addEventListener('click', () => {
+        document.getElementById('artwork').value = '';
+        document.getElementById('artwork-preview').classList.add('hidden');
+      });
+      document.getElementById('remove-audio')?.addEventListener('click', () => {
+        document.getElementById('audio-file').value = '';
+        document.getElementById('audio-preview').classList.add('hidden');
+      });
+
+      // Audio posts management
+      let audioPosts = [];
+      let editingPostId = null;
+
+      const formTitle = document.getElementById('form-title');
+      const postIdInput = document.getElementById('post-id');
+      const cancelBtn = document.getElementById('cancel-btn');
+      const saveBtn = document.getElementById('save-btn');
+      const feedback = document.getElementById('form-feedback');
+      const emptyState = document.getElementById('empty-state');
+      const postsList = document.getElementById('audio-posts-list');
+      const audioCount = document.getElementById('audio-count');
+
+      function showFeedback(message, type) {
+        feedback.textContent = message;
+        feedback.className = `mt-4 p-3 rounded-md text-sm ${type === 'success' ? 'bg-green-900/30 text-green-400 border border-green-800' : 'bg-red-900/30 text-red-400 border border-red-800'}`;
+        feedback.classList.remove('hidden');
+        setTimeout(() => feedback.classList.add('hidden'), 3000);
+      }
+
+      function renderPosts() {
+        audioCount.textContent = `${audioPosts.length} post${audioPosts.length !== 1 ? 's' : ''}`;
+
+        if (audioPosts.length === 0) {
+          emptyState.classList.remove('hidden');
+          postsList.classList.add('hidden');
+          return;
+        }
+
+        emptyState.classList.add('hidden');
+        postsList.classList.remove('hidden');
+
+        postsList.innerHTML = audioPosts.map(post => `
+          <div class="flex items-center gap-4 p-4 bg-[#222] rounded-lg border border-[#333] hover:border-[#444] transition-all group" data-id="${post.id}">
+            ${post.artwork ? `
+              <img src="${post.artwork}" alt="" class="w-16 h-16 object-cover rounded-md shrink-0" />
+            ` : `
+              <div class="w-16 h-16 bg-[#333] rounded-md flex items-center justify-center shrink-0">
+                <svg class="w-8 h-8 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M21.6464 2.23699C21.8707 2.42699 22 2.70606 22 3.00001V16C22 18.2091 20.2091 20 18 20C15.7909 20 14 18.2091 14 16C14 13.7909 15.7909 12 18 12C18.7286 12 19.4117 12.1948 20 12.5351V4.18047L10 5.84713V18L9.99999 18.0032C9.99824 20.2109 8.20806 22 6 22C3.79086 22 2 20.2091 2 18C2 15.7909 3.79086 14 6 14C6.72857 14 7.41165 14.1948 8 14.5351V5.00001C8 4.51117 8.35341 4.09398 8.8356 4.01361L20.8356 2.01361C21.1256 1.96529 21.4221 2.04698 21.6464 2.23699ZM20 16C20 14.8954 19.1046 14 18 14C16.8954 14 16 14.8954 16 16C16 17.1046 16.8954 18 18 18C19.1046 18 20 17.1046 20 16ZM6 16C7.10457 16 8 16.8954 8 18C8 19.1046 7.10457 20 6 20C4.89543 20 4 19.1046 4 18C4 16.8954 4.89543 16 6 16Z" />
+                </svg>
+              </div>
+            `}
+            <div class="flex-1 min-w-0">
+              <h3 class="text-sm font-medium text-white truncate">${post.title}</h3>
+              <div class="flex items-center gap-2 mt-1 text-xs text-gray-500">
+                ${post.audioFile ? '<span class="text-blue-400">● Audio</span>' : ''}
+                ${post.youtubeLink ? '<span class="text-red-400">● YouTube</span>' : ''}
+                ${post.soundcloudLink ? '<span class="text-orange-400">● SoundCloud</span>' : ''}
+              </div>
+            </div>
+            <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button type="button" class="edit-btn p-2 text-gray-400 hover:text-white" data-id="${post.id}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </button>
+              <button type="button" class="delete-btn p-2 text-gray-400 hover:text-red-400" data-id="${post.id}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // Edit/Delete handlers using event delegation
+      postsList?.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        const editBtn = target.closest('.edit-btn') as HTMLElement;
+        const deleteBtn = target.closest('.delete-btn') as HTMLElement;
+        
+        if (editBtn) {
+          const id = editBtn.dataset.id;
+          editPost(id);
+        } else if (deleteBtn) {
+          const id = deleteBtn.dataset.id;
+          deletePost(id);
+        }
+      });
+
+      function editPost(id) {
+        const post = audioPosts.find(p => p.id === id);
+        if (!post) return;
+
+        editingPostId = id;
+        postIdInput.value = id;
+        document.getElementById('title').value = post.title;
+        document.getElementById('audio-file').value = post.audioFile || '';
+        document.getElementById('artwork').value = post.artwork || '';
+        document.getElementById('youtube-link').value = post.youtubeLink || '';
+        document.getElementById('soundcloud-link').value = post.soundcloudLink || '';
+
+        // Show previews
+        if (post.artwork) {
+          document.getElementById('artwork-preview-img').src = post.artwork;
+          document.getElementById('artwork-preview').classList.remove('hidden');
+        }
+        if (post.audioFile) {
+          document.getElementById('audio-file-name').textContent = 'Audio file';
+          document.getElementById('audio-preview').classList.remove('hidden');
+        }
+
+        formTitle.textContent = 'Edit Audio Post';
+        saveBtn.textContent = 'Update Post';
+        cancelBtn.classList.remove('hidden');
+      }
+
+      function cancelEdit() {
+        editingPostId = null;
+        form.reset();
+        postIdInput.value = '';
+        document.getElementById('artwork-preview').classList.add('hidden');
+        document.getElementById('audio-preview').classList.add('hidden');
+        formTitle.textContent = 'New Audio Post';
+        saveBtn.textContent = 'Save Post';
+        cancelBtn.classList.add('hidden');
+      }
+
+      async function deletePost(id) {
+        if (!confirm('Delete this post?')) return;
+        
+        const csrfMatch = document.cookie.match(/csrf_token=([^;]+)/);
+        const csrfToken = csrfMatch ? csrfMatch[1] : '';
+
+        try {
+          const res = await fetch(`/api/admin/audio-posts?id=${id}`, {
+            method: 'DELETE',
+            credentials: 'include',
+            headers: { 'X-CSRF-Token': csrfToken }
+          });
+
+          if (res.ok) {
+            audioPosts = audioPosts.filter(p => p.id !== id);
+            renderPosts();
+            showFeedback('Post deleted', 'success');
+          } else {
+            throw new Error('Delete failed');
+          }
+        } catch {
+          showFeedback('Failed to delete post', 'error');
+        }
+      }
+
+      cancelBtn?.addEventListener('click', cancelEdit);
+
+      form?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        window.location.href = link.getAttribute('href') || '/';
-      });
-    });
 
-    document.getElementById('admin-logout-btn')?.addEventListener('click', async () => {
-      if (!confirm('Are you sure you want to logout?')) return;
-      try {
-        const res = await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' });
-        if (res.ok) window.location.href = '/admin/login?logged_out=1';
-        else window.location.href = '/admin/login?session=expired';
-      } catch {
-        alert('Logout failed');
-      }
-    });
+        const csrfMatch = document.cookie.match(/csrf_token=([^;]+)/);
+        const csrfToken = csrfMatch ? csrfMatch[1] : '';
 
-    // Modal handlers
-    document.getElementById('choose-artwork-btn')?.addEventListener('click', () => {
-      document.getElementById('artwork-modal')?.classList.remove('hidden');
-    });
-    document.getElementById('close-artwork-modal')?.addEventListener('click', () => {
-      document.getElementById('artwork-modal')?.classList.add('hidden');
-    });
-    document.getElementById('artwork-modal-backdrop')?.addEventListener('click', () => {
-      document.getElementById('artwork-modal')?.classList.add('hidden');
-    });
+        const data = {
+          id: editingPostId,
+          title: document.getElementById('title').value,
+          audioFile: document.getElementById('audio-file').value || undefined,
+          artwork: document.getElementById('artwork').value || undefined,
+          youtubeLink: document.getElementById('youtube-link').value || undefined,
+          soundcloudLink: document.getElementById('soundcloud-link').value || undefined,
+        };
 
-    document.getElementById('choose-audio-btn')?.addEventListener('click', () => {
-      document.getElementById('audio-modal')?.classList.remove('hidden');
-    });
-    document.getElementById('close-audio-modal')?.addEventListener('click', () => {
-      document.getElementById('audio-modal')?.classList.add('hidden');
-    });
-    document.getElementById('audio-modal-backdrop')?.addEventListener('click', () => {
-      document.getElementById('audio-modal')?.classList.add('hidden');
-    });
+        saveBtn.disabled = true;
+        saveBtn.textContent = editingPostId ? 'Updating...' : 'Saving...';
 
-    // Remove buttons
-    document.getElementById('remove-artwork')?.addEventListener('click', () => {
-      document.getElementById('artwork').value = '';
-      document.getElementById('artwork-preview').classList.add('hidden');
-    });
-    document.getElementById('remove-audio')?.addEventListener('click', () => {
-      document.getElementById('audio-file').value = '';
-      document.getElementById('audio-preview').classList.add('hidden');
-    });
+        try {
+          const res = await fetch('/api/admin/audio-posts', {
+            method: editingPostId ? 'PUT' : 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-Token': csrfToken
+            },
+            credentials: 'include',
+            body: JSON.stringify(data)
+          });
 
-    // Audio posts management
-    let audioPosts = [];
-    let editingPostId = null;
+          if (!res.ok) throw new Error('Save failed');
 
-    const form = document.getElementById('audio-post-form');
-    const formTitle = document.getElementById('form-title');
-    const postIdInput = document.getElementById('post-id');
-    const cancelBtn = document.getElementById('cancel-btn');
-    const saveBtn = document.getElementById('save-btn');
-    const feedback = document.getElementById('form-feedback');
-    const emptyState = document.getElementById('empty-state');
-    const postsList = document.getElementById('audio-posts-list');
-    const audioCount = document.getElementById('audio-count');
+          const savedPost = await res.json();
 
-    function showFeedback(message, type) {
-      feedback.textContent = message;
-      feedback.className = `mt-4 p-3 rounded-md text-sm ${type === 'success' ? 'bg-green-900/30 text-green-400 border border-green-800' : 'bg-red-900/30 text-red-400 border border-red-800'}`;
-      feedback.classList.remove('hidden');
-      setTimeout(() => feedback.classList.add('hidden'), 3000);
-    }
+          if (editingPostId) {
+            const index = audioPosts.findIndex(p => p.id === editingPostId);
+            if (index !== -1) audioPosts[index] = savedPost;
+          } else {
+            audioPosts.unshift(savedPost);
+          }
 
-    function renderPosts() {
-      audioCount.textContent = `${audioPosts.length} post${audioPosts.length !== 1 ? 's' : ''}`;
-
-      if (audioPosts.length === 0) {
-        emptyState.classList.remove('hidden');
-        postsList.classList.add('hidden');
-        return;
-      }
-
-      emptyState.classList.add('hidden');
-      postsList.classList.remove('hidden');
-
-      postsList.innerHTML = audioPosts.map(post => `
-        <div class="flex items-center gap-4 p-4 bg-[#222] rounded-lg border border-[#333] hover:border-[#444] transition-all group" data-id="${post.id}">
-          ${post.artwork ? `
-            <img src="${post.artwork}" alt="" class="w-16 h-16 object-cover rounded-md shrink-0" />
-          ` : `
-            <div class="w-16 h-16 bg-[#333] rounded-md flex items-center justify-center shrink-0">
-              <svg class="w-8 h-8 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
-                <path fill-rule="evenodd" clip-rule="evenodd" d="M21.6464 2.23699C21.8707 2.42699 22 2.70606 22 3.00001V16C22 18.2091 20.2091 20 18 20C15.7909 20 14 18.2091 14 16C14 13.7909 15.7909 12 18 12C18.7286 12 19.4117 12.1948 20 12.5351V4.18047L10 5.84713V18L9.99999 18.0032C9.99824 20.2109 8.20806 22 6 22C3.79086 22 2 20.2091 2 18C2 15.7909 3.79086 14 6 14C6.72857 14 7.41165 14.1948 8 14.5351V5.00001C8 4.51117 8.35341 4.09398 8.8356 4.01361L20.8356 2.01361C21.1256 1.96529 21.4221 2.04698 21.6464 2.23699ZM20 16C20 14.8954 19.1046 14 18 14C16.8954 14 16 14.8954 16 16C16 17.1046 16.8954 18 18 18C19.1046 18 20 17.1046 20 16ZM6 16C7.10457 16 8 16.8954 8 18C8 19.1046 7.10457 20 6 20C4.89543 20 4 19.1046 4 18C4 16.8954 4.89543 16 6 16Z" />
-              </svg>
-            </div>
-          `}
-          <div class="flex-1 min-w-0">
-            <h3 class="text-sm font-medium text-white truncate">${post.title}</h3>
-            <div class="flex items-center gap-2 mt-1 text-xs text-gray-500">
-              ${post.audioFile ? '<span class="text-blue-400">● Audio</span>' : ''}
-              ${post.youtubeLink ? '<span class="text-red-400">● YouTube</span>' : ''}
-              ${post.soundcloudLink ? '<span class="text-orange-400">● SoundCloud</span>' : ''}
-            </div>
-          </div>
-          <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button type="button" class="edit-btn p-2 text-gray-400 hover:text-white" data-id="${post.id}">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-            </button>
-            <button type="button" class="delete-btn p-2 text-gray-400 hover:text-red-400" data-id="${post.id}">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      `).join('');
-
-      // Attach handlers
-      postsList.querySelectorAll('.edit-btn').forEach(btn => {
-        btn.addEventListener('click', () => editPost(btn.dataset.id));
-      });
-      postsList.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', () => deletePost(btn.dataset.id));
-      });
-    }
-
-    function editPost(id) {
-      const post = audioPosts.find(p => p.id === id);
-      if (!post) return;
-
-      editingPostId = id;
-      postIdInput.value = id;
-      document.getElementById('title').value = post.title;
-      document.getElementById('audio-file').value = post.audioFile || '';
-      document.getElementById('artwork').value = post.artwork || '';
-      document.getElementById('youtube-link').value = post.youtubeLink || '';
-      document.getElementById('soundcloud-link').value = post.soundcloudLink || '';
-
-      // Show previews
-      if (post.artwork) {
-        document.getElementById('artwork-preview-img').src = post.artwork;
-        document.getElementById('artwork-preview').classList.remove('hidden');
-      }
-      if (post.audioFile) {
-        document.getElementById('audio-file-name').textContent = 'Audio file';
-        document.getElementById('audio-preview').classList.remove('hidden');
-      }
-
-      formTitle.textContent = 'Edit Audio Post';
-      saveBtn.textContent = 'Update Post';
-      cancelBtn.classList.remove('hidden');
-    }
-
-    function cancelEdit() {
-      editingPostId = null;
-      form.reset();
-      postIdInput.value = '';
-      document.getElementById('artwork-preview').classList.add('hidden');
-      document.getElementById('audio-preview').classList.add('hidden');
-      formTitle.textContent = 'New Audio Post';
-      saveBtn.textContent = 'Save Post';
-      cancelBtn.classList.add('hidden');
-    }
-
-    async function deletePost(id) {
-      if (!confirm('Delete this post?')) return;
-      
-      const csrfMatch = document.cookie.match(/csrf_token=([^;]+)/);
-      const csrfToken = csrfMatch ? csrfMatch[1] : '';
-
-      try {
-        const res = await fetch(`/api/admin/audio-posts?id=${id}`, {
-          method: 'DELETE',
-          credentials: 'include',
-          headers: { 'X-CSRF-Token': csrfToken }
-        });
-
-        if (res.ok) {
-          audioPosts = audioPosts.filter(p => p.id !== id);
           renderPosts();
-          showFeedback('Post deleted', 'success');
-        } else {
-          throw new Error('Delete failed');
+          showFeedback(editingPostId ? 'Post updated' : 'Post created', 'success');
+          cancelEdit();
+        } catch {
+          showFeedback('Failed to save post', 'error');
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.textContent = editingPostId ? 'Update Post' : 'Save Post';
         }
-      } catch {
-        showFeedback('Failed to delete post', 'error');
+      });
+
+      // Load posts
+      async function loadPosts() {
+        try {
+          const res = await fetch('/api/admin/audio-posts', { credentials: 'include' });
+          if (!res.ok) throw new Error('Failed to load');
+          audioPosts = await res.json();
+          renderPosts();
+        } catch {
+          showFeedback('Failed to load posts', 'error');
+        }
       }
+
+      loadPosts();
     }
 
-    cancelBtn?.addEventListener('click', cancelEdit);
-
-    form?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const csrfMatch = document.cookie.match(/csrf_token=([^;]+)/);
-      const csrfToken = csrfMatch ? csrfMatch[1] : '';
-
-      const data = {
-        id: editingPostId,
-        title: document.getElementById('title').value,
-        audioFile: document.getElementById('audio-file').value || undefined,
-        artwork: document.getElementById('artwork').value || undefined,
-        youtubeLink: document.getElementById('youtube-link').value || undefined,
-        soundcloudLink: document.getElementById('soundcloud-link').value || undefined,
-      };
-
-      saveBtn.disabled = true;
-      saveBtn.textContent = editingPostId ? 'Updating...' : 'Saving...';
-
-      try {
-        const res = await fetch('/api/admin/audio-posts', {
-          method: editingPostId ? 'PUT' : 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-Token': csrfToken
-          },
-          credentials: 'include',
-          body: JSON.stringify(data)
-        });
-
-        if (!res.ok) throw new Error('Save failed');
-
-        const savedPost = await res.json();
-
-        if (editingPostId) {
-          const index = audioPosts.findIndex(p => p.id === editingPostId);
-          if (index !== -1) audioPosts[index] = savedPost;
-        } else {
-          audioPosts.unshift(savedPost);
-        }
-
-        renderPosts();
-        showFeedback(editingPostId ? 'Post updated' : 'Post created', 'success');
-        cancelEdit();
-      } catch {
-        showFeedback('Failed to save post', 'error');
-      } finally {
-        saveBtn.disabled = false;
-        saveBtn.textContent = editingPostId ? 'Update Post' : 'Save Post';
-      }
-    });
-
-    // Load posts
-    async function loadPosts() {
-      try {
-        const res = await fetch('/api/admin/audio-posts', { credentials: 'include' });
-        if (!res.ok) throw new Error('Failed to load');
-        audioPosts = await res.json();
-        renderPosts();
-      } catch {
-        showFeedback('Failed to load posts', 'error');
-      }
+    // Initialize on DOM ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initAudioAdmin);
+    } else {
+      initAudioAdmin();
     }
-
-    loadPosts();
+    
+    // Re-initialize after Astro view transitions
+    document.addEventListener('astro:page-load', initAudioAdmin);
   </script>
-</Layout>
+</AdminLayout>

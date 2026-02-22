@@ -222,17 +222,17 @@ export function WorksGrid({
       {/* YouTube Modal */}
       {youtubeModal.isOpen && youtubeModal.videoId && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm"
           onClick={() => setYoutubeModal({ isOpen: false, videoId: null })}
         >
           <div
-            className="relative w-full max-w-4xl mx-4 bg-black rounded-lg overflow-hidden shadow-2xl"
+            className="relative w-[75vw] bg-black rounded-lg overflow-hidden shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-4 py-3 bg-gray-900">
+            <div className="flex items-center justify-between px-4 py-3 bg-black">
               <h3 className="text-white font-medium truncate">
-                {youtubeModal.title || 'Video'}
+                {youtubeModal.title}
               </h3>
               <button
                 onClick={() => setYoutubeModal({ isOpen: false, videoId: null })}

@@ -44,7 +44,9 @@ const CSP_DIRECTIVES = {
   ],
   'frame-src': [
     "'self'",
-    'https://*.stripe.com',     // Stripe checkout iframe
+    'https://*.stripe.com',       // Stripe checkout iframe
+    'https://www.youtube.com',    // YouTube video embeds
+    'https://www.youtube-nocookie.com', // Privacy-friendly YouTube embeds
   ],
   'object-src': ["'none'"],
   'base-uri': ["'self'"],

@@ -25,7 +25,7 @@ const releases: Release[] = audioPosts.map((post) => {
     tracks.push({
       id: post.slug,
       title: post.title,
-      artist: 'she_skin', // Could be enhanced with artist field in DB
+      artist: 'she_skin',
       src: post.audioFile,
       coverArt: post.artwork || undefined,
       album: post.title,
@@ -33,16 +33,14 @@ const releases: Release[] = audioPosts.map((post) => {
     });
   }
   
-  // Note: YouTube and SoundCloud links are stored but require
-  // separate player components. For now, they show as releases
-  // with external links that can be enhanced later.
-  
   return {
     id: post.id,
     title: post.title,
     year,
     coverArt: post.artwork,
     tracks,
+    youtubeLink: post.youtubeLink,
+    soundcloudLink: post.soundcloudLink,
   };
 });
 

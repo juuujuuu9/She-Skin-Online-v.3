@@ -36,15 +36,15 @@ const physicalWorks = await getWorksForGrid('physical');
 
 <AdminLayout title="Works - she_skin Admin">
   <div class="px-4 sm:px-6 lg:px-8 py-4 flex-1 flex flex-col min-h-0 overflow-hidden">
-    <h1 class="text-2xl font-bold text-gray-900 mb-4 shrink-0">Works</h1>
+    <h1 class="text-2xl font-bold text-white mb-4 shrink-0">Works</h1>
 
     <div class="flex-1 flex gap-6 min-h-0">
       {/* Works Gallery - takes 2/3 of space */}
-      <div class="w-2/3 min-w-0 flex flex-col bg-white rounded-lg shadow-sm border border-gray-200 min-h-0">
-        <div class="px-6 py-4 border-b border-gray-200 flex items-center gap-2 text-sm shrink-0">
+      <div class="w-2/3 min-w-0 flex flex-col bg-[#1a1a1a] rounded-lg shadow-sm border border-[#333] min-h-0">
+        <div class="px-6 py-4 border-b border-[#333] flex items-center gap-2 text-sm shrink-0">
           <button
             type="button"
-            class="gallery-filter-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all"
+            class="gallery-filter-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-gray-400 hover:bg-white/10 hover:text-white transition-all"
             data-filter="physical"
             title="Show only physical works"
           >
@@ -52,11 +52,11 @@ const physicalWorks = await getWorksForGrid('physical');
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
             </svg>
             <span>Physical</span>
-            <span class="text-gray-400">{physicalCount}</span>
+            <span class="text-gray-500">{physicalCount}</span>
           </button>
           <button
             type="button"
-            class="gallery-filter-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all"
+            class="gallery-filter-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-gray-400 hover:bg-white/10 hover:text-white transition-all"
             data-filter="collaborations"
             title="Show only collaborations"
           >
@@ -64,11 +64,11 @@ const physicalWorks = await getWorksForGrid('physical');
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
             <span>Collaborations</span>
-            <span class="text-gray-400">{collaborationsCount}</span>
+            <span class="text-gray-500">{collaborationsCount}</span>
           </button>
           <button
             type="button"
-            class="gallery-filter-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all"
+            class="gallery-filter-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-gray-400 hover:bg-white/10 hover:text-white transition-all"
             data-filter="digital"
             title="Show only digital works"
           >
@@ -76,13 +76,13 @@ const physicalWorks = await getWorksForGrid('physical');
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
             <span>Digital</span>
-            <span class="text-gray-400">{digitalCount}</span>
+            <span class="text-gray-500">{digitalCount}</span>
           </button>
           <div class="flex-1"></div>
           <button
             type="button"
             id="select-mode-btn"
-            class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all border border-gray-200"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-gray-400 hover:bg-white/10 hover:text-white transition-all border border-[#333]"
             title="Toggle select mode for bulk operations"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -92,26 +92,26 @@ const physicalWorks = await getWorksForGrid('physical');
           </button>
           <label
             id="select-all-container"
-            class="hidden items-center gap-2 px-3 py-1.5 rounded-md cursor-pointer hover:bg-gray-100 transition-all select-none"
+            class="hidden items-center gap-2 px-3 py-1.5 rounded-md cursor-pointer hover:bg-white/10 transition-all select-none"
           >
             <input
               type="checkbox"
               id="select-all-checkbox"
-              class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+              class="w-4 h-4 rounded border-[#444] bg-[#222] text-blue-500 focus:ring-blue-500 cursor-pointer"
             />
-            <span class="text-sm text-gray-700">Select All</span>
+            <span class="text-sm text-gray-300">Select All</span>
           </label>
           <button
             type="button"
             id="delete-selected-btn"
-            class="hidden flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 transition-all border border-red-200"
+            class="hidden flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-red-500/20 text-red-400 hover:bg-red-500/30 hover:text-red-300 transition-all border border-red-500/30"
             title="Delete selected works"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
             <span>Delete Selected</span>
-            <span id="selected-count" class="bg-red-200 text-red-800 text-xs px-1.5 py-0.5 rounded-full">0</span>
+            <span id="selected-count" class="bg-red-500/30 text-red-300 text-xs px-1.5 py-0.5 rounded-full">0</span>
           </button>
         </div>
 
@@ -122,13 +122,13 @@ const physicalWorks = await getWorksForGrid('physical');
 
           {digitalWorks.length === 0 && collaborationsWorks.length === 0 && physicalWorks.length === 0 && (
             <div class="py-16 text-center">
-              <div class="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-2xl flex items-center justify-center">
-                <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="w-20 h-20 mx-auto mb-4 bg-[#222] rounded-2xl flex items-center justify-center">
+                <svg class="w-10 h-10 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                 </svg>
               </div>
-              <p class="text-gray-900 font-medium">No works yet</p>
-              <p class="text-sm text-gray-500 mt-1 max-w-sm mx-auto">Create your first work using the form on the right.</p>
+              <p class="text-white font-medium">No works yet</p>
+              <p class="text-sm text-gray-400 mt-1 max-w-sm mx-auto">Create your first work using the form on the right.</p>
             </div>
           )}
         </div>
@@ -144,11 +144,11 @@ const physicalWorks = await getWorksForGrid('physical');
   <style>
     .gallery-filter-btn.active-filter {
       color: #fff;
-      background-color: #1a1a1a;
+      background-color: #333;
       font-weight: 600;
     }
     .gallery-filter-btn.active-filter:hover {
-      background-color: #000;
+      background-color: #444;
     }
 
     /* Selection mode styles */
@@ -179,13 +179,14 @@ const physicalWorks = await getWorksForGrid('physical');
     }
 
     #select-mode-btn.active {
-      background-color: #1a1a1a;
+      background-color: #333;
       color: #fff;
-      border-color: #1a1a1a;
+      border-color: #444;
     }
 
     .work-checkbox {
-      background-color: white;
+      background-color: #222;
+      border-color: #444;
     }
 
     .work-checkbox:checked {

@@ -208,6 +208,7 @@ export const POST: APIRoute = async ({ request }) => {
               height: mediaItem.height || null,
               isPrimary: i === 0, // First image is primary
               sortOrder: i,
+              mediaId: mediaId,
             });
             // Increment ref count
             await incrementRefCount(mediaId);
@@ -296,8 +297,8 @@ export const PUT: APIRoute = async ({ request }) => {
       externalUrl: data.externalUrl || null,
     });
 
-    // Handle media updates - only if mediaIds is provided and non-empty
-    if (data.mediaIds && data.mediaIds.length > 0) {
+    // Handle media updates only if mediaIds is explicitly provided (not undefined)
+    if (data.mediaIds !== undefined) {
       // Decrement ref count for existing media before deleting
       for (const workMedia of existing.media) {
         // Get the original media record to decrement ref count
@@ -306,7 +307,7 @@ export const PUT: APIRoute = async ({ request }) => {
         await deleteWorkMedia(workMedia.id);
       }
 
-      // Add new media from database
+      // Add new media from database (if any provided)
       for (let i = 0; i < data.mediaIds.length; i++) {
         const mediaId = data.mediaIds[i];
         
@@ -315,7 +316,7 @@ export const PUT: APIRoute = async ({ request }) => {
           where: eq(media.id, mediaId),
         });
         
-        if (mediaItem && mediaItem.mediaType === 'image') {
+          if (mediaItem && mediaItem.mediaType === 'image') {
           const imageUrl = mediaItem.variants?.lg?.url || mediaItem.variants?.md?.url || mediaItem.variants?.sm?.url || mediaItem.url;
           if (imageUrl) {
             await addWorkMedia(data.id, {
@@ -328,6 +329,7 @@ export const PUT: APIRoute = async ({ request }) => {
               height: mediaItem.height || null,
               isPrimary: i === 0,
               sortOrder: i,
+              mediaId: mediaId,
             });
             // Increment ref count
             await incrementRefCount(mediaId);
@@ -335,7 +337,7 @@ export const PUT: APIRoute = async ({ request }) => {
         }
       }
     }
-    // If mediaIds is undefined or empty, preserve existing media (don't delete)
+    // If mediaIds is undefined, preserve existing media (don't delete)
 
     return new Response(
       JSON.stringify({ success: true, id: data.id, message: 'Work updated' }),
