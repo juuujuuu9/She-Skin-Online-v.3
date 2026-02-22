@@ -18,9 +18,11 @@ import { SignIn } from '@clerk/astro/react';
       </div>
       
       <div class="bg-[#1a1a1a] border border-[#333] rounded-xl p-6">
-        <SignIn 
+        <SignIn
+          client:load
           routing="path"
           path="/admin/login"
+          signUpUrl={null}
           redirectUrl="/admin"
           appearance={{
             elements: {

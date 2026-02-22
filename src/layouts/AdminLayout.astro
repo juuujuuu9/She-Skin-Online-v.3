@@ -11,12 +11,6 @@ interface Props {
 
 const { title } = Astro.props;
 
-// Check auth with Clerk
-const auth = await Astro.locals.auth();
-if (!auth.userId) {
-  return Astro.redirect('/admin/login');
-}
-
 const currentPath = Astro.url.pathname;
 const adminNavItems = [
   { href: '/admin', label: 'Uploads', icon: 'dashboard' },
@@ -107,21 +101,21 @@ const isActive = (href: string) => {
     </div>
   </div>
 
-  <script is:inline define:vars={{ csrfToken: csrf.token }}>
-    window.CSRF_TOKEN = csrfToken;
-  </script>
-
   <script>
-    // Logout button handler
+    // Logout button handler - Clerk sign out
     document.getElementById('admin-logout-btn')?.addEventListener('click', async () => {
       if (!confirm('Are you sure you want to logout?')) return;
       try {
-        const res = await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' });
-        if (res.ok) window.location.href = '/admin/login?logged_out=1';
-        else if (res.status === 401) window.location.href = '/admin/login?session=expired';
-        else alert('Logout failed. Please try again.');
+        // Clerk's signOut is available globally
+        if (typeof window.Clerk !== 'undefined') {
+          await window.Clerk.signOut();
+          window.location.href = '/admin/login';
+        } else {
+          // Fallback: redirect to login
+          window.location.href = '/admin/login';
+        }
       } catch {
-        alert('Logout failed. Please try again.');
+        window.location.href = '/admin/login';
       }
     });
   </script>
