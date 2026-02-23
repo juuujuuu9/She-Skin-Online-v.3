@@ -2,6 +2,7 @@
 export const prerender = false;
 
 import AdminLayout from '@layouts/AdminLayout.astro';
+import FilePondUploader from '@components/admin/FilePondUploader.tsx';
 import { loadManifest } from '@lib/upload-service';
 import { db } from '@lib/db';
 import { media } from '@lib/db/schema';
@@ -63,26 +64,16 @@ const videoCount = recentMedia.filter(m => m.mediaType === 'video').length;
         <div class="bg-[#1a1a1a] rounded-lg border border-[#333] p-5">
           <h2 class="text-sm font-medium text-white mb-4">UPLOAD FILES</h2>
           
-          <div
-            id="upload-dropzone"
-            class="border-2 border-dashed border-[#444] rounded-lg p-6 text-center transition-colors cursor-pointer hover:border-[#666] hover:bg-[#222]/30 min-h-[200px] flex flex-col items-center justify-center"
-          >
-            <input
-              type="file"
-              id="upload-file-input"
-              class="hidden"
-              accept="image/*,audio/*,video/*"
-              multiple
-            />
-            <svg class="w-10 h-10 text-[#555] mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-            </svg>
-            <p class="text-gray-400 text-sm font-medium">DRAG & DROP FILES HERE</p>
-            <p class="text-gray-500 text-xs mt-1">OR CLICK TO BROWSE</p>
-            <p class="text-[#555] text-xs mt-3">IMAGES, AUDIO, VIDEO • MAX 500MB</p>
-          </div>
+          <FilePondUploader
+            client:load
+            allowMultiple={true}
+            maxFiles={50}
+            onUploadComplete={() => window.location.reload()}
+            variant="dropzone"
+            labelIdle='Drag & drop files or <span class="filepond--label-action">Browse</span>'
+          />
           
-          <div id="upload-feedback" class="hidden mt-3 text-sm"></div>
+          <p class="text-[#555] text-xs mt-3 text-center">IMAGES, AUDIO, VIDEO • MAX 500MB EACH</p>
         </div>
 
         {/* Stats */}
@@ -106,10 +97,22 @@ const videoCount = recentMedia.filter(m => m.mediaType === 'video').length;
       <div class="flex-1 bg-[#1a1a1a] rounded-lg border border-[#333] p-5 flex flex-col min-h-0">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-sm font-medium text-white">RECENT UPLOADS</h2>
-          <label class="flex items-center gap-2 text-sm text-gray-400 cursor-pointer hover:text-white transition-colors">
-            <input type="checkbox" id="select-all" class="w-4 h-4 rounded border-[#444] bg-[#222] text-blue-500 focus:ring-blue-500 focus:ring-offset-[#1a1a1a]" />
-            SELECT ALL
-          </label>
+          <div class="flex items-center gap-3">
+            {/* Bulk delete button - hidden by default */}
+            <button
+              id="bulk-delete-btn"
+              class="hidden items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded transition-colors"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              DELETE <span id="selected-count">0</span>
+            </button>
+            <label class="flex items-center gap-2 text-sm text-gray-400 cursor-pointer hover:text-white transition-colors">
+              <input type="checkbox" id="select-all" class="w-4 h-4 rounded border-[#444] bg-[#222] text-blue-500 focus:ring-blue-500 focus:ring-offset-[#1a1a1a]" />
+              SELECT ALL
+            </label>
+          </div>
         </div>
 
         <div class="flex-1 overflow-auto min-h-0">
@@ -168,7 +171,7 @@ const videoCount = recentMedia.filter(m => m.mediaType === 'video').length;
                   )}
 
                   <div class="p-2.5 bg-[#1a1a1a]">
-                    <p class="text-xs text-gray-400 truncate" title={item.filename}>{item.id.slice(0, 8)}...</p>
+                    <p class="text-xs text-gray-400 truncate" title={item.filename}>{item.filename}</p>
                     <p class="text-[10px] text-gray-500 mt-0.5">{formatBytes(item.fileSize)}</p>
                   </div>
                 </div>
@@ -190,89 +193,69 @@ const videoCount = recentMedia.filter(m => m.mediaType === 'video').length;
 </AdminLayout>
 
 <script>
-  // Upload functionality
-  const dropzone = document.getElementById('upload-dropzone');
-  const fileInput = document.getElementById('upload-file-input') as HTMLInputElement;
-  const feedback = document.getElementById('upload-feedback');
-
-  if (dropzone && fileInput) {
-    dropzone.addEventListener('click', () => fileInput.click());
-
-    dropzone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      dropzone.classList.add('border-[#666]', 'bg-[#222]/50');
-    });
-
-    dropzone.addEventListener('dragleave', () => {
-      dropzone.classList.remove('border-[#666]', 'bg-[#222]/50');
-    });
-
-    dropzone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dropzone.classList.remove('border-[#666]', 'bg-[#222]/50');
-      if (e.dataTransfer?.files) {
-        handleFiles(Array.from(e.dataTransfer.files));
-      }
-    });
-
-    fileInput.addEventListener('change', () => {
-      if (fileInput.files) {
-        handleFiles(Array.from(fileInput.files));
-      }
-    });
-  }
-
   // Get CSRF token from cookie
   function getCsrfToken(): string {
     const match = document.cookie.match(/csrf_token=([^;]+)/);
     return match ? decodeURIComponent(match[1]) : '';
   }
 
-  async function handleFiles(files: File[]) {
-    if (!files.length || !feedback) return;
+  // Selection state
+  const selectedIds = new Set<string>();
+  const selectAll = document.getElementById('select-all') as HTMLInputElement;
+  const bulkDeleteBtn = document.getElementById('bulk-delete-btn') as HTMLButtonElement;
+  const selectedCount = document.getElementById('selected-count') as HTMLSpanElement;
+  const mediaSelects = document.querySelectorAll('.media-select') as NodeListOf<HTMLInputElement>;
 
-    feedback.classList.remove('hidden');
-    feedback.textContent = `Uploading ${files.length} file(s)...`;
-    feedback.className = 'mt-3 text-sm text-blue-400';
-
-    const uploaded: string[] = [];
-    const failed: string[] = [];
-
-    for (const file of files) {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      try {
-        const res = await fetch('/api/admin/media/upload', {
-          method: 'POST',
-          body: formData,
-          credentials: 'include',
-          headers: {
-            'X-CSRF-Token': getCsrfToken()
-          }
-        });
-
-        if (res.ok) {
-          uploaded.push(file.name);
-        } else {
-          failed.push(file.name);
-        }
-      } catch {
-        failed.push(file.name);
+  // Update UI based on selection
+  function updateSelectionUI() {
+    const count = selectedIds.size;
+    if (selectedCount) selectedCount.textContent = String(count);
+    if (bulkDeleteBtn) {
+      if (count > 0) {
+        bulkDeleteBtn.classList.remove('hidden');
+        bulkDeleteBtn.classList.add('flex');
+      } else {
+        bulkDeleteBtn.classList.add('hidden');
+        bulkDeleteBtn.classList.remove('flex');
       }
     }
-
-    if (failed.length === 0) {
-      feedback.textContent = `${uploaded.length} file(s) uploaded!`;
-      feedback.className = 'mt-3 text-sm text-green-400';
-      setTimeout(() => window.location.reload(), 1000);
-    } else {
-      feedback.textContent = `${uploaded.length} uploaded, ${failed.length} failed`;
-      feedback.className = 'mt-3 text-sm text-yellow-400';
+    // Update select all checkbox
+    if (selectAll) {
+      selectAll.checked = count > 0 && count === mediaSelects.length;
+      selectAll.indeterminate = count > 0 && count < mediaSelects.length;
     }
   }
 
-  // Delete functionality
+  // Individual checkbox change
+  mediaSelects.forEach(cb => {
+    cb.addEventListener('change', () => {
+      const id = cb.value;
+      if (cb.checked) {
+        selectedIds.add(id);
+      } else {
+        selectedIds.delete(id);
+      }
+      updateSelectionUI();
+    });
+  });
+
+  // Select all checkbox
+  if (selectAll) {
+    selectAll.addEventListener('change', () => {
+      mediaSelects.forEach(cb => {
+        cb.checked = selectAll.checked;
+        const id = cb.value;
+        if (selectAll.checked) {
+          selectedIds.add(id);
+        } else {
+          selectedIds.delete(id);
+        }
+      });
+      updateSelectionUI();
+    });
+  }
+
+  // Single delete functionality
   document.querySelectorAll('.delete-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
       e.stopPropagation();
@@ -291,6 +274,8 @@ const videoCount = recentMedia.filter(m => m.mediaType === 'video').length;
         if (res.ok) {
           const card = btn.closest('[data-media-id]');
           if (card) card.remove();
+          selectedIds.delete(id);
+          updateSelectionUI();
         } else {
           alert('Failed to delete');
         }
@@ -300,13 +285,62 @@ const videoCount = recentMedia.filter(m => m.mediaType === 'video').length;
     });
   });
 
-  // Select all checkbox
-  const selectAll = document.getElementById('select-all') as HTMLInputElement;
-  if (selectAll) {
-    selectAll.addEventListener('change', () => {
-      document.querySelectorAll('.media-select').forEach(cb => {
-        (cb as HTMLInputElement).checked = selectAll.checked;
-      });
+  // Bulk delete functionality
+  if (bulkDeleteBtn) {
+    bulkDeleteBtn.addEventListener('click', async () => {
+      const ids = Array.from(selectedIds);
+      if (ids.length === 0) return;
+
+      const force = confirm(`Delete ${ids.length} selected item(s)?\n\nClick OK to delete all, Cancel to skip items in use.`);
+
+      try {
+        const res = await fetch('/api/admin/media/bulk-delete', {
+          method: 'DELETE',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': getCsrfToken()
+          },
+          body: JSON.stringify({ ids, force })
+        });
+
+        const result = await res.json();
+
+        if (res.ok) {
+          // Remove deleted items from UI
+          result.results?.deleted?.forEach((id: string) => {
+            const card = document.querySelector(`[data-media-id="${id}"]`);
+            if (card) card.remove();
+          });
+
+          // Show results
+          const deleted = result.results?.deleted?.length || 0;
+          const failed = result.results?.failed?.length || 0;
+          const inUse = result.results?.inUse?.length || 0;
+
+          if (failed === 0) {
+            alert(`${deleted} item(s) deleted successfully`);
+          } else if (inUse > 0) {
+            alert(`${deleted} deleted, ${inUse} in use (not deleted)\n\nSome items are referenced by works and cannot be deleted.`);
+          } else {
+            alert(`${deleted} deleted, ${failed} failed`);
+          }
+
+          // Clear selection
+          selectedIds.clear();
+          mediaSelects.forEach(cb => cb.checked = false);
+          updateSelectionUI();
+
+          // Reload if all deleted
+          if (deleted > 0 && document.querySelectorAll('[data-media-id]').length === 0) {
+            window.location.reload();
+          }
+        } else {
+          alert(result.error || 'Bulk delete failed');
+        }
+      } catch (err) {
+        alert('Failed to delete items');
+      }
     });
   }
 </script>

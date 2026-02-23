@@ -4,7 +4,7 @@
  * Full media library management for the /admin/uploads page.
  * Features:
  * - Grid view of all media
- * - Upload new files
+ * - Upload new files (via FilePond)
  * - Delete items (with ref count warning)
  * - Search/filter
  * - Show reference counts
@@ -12,6 +12,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import type { Media } from '@lib/db/schema';
+import { FilePondUploader, useFilePondUpload, type UploadedFile } from './FilePondUploader';
 
 interface MediaManagerProps {
   initialMedia?: Media[];
@@ -25,11 +26,13 @@ export default function MediaManager({ initialMedia = [] }: MediaManagerProps) {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [uploading, setUploading] = useState(false);
-  const [uploadCurrentFile, setUploadCurrentFile] = useState<string>('');
-  const [uploadTotalFiles, setUploadTotalFiles] = useState(0);
-  const [uploadCurrentIndex, setUploadCurrentIndex] = useState(0);
-  const [uploadFadingOut, setUploadFadingOut] = useState(false);
+  // FilePond upload state
+  const {
+    uploadedFiles: newUploadedFiles,
+    isUploading,
+    reset: resetUpload,
+    handleUploadComplete,
+  } = useFilePondUpload();
   const [error, setError] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<Media | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -93,109 +96,37 @@ export default function MediaManager({ initialMedia = [] }: MediaManagerProps) {
     return () => clearTimeout(timer);
   }, [search, typeFilter]);
 
-  // Upload a single file, returns the created media
-  const uploadFileWithProgress = (file: File): Promise<Media> => {
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      const formData = new FormData();
-      formData.append('file', file);
+  // Handle FilePond upload complete
+  const handlePondUploadComplete = (uploadedFiles: UploadedFile[]) => {
+    handleUploadComplete(uploadedFiles);
+    
+    // Convert to Media format and add to list
+    const uploadedMedia: Media[] = uploadedFiles.map(f => ({
+      id: f.id,
+      filename: f.name,
+      originalName: f.name,
+      fileSize: f.size,
+      mediaType: f.mediaType,
+      url: f.url,
+      variants: f.variants,
+      width: f.width || null,
+      height: f.height || null,
+      blurhash: f.blurhash || null,
+      refCount: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as Media));
 
-      xhr.addEventListener('load', () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          try {
-            const data = JSON.parse(xhr.responseText);
-            if (data.media) {
-              resolve(data.media);
-            } else {
-              reject(new Error(`Failed to upload ${file.name}`));
-            }
-          } catch {
-            reject(new Error(`Failed to upload ${file.name}`));
-          }
-        } else {
-          try {
-            const data = JSON.parse(xhr.responseText);
-            reject(new Error(data.error || `Failed to upload ${file.name}`));
-          } catch {
-            reject(new Error(`Failed to upload ${file.name}`));
-          }
-        }
-      });
-
-      xhr.addEventListener('error', () => {
-        reject(new Error(`Network error uploading ${file.name}`));
-      });
-
-      xhr.addEventListener('abort', () => {
-        reject(new Error(`Upload aborted for ${file.name}`));
-      });
-
-      xhr.open('POST', '/api/admin/media', true);
-      xhr.setRequestHeader('X-CSRF-Token', getCsrfToken());
-      xhr.withCredentials = true;
-      xhr.send(formData);
-    });
-  };
-
-  // Handle file upload
-  const handleFileUpload = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
-
-    const fileArray = Array.from(files);
-    setUploading(true);
-    setUploadFadingOut(false);
-    setUploadTotalFiles(fileArray.length);
-    setUploadCurrentIndex(0);
-    setUploadCurrentFile('');
-    setError(null);
-
-    const uploadedMedia: Media[] = [];
-    const failedFiles: string[] = [];
-
-    for (let i = 0; i < fileArray.length; i++) {
-      const file = fileArray[i];
-      setUploadCurrentFile(file.name);
-      setUploadCurrentIndex(i + 1);
-
-      try {
-        const media = await uploadFileWithProgress(file);
-        uploadedMedia.push(media);
-      } catch (err) {
-        // Track failed file but continue with remaining files
-        failedFiles.push(file.name);
-        // Continue to next file instead of stopping
-      }
-    }
-
-    // Add uploaded items to the beginning of the list
     if (uploadedMedia.length > 0) {
       setMedia((prev) => [...uploadedMedia, ...prev]);
       setTotal((prev) => prev + uploadedMedia.length);
+      setError(null);
     }
 
-    // Show appropriate message based on results
-    if (failedFiles.length > 0) {
-      if (uploadedMedia.length === 0) {
-        setError(`All uploads failed. Last error: ${failedFiles.join(', ')}`);
-      } else {
-        setError(`${uploadedMedia.length} uploaded, ${failedFiles.length} failed: ${failedFiles.slice(0, 3).join(', ')}${failedFiles.length > 3 ? '...' : ''}`);
-      }
-    }
-
-    // Complete and fade out
-    completeUpload();
-  };
-
-  // Complete upload and fade out
-  const completeUpload = () => {
-    setUploadFadingOut(true);
+    // Reset after a delay
     setTimeout(() => {
-      setUploading(false);
-      setUploadFadingOut(false);
-      setUploadCurrentFile('');
-      setUploadTotalFiles(0);
-      setUploadCurrentIndex(0);
-    }, 250);
+      resetUpload();
+    }, 1000);
   };
 
   // Handle delete
@@ -254,59 +185,43 @@ export default function MediaManager({ initialMedia = [] }: MediaManagerProps) {
   // Get selected media items
   const getSelectedItems = () => media.filter((m) => selectedIds.has(m.id));
 
-  // Handle bulk delete
+  // Handle bulk delete using bulk API
   const handleBulkDelete = async (force = false) => {
     setBulkDeleting(true);
-    const selectedItems = getSelectedItems();
-    let deletedCount = 0;
-    let inUseCount = 0;
-    const inUseItems: Media[] = [];
+    const ids = Array.from(selectedIds);
 
-    for (const item of selectedItems) {
-      try {
-        const response = await fetch(`/api/admin/media/${item.id}?force=${force}`, {
-          method: 'DELETE',
-          credentials: 'include',
-          headers: {
-            'X-CSRF-Token': getCsrfToken(),
-          },
-        });
+    try {
+      const response = await fetch('/api/admin/media/bulk-delete', {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': getCsrfToken(),
+        },
+        body: JSON.stringify({ ids, force }),
+      });
 
-        if (response.ok) {
-          deletedCount++;
-        } else if (response.status === 409) {
-          const data = await response.json();
-          inUseCount++;
-          inUseItems.push({ ...item, refCount: data.refCount });
-        }
-      } catch {
-        // Ignore individual errors
+      const result = await response.json();
+      const deletedCount = result.results?.deleted?.length || 0;
+      const inUseCount = result.results?.inUse?.length || 0;
+
+      // Update state - remove deleted items
+      const deletedIds = new Set(result.results?.deleted || []);
+      setMedia((prev) => prev.filter((m) => !deletedIds.has(m.id)));
+      setTotal((prev) => prev - deletedCount);
+      setSelectedIds(new Set());
+
+      if (inUseCount > 0 && !force) {
+        setError(`${inUseCount} item(s) are in use and were not deleted. Click "Force Delete All" to delete anyway.`);
+      } else if (deletedCount > 0) {
+        setError(null);
       }
+    } catch {
+      setError('Bulk delete failed');
+    } finally {
+      setBulkDeleting(false);
+      setBulkDeleteConfirm(false);
     }
-
-    // Update state
-    setMedia((prev) => prev.filter((m) => !selectedIds.has(m.id)));
-    setTotal((prev) => prev - deletedCount);
-    setSelectedIds(new Set());
-
-    if (inUseCount > 0 && !force) {
-      setError(`${inUseCount} item(s) are in use and were not deleted. Click "Force Delete All" to delete anyway.`);
-    } else if (deletedCount > 0) {
-      setError(null);
-    }
-
-    setBulkDeleting(false);
-    setBulkDeleteConfirm(false);
-  };
-
-  // Handle drag and drop
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    handleFileUpload(e.dataTransfer.files);
   };
 
   // Get media type label
@@ -359,18 +274,13 @@ export default function MediaManager({ initialMedia = [] }: MediaManagerProps) {
           <span style={styles.count}>({total} items)</span>
         </h2>
 
-        {/* Upload button */}
+        {/* FilePond Upload */}
         <div style={styles.uploadSection}>
-          <input
-            type="file"
-            multiple
-            onChange={(e) => handleFileUpload(e.target.files)}
-            style={styles.fileInput}
-            id="file-upload-multiple"
-          />
-          <label htmlFor="file-upload-multiple" style={styles.uploadButton}>
-            {uploading ? `Uploading ${uploadCurrentIndex}/${uploadTotalFiles}...` : '+ Upload Files'}
-          </label>
+          {isUploading ? (
+            <span style={styles.uploadingText}>Uploading...</span>
+          ) : (
+            <label style={styles.uploadLabel}>+ Upload Files</label>
+          )}
         </div>
       </div>
 
@@ -468,35 +378,19 @@ export default function MediaManager({ initialMedia = [] }: MediaManagerProps) {
         </div>
       )}
 
-      {/* Drop zone (visible when dragging) */}
-      <div
-        onDragOver={handleDragOver}
-        onDrop={handleDrop}
-        style={styles.dropZone}
-      >
-        <div style={styles.dropZoneHint}>
-          Drop files here to upload
-        </div>
+      {/* FilePond Upload Area */}
+      <div style={styles.filepondContainer}>
+        <FilePondUploader
+          allowMultiple={true}
+          maxFiles={50}
+          onUploadComplete={handlePondUploadComplete}
+          variant="dropzone"
+          labelIdle='Drag & drop files or <span class="filepond--label-action">Browse</span>'
+        />
       </div>
 
-      {/* Media Grid with Upload Spinner Overlay */}
+      {/* Media Grid */}
       <div style={styles.mediaContainer}>
-        {/* Upload Spinner Overlay */}
-        {uploading && (
-          <div
-            style={{
-              ...styles.spinnerOverlay,
-              opacity: uploadFadingOut ? 0 : 1,
-            }}
-          >
-            <div style={styles.overlaySpinner} />
-            <p style={styles.spinnerText}>Uploading...</p>
-            <p style={styles.spinnerSubtext}>Don't close this page until upload completes</p>
-            <p style={styles.spinnerFile}>
-              {uploadCurrentIndex > 0 ? `File ${uploadCurrentIndex} of ${uploadTotalFiles}: ${uploadCurrentFile}` : 'Starting...'}
-            </p>
-          </div>
-        )}
 
         {media.length === 0 && !loading ? (
           <div style={styles.empty}>
@@ -766,19 +660,29 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#999',
     fontWeight: 'normal',
   },
-  uploadSection: {},
-  fileInput: {
-    display: 'none',
+  uploadSection: {
+    display: 'flex',
+    alignItems: 'center',
   },
-  uploadButton: {
+  uploadLabel: {
     display: 'inline-block',
     padding: '10px 20px',
     background: '#4a9eff',
     borderRadius: '6px',
     color: '#fff',
-    cursor: 'pointer',
     fontSize: '14px',
     fontWeight: 500,
+  },
+  uploadingText: {
+    display: 'inline-block',
+    padding: '10px 20px',
+    background: '#333',
+    borderRadius: '6px',
+    color: '#999',
+    fontSize: '14px',
+  },
+  filepondContainer: {
+    marginBottom: '20px',
   },
   toolbar: {
     display: 'flex',
@@ -905,17 +809,6 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#ff6666',
     fontSize: '18px',
     cursor: 'pointer',
-  },
-  dropZone: {
-    border: '2px dashed #444',
-    borderRadius: '8px',
-    padding: '40px',
-    marginBottom: '20px',
-    textAlign: 'center',
-  },
-  dropZoneHint: {
-    color: '#666',
-    fontSize: '14px',
   },
   empty: {
     textAlign: 'center',
@@ -1210,46 +1103,5 @@ const styles: Record<string, React.CSSProperties> = {
   mediaContainer: {
     position: 'relative',
     minHeight: '200px',
-  },
-  spinnerOverlay: {
-    position: 'absolute',
-    inset: 0,
-    background: 'rgba(26, 26, 26, 0.95)',
-    zIndex: 50,
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: '12px',
-    transition: 'opacity 0.3s ease-out',
-  },
-  overlaySpinner: {
-    width: '48px',
-    height: '48px',
-    border: '4px solid #333',
-    borderTopColor: '#4a9eff',
-    borderRadius: '50%',
-    animation: 'spin 1s linear infinite',
-    marginBottom: '16px',
-  },
-  spinnerText: {
-    color: '#fff',
-    fontSize: '16px',
-    fontWeight: 500,
-    marginBottom: '8px',
-  },
-  spinnerSubtext: {
-    color: '#999',
-    fontSize: '13px',
-    marginBottom: '12px',
-  },
-  spinnerFile: {
-    color: '#666',
-    fontSize: '12px',
-    maxWidth: '80%',
-    textAlign: 'center',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
   },
 };

@@ -115,9 +115,12 @@ export function validateFile(file: File): { valid: boolean; error?: string } {
 async function processAndUploadImage(
   buffer: Buffer,
   id: string,
-  datePath: string
+  datePath: string,
+  friendlyFilename: string
 ): Promise<{ variants: ProcessedImage['variants']; width: number; height: number; blurhash: string; dominantColor: string; mainUrl: string }> {
-  const filenameForProcessing = `${datePath}/${id}.webp`;
+  // Use friendly filename (without extension) for processing path
+  const baseName = friendlyFilename.replace(/\.webp$/, '');
+  const filenameForProcessing = `${datePath}/${baseName}.webp`;
   const { result } = await processImageBuffer(buffer, filenameForProcessing);
 
   // Upload variants to Bunny
@@ -130,7 +133,7 @@ async function processAndUploadImage(
     if (variantBuffer) {
       const bunnyUrl = await uploadToBunny(
         variantBuffer,
-        `${datePath}/${id}-${sizeName}.webp`,
+        `${datePath}/${baseName}-${sizeName}.webp`,
         { contentType: 'image/webp' }
       );
 
@@ -191,6 +194,30 @@ async function cleanupTempFiles(variants: ProcessedImage['variants']): Promise<v
 }
 
 /**
+ * Generate a human-friendly filename from original name
+ * Sanitizes, adds short unique suffix for collision resistance
+ */
+function generateFriendlyFilename(originalName: string, newExt?: string): string {
+  // Extract base name (remove extension)
+  const baseName = originalName.replace(/\.[^/.]+$/, '');
+  
+  // Sanitize: lowercase, replace non-alphanumeric with hyphens, collapse multiple hyphens
+  const sanitized = baseName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')  // Replace non-alphanumeric with hyphens
+    .replace(/^-+|-+$/g, '')      // Trim leading/trailing hyphens
+    .substring(0, 50);             // Limit length
+  
+  // Add short unique suffix (6 chars from nanoid alphabet)
+  const shortUnique = nanoid(6);
+  
+  // Use provided extension or preserve original
+  const ext = newExt || originalName.split('.').pop()?.toLowerCase() || 'bin';
+  
+  return `${sanitized}-${shortUnique}.${ext}`;
+}
+
+/**
  * Upload a media file to the database and CDN
  */
 export async function uploadMedia(
@@ -221,9 +248,15 @@ export async function uploadMedia(
 
     const buffer = Buffer.from(await file.arrayBuffer());
 
+    // Generate friendly filename for images (converted to webp)
+    // or use original name for non-image files
+    const friendlyFilename = mediaType === 'image' 
+      ? generateFriendlyFilename(originalName, 'webp')
+      : generateFriendlyFilename(originalName);
+    
     if (mediaType === 'image' && options.processImage !== false) {
       // Process image with Sharp, upload variants
-      const processed = await processAndUploadImage(buffer, id, datePath);
+      const processed = await processAndUploadImage(buffer, id, datePath, friendlyFilename);
       mainUrl = processed.mainUrl;
       variants = processed.variants;
       width = processed.width;
@@ -235,14 +268,14 @@ export async function uploadMedia(
       fileSize = Object.values(variants || {}).reduce((sum, v) => sum + (v?.size || 0), 0);
     } else {
       // Upload raw file for audio, video, documents
-      const filename = `${datePath}/${id}.${ext}`;
+      const filename = `${datePath}/${friendlyFilename}`;
       mainUrl = await uploadToBunny(buffer, filename, { contentType: file.type });
     }
 
     // Insert into database
     const [newMedia] = await db.insert(media).values({
       id,
-      filename: mediaType === 'image' ? `${id}.webp` : originalName,
+      filename: friendlyFilename,
       originalName,
       mimeType: mediaType === 'image' ? 'image/webp' : file.type,
       fileSize,

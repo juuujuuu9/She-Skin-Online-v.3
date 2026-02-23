@@ -3,13 +3,14 @@
  * 
  * A tabbed interface for selecting media:
  * - Gallery tab: Browse existing media from database
- * - Upload tab: Drag/drop or browse for new files
+ * - Upload tab: FilePond drag/drop or browse for new files
  * 
  * Used by Works and Audio admin pages.
  */
 
 import { useState, useCallback, useEffect } from 'react';
 import type { Media } from '@lib/db/schema';
+import { FilePondUploader, type UploadedFile } from './FilePondUploader';
 
 interface MediaSelectorProps {
   mediaType?: 'image' | 'audio' | 'video' | 'all';
@@ -30,8 +31,6 @@ export default function MediaSelector({
   const [media, setMedia] = useState<Media[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -92,60 +91,31 @@ export default function MediaSelector({
     fetchMedia();
   }, [fetchMedia]);
 
-  // Handle file upload
-  const handleFileUpload = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
-
-    const file = files[0];
-    setUploading(true);
-    setUploadProgress(0);
-    setError(null);
-
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const response = await fetch('/api/admin/media', {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'X-CSRF-Token': getCsrfToken(),
-        },
-        body: formData,
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.media) {
-          // Refresh gallery, switch to it, and show success
-          await fetchMedia();
-          setError(null);
-          setSuccess(`"${data.media.filename}" uploaded successfully. Click it to select.`);
-          setActiveTab('gallery');
-        } else {
-          setSuccess(null);
-          setError(data.error || 'Upload failed');
-        }
-      } else {
-        const data = await response.json();
-        setSuccess(null);
-        setError(data.error || 'Upload failed');
-      }
-    } catch (err) {
-      setError('Upload failed');
-    } finally {
-      setUploading(false);
+  // Handle FilePond upload complete
+  const handleFilePondUpload = (uploadedFiles: UploadedFile[]) => {
+    if (uploadedFiles.length > 0) {
+      const file = uploadedFiles[0];
+      // Refresh gallery and show success
+      fetchMedia();
+      setError(null);
+      setSuccess(`"${file.name}" uploaded successfully. Click it to select.`);
+      setActiveTab('gallery');
     }
   };
 
-  // Handle drag and drop
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    handleFileUpload(e.dataTransfer.files);
+  // Get accepted file types based on mediaType filter
+  const getAcceptedTypes = () => {
+    switch (mediaType) {
+      case 'image':
+        return ['image/*'];
+      case 'audio':
+        return ['audio/*'];
+      case 'video':
+        return ['video/*'];
+      case 'all':
+      default:
+        return ['image/*', 'audio/*', 'video/*'];
+    }
   };
 
   // Get media type label
@@ -297,42 +267,13 @@ export default function MediaSelector({
       {/* Upload Tab */}
       {activeTab === 'upload' && (
         <div style={styles.uploadContainer}>
-          <div
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-            style={styles.dropzone}
-          >
-            <input
-              type="file"
-              onChange={(e) => handleFileUpload(e.target.files)}
-              accept={
-                mediaType === 'image'
-                  ? 'image/*'
-                  : mediaType === 'audio'
-                  ? 'audio/*'
-                  : mediaType === 'video'
-                  ? 'video/*'
-                  : '*/*'
-              }
-              style={styles.fileInput}
-              id="file-upload"
-            />
-            <label htmlFor="file-upload" style={styles.dropzoneLabel}>
-              {uploading ? (
-                <div style={styles.uploading}>
-                  <div style={styles.spinner} />
-                  <span>Uploading...</span>
-                </div>
-              ) : (
-                <>
-                  <div style={styles.uploadIcon}>+</div>
-                  <div>Drag & drop a file here</div>
-                  <div style={styles.orText}>or</div>
-                  <div style={styles.browseButton}>Browse Files</div>
-                </>
-              )}
-            </label>
-          </div>
+          <FilePondUploader
+            allowMultiple={false}
+            acceptedFileTypes={getAcceptedTypes()}
+            onUploadComplete={handleFilePondUpload}
+            variant="dropzone"
+            labelIdle='Drag & drop a file or <span class="filepond--label-action">Browse</span>'
+          />
 
           <div style={styles.uploadInfo}>
             <p>Max file size: 500MB</p>
@@ -486,51 +427,6 @@ const styles: Record<string, React.CSSProperties> = {
   },
   uploadContainer: {
     padding: '20px',
-  },
-  dropzone: {
-    border: '2px dashed #444',
-    borderRadius: '8px',
-    padding: '40px',
-    textAlign: 'center',
-    cursor: 'pointer',
-  },
-  fileInput: {
-    display: 'none',
-  },
-  dropzoneLabel: {
-    cursor: 'pointer',
-    display: 'block',
-  },
-  uploadIcon: {
-    fontSize: '48px',
-    color: '#666',
-    marginBottom: '12px',
-  },
-  orText: {
-    color: '#666',
-    margin: '8px 0',
-  },
-  browseButton: {
-    display: 'inline-block',
-    padding: '8px 16px',
-    background: '#333',
-    borderRadius: '6px',
-    color: '#fff',
-    fontSize: '14px',
-  },
-  uploading: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '12px',
-  },
-  spinner: {
-    width: '32px',
-    height: '32px',
-    border: '3px solid #333',
-    borderTopColor: '#fff',
-    borderRadius: '50%',
-    animation: 'spin 1s linear infinite',
   },
   uploadInfo: {
     marginTop: '16px',
