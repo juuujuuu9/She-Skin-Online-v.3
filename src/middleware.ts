@@ -6,7 +6,6 @@
 
 import { clerkMiddleware } from '@clerk/astro/server';
 import { createRouteMatcher } from '@clerk/astro/server';
-import { clerkClient } from '@clerk/astro/server';
 
 // Content Security Policy
 const CSP_DIRECTIVES = {
@@ -107,35 +106,27 @@ export const onRequest = clerkMiddleware(async (auth, context, next) => {
     // Check if user is authorized (by email or user ID)
     const userId = authResult.userId;
     
-    // Try to get email from session claims first, then fall back to fetching user
-    let userEmail = authResult.sessionClaims?.email || authResult.sessionClaims?.user?.email;
+    // Debug: log full session claims to find where email is
+    console.log('[Admin] Full session claims:', JSON.stringify(authResult.sessionClaims, null, 2));
     
-    // If email not in claims, fetch from Clerk
-    let fetchError = null;
-    let userData = null;
-    if (!userEmail && userId) {
-      try {
-        userData = await clerkClient.users.getUser(userId);
-        console.log('[Admin] Clerk user data:', JSON.stringify({
-          id: userData.id,
-          emailAddresses: userData.emailAddresses,
-          primaryEmailAddressId: userData.primaryEmailAddressId,
-        }));
-        userEmail = userData.emailAddresses?.[0]?.emailAddress;
-      } catch (err) {
-        fetchError = err instanceof Error ? err.message : String(err);
-        console.error('[Admin] Failed to fetch user from Clerk:', fetchError);
-      }
-    }
+    // Try to get email from session claims - check multiple possible locations
+    let userEmail = authResult.sessionClaims?.email 
+      || authResult.sessionClaims?.user?.email
+      || authResult.sessionClaims?.primary_email_address
+      || authResult.sessionClaims?.user?.primary_email_address;
     
     // Debug logging
-    console.log('[Admin] Auth check:', { userId, userEmail, hasClaims: !!authResult.sessionClaims, fetchError });
+    console.log('[Admin] Auth check:', { userId, userEmail, allClaims: authResult.sessionClaims });
     
     const isAuthorized = ADMIN_EMAILS.includes(userEmail) || ADMIN_USER_IDS.includes(userId);
     
     if (!isAuthorized) {
       console.warn(`[Admin] Unauthorized access attempt: ${userEmail || userId}`);
-      const debugInfo = JSON.stringify({ userId, userEmail, hasClaims: !!authResult.sessionClaims, fetchError }, null, 2);
+      const debugInfo = JSON.stringify({ 
+        userId, 
+        userEmail, 
+        sessionClaims: authResult.sessionClaims 
+      }, null, 2);
       return new Response(
         `Access Denied. You are not authorized to access the admin panel.\n\nDebug Info:\n${debugInfo}`,
         { status: 403, headers: { 'Content-Type': 'text/plain' } }
