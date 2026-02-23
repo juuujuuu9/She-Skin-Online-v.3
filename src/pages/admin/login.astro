@@ -52,9 +52,9 @@ const isSignedIn = !!clerkAuth.userId;
             <div class="h-10 bg-blue-600/30 rounded animate-pulse"></div>
           </div>
           <div id="clerk-signin-container" class="hidden">
-            <!-- Use client:only to prevent SSR hydration issues -->
+            <!-- Use client:load for better hydration -->
             <SignIn
-              client:only="react"
+              client:load
               routing="path"
               path="/admin/login"
               fallbackRedirectUrl="/admin"
