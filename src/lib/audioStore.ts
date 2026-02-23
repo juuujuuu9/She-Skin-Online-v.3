@@ -14,6 +14,18 @@ export interface Track {
   coverArt?: string; // Optional cover image
   album?: string;
   year?: number;
+  youtubeLink?: string | null;
+  soundcloudLink?: string | null;
+}
+
+export interface Release {
+  id: string;
+  title: string;
+  year: number;
+  coverArt: string | null;
+  tracks: Track[];
+  youtubeLink?: string | null;
+  soundcloudLink?: string | null;
 }
 
 export interface AudioState {

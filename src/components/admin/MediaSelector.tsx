@@ -448,13 +448,11 @@ const styles: Record<string, React.CSSProperties> = {
     objectFit: 'cover',
   },
   thumbnailIcon: {
-    width: '60%',
-    height: '60%',
+    width: '100%',
+    height: '100%',
     objectFit: 'contain',
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
+    padding: '20%',
+    boxSizing: 'border-box',
   },
   typeBadge: {
     position: 'absolute',

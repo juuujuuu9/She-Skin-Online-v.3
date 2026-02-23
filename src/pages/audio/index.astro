@@ -30,6 +30,8 @@ const releases: Release[] = audioPosts.map((post) => {
       coverArt: post.artwork || undefined,
       album: post.title,
       year,
+      youtubeLink: post.youtubeLink,
+      soundcloudLink: post.soundcloudLink,
     });
   }
   

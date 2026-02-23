@@ -47,19 +47,15 @@ export function LenisSmoothScroll() {
 
     const pageLoadHandler = () => {
       syncLenis();
-      // Don't force scroll to top - View Transitions handle this naturally
-      // and forcing it causes jank. Only scroll if not at top already.
-      if (lenis && !isAdminPage() && window.scrollY > 0) {
-        lenis.scrollTo(0, { immediate: false });
+      if (lenis && !isAdminPage()) {
+        lenis.scrollTo(0, { immediate: true });
       }
     };
     document.addEventListener('astro:page-load', pageLoadHandler);
 
     const beforeSwapHandler = () => {
       if (lenis && !isAdminPage()) {
-        // Use immediate: false (smooth) to avoid blocking the main thread
-        // during page transitions. The native browser scroll will reset anyway.
-        lenis.scrollTo(0, { immediate: false });
+        lenis.scrollTo(0, { immediate: true });
       }
     };
     document.addEventListener('astro:before-swap', beforeSwapHandler);

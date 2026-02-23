@@ -135,22 +135,26 @@ export function AudioPlayer() {
           </div>
           {/* Links */}
           <div className="md:flex-1 flex items-center justify-center md:justify-end gap-4 shrink-0">
-            <a
-              href="#"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm font-medium tracking-wide text-black hover:text-gray-600 transition-colors"
-            >
-              YOUTUBE
-            </a>
-            <a
-              href="#"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm font-medium tracking-wide text-black hover:text-gray-600 transition-colors"
-            >
-              SOUNDCLOUD
-            </a>
+            {audio.currentTrack?.youtubeLink && (
+              <a
+                href={audio.currentTrack.youtubeLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-medium tracking-wide text-black hover:text-gray-600 transition-colors"
+              >
+                YOUTUBE
+              </a>
+            )}
+            {audio.currentTrack?.soundcloudLink && (
+              <a
+                href={audio.currentTrack.soundcloudLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-medium tracking-wide text-black hover:text-gray-600 transition-colors"
+              >
+                SOUNDCLOUD
+              </a>
+            )}
           </div>
         </div>
       </div>
@@ -159,6 +163,13 @@ export function AudioPlayer() {
       <footer 
         className="fixed bottom-0 left-0 right-0 z-50 bg-white text-black transition-transform duration-300"
         style={{ transform: audio.isExpanded ? 'translateY(-200px)' : 'translateY(0)' }}
+        onClick={() => {
+          // On mobile: close overlay when touching the player bar while overlay is open
+          if (showOverlay) {
+            setShowOverlay(false);
+            setIsManualOverlay(false);
+          }
+        }}
       >
         <div className="flex items-center h-16 px-4 sm:px-6">
           {/* Track Info - clickable to open overlay */}

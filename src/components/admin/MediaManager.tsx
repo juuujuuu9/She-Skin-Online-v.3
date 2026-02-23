@@ -329,7 +329,7 @@ export default function MediaManager({ initialMedia = [] }: MediaManagerProps) {
       return mediaItem.variants?.sm?.url || mediaItem.url;
     }
     if (mediaItem.mediaType === 'audio') {
-      return "data:image/svg+xml,%3Csvg fill='%23434343' viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M211.44824,52.50586l-80-24A12.00045,12.00045,0,0,0,116,40V87.73047q-.00587.27539,0,.54785V140.2168A51.97764,51.97764,0,1,0,140,184V104.12842l64.55176,19.36572A12.00045,12.00045,0,0,0,220,112V64A11.99994,11.99994,0,0,0,211.44824,52.50586ZM88,212a28,28,0,1,1,28-28A28.03146,28.03146,0,0,1,88,212ZM196,95.87158,140,79.07129V56.12842l56,16.80029Z'/%3E%3C/svg%3E";
+      return "data:image/svg+xml,%3Csvg viewBox='0 -0.5 17 17' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6.021,2.188 L6.021,11.362 C5.46,11.327 4.843,11.414 4.229,11.663 C2.624,12.312 1.696,13.729 2.155,14.825 C2.62,15.924 4.294,16.284 5.898,15.634 C7.131,15.134 7.856,14.184 7.965,13.272 L7.958,4.387 L15.02,3.028 L15.02,9.406 C14.422,9.343 13.746,9.432 13.076,9.703 C11.471,10.353 10.544,11.77 11.004,12.866 C11.467,13.964 13.141,14.325 14.746,13.675 C15.979,13.174 16.836,12.224 16.947,11.313 L16.958,0.00199999998 L6.021,2.188 L6.021,2.188 Z' fill='%23434343'/%3E%3C/svg%3E";
     }
     if (mediaItem.mediaType === 'video') {
       return 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23666"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>';
@@ -616,7 +616,6 @@ export default function MediaManager({ initialMedia = [] }: MediaManagerProps) {
           ))}
         </div>
       )}
-      </div>
 
       {/* Load more */}
       {hasMore && !loading && (

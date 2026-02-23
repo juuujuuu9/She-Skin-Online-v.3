@@ -76,10 +76,10 @@ export const GET: APIRoute = async ({ request, locals }) => {
 };
 
 // DELETE - Delete a work
-export const DELETE: APIRoute = async ({ request, locals }) => {
-  // Auth is handled by Clerk middleware
-  const auth = locals.auth();
-  if (!auth.userId) {
+export const DELETE: APIRoute = async ({ request }) => {
+  // Check auth
+  const auth = await checkAdminAuth(request);
+  if (!auth.valid) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
       headers: { 'Content-Type': 'application/json' },
@@ -131,10 +131,10 @@ export const DELETE: APIRoute = async ({ request, locals }) => {
   }
 };
 
-export const POST: APIRoute = async ({ request, locals }) => {
-  // Auth is handled by Clerk middleware
-  const auth = locals.auth();
-  if (!auth.userId) {
+export const POST: APIRoute = async ({ request }) => {
+  // Check auth
+  const auth = await checkAdminAuth(request);
+  if (!auth.valid) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
       headers: { 'Content-Type': 'application/json' },

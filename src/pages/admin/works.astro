@@ -5,13 +5,23 @@
 
 export const prerender = false;
 
-import AdminLayout from '@layouts/AdminLayout.astro';
+import Layout from '@layouts/Layout.astro';
+import { checkAdminAuth } from '@lib/admin-auth';
+import { generateCsrfToken } from '@lib/csrf';
 import { db } from '@lib/db';
 import { works } from '@lib/db/schema';
 import { eq, and, isNull, count } from 'drizzle-orm';
 import { getWorksForGrid, type WorkCategory } from '@lib/db/queries';
-import WorksGallery from '@components/admin/works/WorksGallery.astro';
-import WorkEditor from '@components/admin/works/WorkEditor.astro';
+
+// Generate and set CSRF token
+const csrf = generateCsrfToken();
+Astro.response.headers.set('Set-Cookie', csrf.cookie);
+
+// Check auth
+const auth = await checkAdminAuth(Astro.request);
+if (!auth.valid) {
+  return Astro.redirect('/admin/login');
+}
 
 // Get counts for each category
 const getCategoryCount = async (category: string) => {
@@ -43,6 +53,8 @@ const physicalWorks = await getWorksForGrid('physical');
       <div class="w-2/3 min-w-0 flex flex-col bg-[#1a1a1a] rounded-lg shadow-sm border border-[#333] min-h-0">
         <div class="px-6 py-4 border-b border-[#333] flex items-center gap-2 text-sm shrink-0">
           <button
+
+const totalWorks = digitalCount + collaborationsCount + physicalCount;
             type="button"
             class="gallery-filter-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-gray-400 hover:bg-white/10 hover:text-white transition-all"
             data-filter="physical"
@@ -52,94 +64,1333 @@ const physicalWorks = await getWorksForGrid('physical');
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
             </svg>
             <span>Physical</span>
-            <span class="text-gray-500">{physicalCount}</span>
-          </button>
-          <button
-            type="button"
-            class="gallery-filter-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-gray-400 hover:bg-white/10 hover:text-white transition-all"
-            data-filter="collaborations"
-            title="Show only collaborations"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-            <span>Collaborations</span>
-            <span class="text-gray-500">{collaborationsCount}</span>
-          </button>
-          <button
-            type="button"
-            class="gallery-filter-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-gray-400 hover:bg-white/10 hover:text-white transition-all"
-            data-filter="digital"
-            title="Show only digital works"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-            <span>Digital</span>
-            <span class="text-gray-500">{digitalCount}</span>
-          </button>
-          <div class="flex-1"></div>
-          <button
-            type="button"
-            id="select-mode-btn"
-            class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-gray-400 hover:bg-white/10 hover:text-white transition-all border border-[#333]"
-            title="Toggle select mode for bulk operations"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-            </svg>
-            <span>Select Mode</span>
-          </button>
-          <label
-            id="select-all-container"
-            class="hidden items-center gap-2 px-3 py-1.5 rounded-md cursor-pointer hover:bg-white/10 transition-all select-none"
-          >
-            <input
-              type="checkbox"
-              id="select-all-checkbox"
-              class="w-4 h-4 rounded border-[#444] bg-[#222] text-blue-500 focus:ring-blue-500 cursor-pointer"
-            />
-            <span class="text-sm text-gray-300">Select All</span>
-          </label>
-          <button
-            type="button"
-            id="delete-selected-btn"
-            class="hidden flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-red-500/20 text-red-400 hover:bg-red-500/30 hover:text-red-300 transition-all border border-red-500/30"
-            title="Delete selected works"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-            <span>Delete Selected</span>
-            <span id="selected-count" class="bg-red-500/30 text-red-300 text-xs px-1.5 py-0.5 rounded-full">0</span>
+            <span class="text-gray-400">{physicalCount}</span>
           </button>
         </div>
-
-        <div class="p-6 flex-1 min-h-0 overflow-auto">
-          <WorksGallery works={physicalWorks} category="physical" />
-          <WorksGallery works={collaborationsWorks} category="collaborations" />
-          <WorksGallery works={digitalWorks} category="digital" />
-
-          {digitalWorks.length === 0 && collaborationsWorks.length === 0 && physicalWorks.length === 0 && (
-            <div class="py-16 text-center">
-              <div class="w-20 h-20 mx-auto mb-4 bg-[#222] rounded-2xl flex items-center justify-center">
-                <svg class="w-10 h-10 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+        <nav class="flex-1 p-3 min-h-0 overflow-auto">
+          <ul class="space-y-0.5">
+            {adminNavItems.map((item) => (
+              <li>
+                <a
+                  href={item.href}
+                  data-astro-reload
+                  class={`
+                    flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors
+                    ${isActive(item.href) ? 'bg-white text-black' : 'text-white/80 hover:bg-white/10 hover:text-white'}
+                  `}
+                >
+                  <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" set:html={iconPaths[item.icon] ?? ''} />
+                  <span>{item.label}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <div class="mx-3 border-t border-white/10" />
+        <nav class="p-3" id="admin-view-site">
+          <ul class="space-y-0.5">
+            <li>
+              <a
+                href="/"
+                data-nav-link
+                class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm text-white/60 hover:bg-white/10 hover:text-white transition-colors"
+              >
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                 </svg>
-              </div>
-              <p class="text-white font-medium">No works yet</p>
-              <p class="text-sm text-gray-400 mt-1 max-w-sm mx-auto">Create your first work using the form on the right.</p>
+                <span>View Site</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </aside>
+
+      <div class="px-4 sm:px-6 lg:px-8 py-4 flex-1 flex flex-col min-h-0 overflow-hidden">
+        <h1 class="text-2xl font-bold text-gray-900 mb-4 shrink-0">Works</h1>
+
+        {/* Works Gallery */}
+        <div class="flex-1 flex flex-col min-h-0 bg-white rounded-lg shadow-sm border border-gray-200">
+          <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-3">
+              <h2 class="text-lg font-medium text-gray-900">Works Gallery</h2>
+              <span class="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                {totalWorks} items
+              </span>
             </div>
-          )}
+            <div class="flex items-center gap-2 text-sm">
+              {digitalCount > 0 && (
+                <button
+                  type="button"
+                  class="gallery-filter-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all"
+                  data-filter="digital"
+                  title="Show only digital works"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  <span>Digital</span>
+                  <span class="text-gray-400">{digitalCount}</span>
+                </button>
+              )}
+              {collaborationsCount > 0 && (
+                <button
+                  type="button"
+                  class="gallery-filter-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all"
+                  data-filter="collaborations"
+                  title="Show only collaborations"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  <span>Collaborations</span>
+                  <span class="text-gray-400">{collaborationsCount}</span>
+                </button>
+              )}
+              {physicalCount > 0 && (
+                <button
+                  type="button"
+                  class="gallery-filter-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all"
+                  data-filter="physical"
+                  title="Show only physical works"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                  </svg>
+                  <span>Physical</span>
+                  <span class="text-gray-400">{physicalCount}</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+            <div class="p-6 flex-1 min-h-0 overflow-auto">
+              {/* Digital Works Section */}
+              {digitalWorks.length > 0 && (
+                <div class="gallery-section mb-8" data-section="digital">
+                  <div class="flex items-center gap-2 mb-4">
+                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                    <h3 class="text-sm font-medium text-gray-700 uppercase tracking-wide">Physical</h3>
+                    <span class="text-xs text-gray-400">{physicalWorks.length} works</span>
+                  </div>
+                  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {physicalWorks.map((work, index) => (
+                      <div
+                        class={`group relative bg-gray-100 rounded-lg overflow-hidden border border-gray-200 hover:border-gray-400 transition-all hover:shadow-md ${index >= 8 ? 'gallery-item-extra hidden' : ''}`}
+                        data-id={work.id}
+                        data-category="physical"
+                      >
+                        <div class="aspect-square relative bg-gray-50 flex items-center justify-center overflow-hidden">
+                          {work.image?.src ? (
+                            <img
+                              src={work.image.src}
+                              alt={work.image.alt || work.title}
+                              class="w-full h-full object-cover transition-transform group-hover:scale-105"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div class="flex items-center justify-center text-gray-400">
+                              <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                        <div class="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/80 via-black/40 to-transparent p-3">
+                          <p class="text-sm font-medium text-white truncate">{work.title}</p>
+                        </div>
+                        {/* Edit/Delete buttons - show on hover */}
+                        <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            type="button"
+                            class="edit-work-btn p-1.5 bg-white/90 hover:bg-blue-500 hover:text-white text-gray-700 rounded-md shadow-sm transition-colors"
+                            data-id={work.id}
+                            data-category="physical"
+                            title="Edit work"
+                          >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            class="delete-work-btn p-1.5 bg-white/90 hover:bg-red-500 hover:text-white text-gray-700 rounded-md shadow-sm transition-colors"
+                            data-id={work.id}
+                            title="Delete work"
+                          >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {physicalWorks.length > 8 && (
+                    <div class="mt-3 text-center show-more-container" data-for="physical">
+                      <button
+                        type="button"
+                        class="show-more-btn text-sm text-gray-500 hover:text-yellow-600 hover:underline transition-all"
+                        data-show="physical"
+                      >
+                        +{physicalWorks.length - 8} more
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Collaborations Section */}
+              {collaborationsWorks.length > 0 && (
+                <div class="gallery-section mb-8" data-section="collaborations">
+                  <div class="flex items-center gap-2 mb-4">
+                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    <h3 class="text-sm font-medium text-gray-700 uppercase tracking-wide">Collaborations</h3>
+                    <span class="text-xs text-gray-400">{collaborationsWorks.length} works</span>
+                  </div>
+                  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {collaborationsWorks.map((work, index) => (
+                      <div
+                        class={`group relative bg-gray-100 rounded-lg overflow-hidden border border-gray-200 hover:border-gray-400 transition-all hover:shadow-md ${index >= 8 ? 'gallery-item-extra hidden' : ''}`}
+                        data-id={work.id}
+                        data-category="collaborations"
+                      >
+                        <div class="aspect-square relative bg-gray-50 flex items-center justify-center overflow-hidden">
+                          {work.image?.src ? (
+                            <img
+                              src={work.image.src}
+                              alt={work.image.alt || work.title}
+                              class="w-full h-full object-cover transition-transform group-hover:scale-105"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div class="flex items-center justify-center text-gray-400">
+                              <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                        <div class="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/80 via-black/40 to-transparent p-3">
+                          <p class="text-sm font-medium text-white truncate">{work.title}</p>
+                        </div>
+                        {/* Edit/Delete buttons - show on hover */}
+                        <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            type="button"
+                            class="edit-work-btn p-1.5 bg-white/90 hover:bg-blue-500 hover:text-white text-gray-700 rounded-md shadow-sm transition-colors"
+                            data-id={work.id}
+                            data-category="collaborations"
+                            title="Edit work"
+                          >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            class="delete-work-btn p-1.5 bg-white/90 hover:bg-red-500 hover:text-white text-gray-700 rounded-md shadow-sm transition-colors"
+                            data-id={work.id}
+                            title="Delete work"
+                          >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {collaborationsWorks.length > 8 && (
+                    <div class="mt-3 text-center show-more-container" data-for="collaborations">
+                      <button
+                        type="button"
+                        class="show-more-btn text-sm text-gray-500 hover:text-yellow-600 hover:underline transition-all"
+                        data-show="collaborations"
+                      >
+                        +{collaborationsWorks.length - 8} more
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Digital Works Section */}
+              {digitalWorks.length > 0 && (
+                <div class="gallery-section" data-section="digital">
+                  <div class="flex items-center gap-2 mb-4">
+                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    <h3 class="text-sm font-medium text-gray-700 uppercase tracking-wide">Digital</h3>
+                    <span class="text-xs text-gray-400">{digitalWorks.length} works</span>
+                  </div>
+                  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {digitalWorks.map((work, index) => (
+                      <div
+                        class={`group relative bg-gray-100 rounded-lg overflow-hidden border border-gray-200 hover:border-gray-400 transition-all hover:shadow-md ${index >= 8 ? 'gallery-item-extra hidden' : ''}`}
+                        data-id={work.id}
+                        data-category="digital"
+                      >
+                        <div class="aspect-square relative bg-gray-50 flex items-center justify-center overflow-hidden">
+                          {work.image?.src ? (
+                            <img
+                              src={work.image.src}
+                              alt={work.image.alt || work.title}
+                              class="w-full h-full object-cover transition-transform group-hover:scale-105"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div class="flex items-center justify-center text-gray-400">
+                              <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                        <div class="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/80 via-black/40 to-transparent p-3">
+                          <p class="text-sm font-medium text-white truncate">{work.title}</p>
+                        </div>
+                        {/* Edit/Delete buttons - show on hover */}
+                        <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            type="button"
+                            class="edit-work-btn p-1.5 bg-white/90 hover:bg-blue-500 hover:text-white text-gray-700 rounded-md shadow-sm transition-colors"
+                            data-id={work.id}
+                            data-category="digital"
+                            title="Edit work"
+                          >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            class="delete-work-btn p-1.5 bg-white/90 hover:bg-red-500 hover:text-white text-gray-700 rounded-md shadow-sm transition-colors"
+                            data-id={work.id}
+                            title="Delete work"
+                          >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {digitalWorks.length > 8 && (
+                    <div class="mt-3 text-center show-more-container" data-for="digital">
+                      <button
+                        type="button"
+                        class="show-more-btn text-sm text-gray-500 hover:text-yellow-600 hover:underline transition-all"
+                        data-show="digital"
+                      >
+                        +{digitalWorks.length - 8} more
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {digitalWorks.length === 0 && collaborationsWorks.length === 0 && physicalWorks.length === 0 && (
+                <div class="py-16 text-center">
+                  <div class="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-2xl flex items-center justify-center">
+                    <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                  </div>
+                  <p class="text-gray-900 font-medium">No works yet</p>
+                  <p class="text-sm text-gray-500 mt-1 max-w-sm mx-auto">Create your first work using the form on the right.</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Create/Edit Form - takes 1/3 of space */}
+          <div class="w-1/3 min-w-0 flex flex-col bg-white rounded-lg shadow-sm border border-gray-200 min-h-0">
+            <div class="px-6 py-4 border-b border-gray-200 shrink-0">
+              <h2 class="text-lg font-medium text-gray-900" id="form-title">New Work</h2>
+            </div>
+            <div class="p-6 flex-1 min-h-0 overflow-auto">
+              <form id="work-form" class="space-y-4">
+                <input type="hidden" id="work-id" name="workId" value="" />
+                <input type="hidden" id="category" name="category" value="" />
+
+                {/* Category Selector - shown when no tab selected */}
+                <div id="category-selector" class="">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Select a category to get started</label>
+                  <div class="space-y-2">
+                    <button
+                      type="button"
+                      class="category-option w-full flex items-center gap-2 px-4 py-3 rounded-md border border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all text-left"
+                      data-category="physical"
+                    >
+                      <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                      </svg>
+                      <span class="font-medium text-gray-700">Physical Work</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="category-option w-full flex items-center gap-2 px-4 py-3 rounded-md border border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all text-left"
+                      data-category="collaborations"
+                    >
+                      <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                      <span class="font-medium text-gray-700">Collaboration</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="category-option w-full flex items-center gap-2 px-4 py-3 rounded-md border border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all text-left"
+                      data-category="digital"
+                    >
+                      <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                      <span class="font-medium text-gray-700">Digital Work</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Form Fields - hidden until category selected */}
+                <div id="form-fields" class="hidden space-y-4">
+                  {/* Active Category Display */}
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                      <span id="active-category-icon"></span>
+                      <span id="active-category-label" class="text-sm font-medium text-gray-900 capitalize"></span>
+                    </div>
+                    <button
+                      type="button"
+                      id="change-category-btn"
+                      class="text-xs text-gray-500 hover:text-gray-700 underline"
+                    >
+                      Change
+                    </button>
+                  </div>
+
+                  {/* Title Field */}
+                  <div>
+                    <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                    <input
+                      type="text"
+                      id="title"
+                      name="title"
+                      required
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      placeholder="Enter work title..."
+                    />
+                  </div>
+
+                  {/* Slug Field */}
+                  <div>
+                    <label for="slug" class="block text-sm font-medium text-gray-700 mb-1">Slug</label>
+                    <input
+                      type="text"
+                      id="slug"
+                      name="slug"
+                      required
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      placeholder="work-slug"
+                    />
+                    <p class="text-xs text-gray-500 mt-1">URL-friendly identifier (e.g., "my-artwork")</p>
+                  </div>
+
+                  {/* Description Field */}
+                  <div>
+                    <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea
+                      id="description"
+                      name="description"
+                      rows="3"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm resize-none"
+                      placeholder="Enter work description..."
+                    ></textarea>
+                  </div>
+
+                  {/* Year Field */}
+                  <div>
+                    <label for="year" class="block text-sm font-medium text-gray-700 mb-1">Year</label>
+                    <input
+                      type="number"
+                      id="year"
+                      name="year"
+                      min="1900"
+                      max="2099"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      placeholder="2024"
+                    />
+                  </div>
+
+                  {/* For Sale Toggle */}
+                  <div class="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      id="for-sale"
+                      name="forSale"
+                      class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <label for="for-sale" class="text-sm font-medium text-gray-700">For Sale</label>
+                  </div>
+
+                  {/* Price Field - hidden by default */}
+                  <div id="price-field" class="hidden">
+                    <label for="price" class="block text-sm font-medium text-gray-700 mb-1">Price</label>
+                    <div class="relative">
+                      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span class="text-gray-500 text-sm">$</span>
+                      </div>
+                      <input
+                        type="number"
+                        id="price"
+                        name="price"
+                        min="0"
+                        step="0.01"
+                        class="w-full pl-7 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </div>
+
+                  {/* External URL Field */}
+                  <div>
+                    <label for="external-url" class="block text-sm font-medium text-gray-700 mb-1">External URL</label>
+                    <input
+                      type="url"
+                      id="external-url"
+                      name="externalUrl"
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      placeholder="https://..."
+                    />
+                    <p class="text-xs text-gray-500 mt-1">Optional link to external page</p>
+                  </div>
+
+                  {/* Media/Artwork Selection */}
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Media</label>
+                    <input type="hidden" id="media-ids" name="mediaIds" value="" />
+                    <button
+                      type="button"
+                      id="choose-media-btn"
+                      class="w-full flex items-center justify-center gap-2 px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M8 10C9.10457 10 10 9.10457 10 8C10 6.89543 9.10457 6 8 6C6.89543 6 6 6.89543 6 8C6 9.10457 6.89543 10 8 10Z" fill="currentColor"></path> <path fill-rule="evenodd" clip-rule="evenodd" d="M2 5C2 3.34315 3.34315 2 5 2H19C20.6569 2 22 3.34315 22 5V19C22 20.6569 20.6569 22 19 22H5C3.34315 22 2 20.6569 2 19V5ZM5 4C4.44772 4 4 4.44772 4 5V17.5857L9.29285 12.2928C9.68337 11.9023 10.3165 11.9023 10.7071 12.2928L12.5 14.0857L20 6.58569V5C20 4.44772 19.5523 4 19 4H5ZM20 9.41412L13.2071 16.2071C12.8165 16.5976 12.1834 16.5976 11.7928 16.2071L9.99995 14.4142L4.5308 19.8833C4.67072 19.9578 4.83043 20 5 20H19C19.5523 20 20 19.5523 20 19V9.41412Z" fill="currentColor"></path> </g></svg>
+                      Select Media
+                    </button>
+                    {/* Selected media preview */}
+                    <div id="media-preview" class="hidden mt-2">
+                      <div class="grid grid-cols-3 gap-2" id="media-preview-grid"></div>
+                      <button
+                        type="button"
+                        id="clear-media"
+                        class="mt-2 text-xs text-red-600 hover:text-red-800"
+                      >
+                        Clear all media
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Form actions */}
+                  <div class="flex gap-3 pt-4">
+                    <button
+                      type="submit"
+                      id="save-btn"
+                      class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                    >
+                      Save Work
+                    </button>
+                    <button
+                      type="button"
+                      id="cancel-btn"
+                      class="hidden px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </form>
+
+              {/* Feedback message */}
+              <div id="form-feedback" class="hidden mt-4 p-3 rounded-md text-sm"></div>
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* Create/Edit Form - takes 1/3 of space */}
-      <WorkEditor client:load />
     </div>
   </div>
 
-  <script src="../../lib/admin-client/works-page.ts"></script>
+  {/* Media Selection Modal */}
+  <div id="media-modal" class="fixed inset-0 z-50 hidden">
+    {/* Backdrop */}
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" id="media-modal-backdrop"></div>
+    
+    {/* Modal content */}
+    <div class="absolute inset-4 md:inset-8 lg:inset-16 bg-white rounded-lg shadow-2xl flex flex-col overflow-hidden">
+      {/* Header */}
+      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 shrink-0">
+        <div>
+          <h2 class="text-lg font-medium text-gray-900">Select Media</h2>
+          <p class="text-sm text-gray-500 mt-0.5">Choose images from your media library</p>
+        </div>
+        <button
+          type="button"
+          id="close-media-modal-btn"
+          class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      
+      {/* Gallery grid */}
+      <div id="modal-media-content" class="flex-1 overflow-auto p-6">
+        {/* Upload dropzone */}
+        <div
+          id="modal-upload-dropzone"
+          class="mb-6 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center transition-colors cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 data-dragover:border-blue-500 data-dragover:bg-blue-100"
+        >
+          <input
+            type="file"
+            id="modal-file-input"
+            class="hidden"
+            accept="image/jpeg,image/png,image/tiff,image/webp,image/gif,.jpg,.jpeg,.png,.tiff,.webp,.gif"
+            multiple
+          />
+          <svg class="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+          <p class="text-sm text-gray-600 font-medium">Drop images here or click to upload</p>
+          <p class="text-xs text-gray-500 mt-1">JPG, PNG, WebP, TIFF, GIF • Max 500MB per file</p>
+          <div id="modal-upload-status" class="hidden mt-3">
+            <span class="text-sm text-blue-600">Uploading...</span>
+          </div>
+        </div>
+
+        <div id="modal-media-loading" class="flex items-center justify-center h-48">
+          <div class="flex items-center gap-3 text-gray-500">
+            <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="text-sm">Loading media...</span>
+          </div>
+        </div>
+
+        <div id="modal-media-empty" class="hidden flex flex-col items-center justify-center h-48 text-center">
+          <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <p class="text-gray-900 font-medium">No images found</p>
+          <p class="text-sm text-gray-500 mt-1">Upload some images above</p>
+        </div>
+
+        <div id="modal-media-grid" class="hidden grid grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+          {/* Images will be rendered here */}
+        </div>
+      </div>
+      
+      {/* Footer */}
+      <div class="px-6 py-4 border-t border-gray-200 shrink-0 flex items-center justify-between bg-gray-50">
+        <span id="modal-media-info" class="text-sm text-gray-600">Click images to select them</span>
+        <div class="flex gap-2">
+          <button
+            type="button"
+            id="clear-media-selection-btn"
+            class="hidden px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-200 rounded-md transition-colors"
+          >
+            Clear Selection
+          </button>
+          <button
+            type="button"
+            id="confirm-media-selection-btn"
+            class="px-4 py-2 text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 rounded-md transition-colors"
+          >
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script is:inline define:vars={{ csrfToken: csrf.token }}>
+    window.CSRF_TOKEN = csrfToken;
+  </script>
+
+  <script>
+    // Logout button
+    document.getElementById('admin-logout-btn')?.addEventListener('click', async () => {
+      if (!confirm('Are you sure you want to logout?')) return;
+      try {
+        const res = await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' });
+        if (res.ok) window.location.href = '/admin/login?logged_out=1';
+        else if (res.status === 401) window.location.href = '/admin/login?session=expired';
+        else alert('Logout failed. Please try again.');
+      } catch {
+        alert('Logout failed. Please try again.');
+      }
+    });
+
+    // Filter functionality
+    const filterBtns = document.querySelectorAll('.gallery-filter-btn');
+    const gallerySections = document.querySelectorAll('.gallery-section');
+    let activeFilter: string | null = null;
+
+    function setGalleryFilter(filter: string | null) {
+      activeFilter = filter;
+
+      if (!filter) {
+        // Show all sections
+        gallerySections.forEach(section => {
+          section.classList.remove('hidden');
+          const extraItems = section.querySelectorAll('.gallery-item-extra');
+          extraItems.forEach(item => item.classList.add('hidden'));
+          const showMoreContainer = section.querySelector('.show-more-container');
+          if (showMoreContainer) showMoreContainer.classList.remove('hidden');
+        });
+        // Remove active styling from all buttons
+        filterBtns.forEach(b => {
+          b.classList.remove('active-filter');
+        });
+        return;
+      }
+
+      // Apply active styling
+      filterBtns.forEach(b => {
+        if (b.getAttribute('data-filter') === filter) {
+          b.classList.add('active-filter');
+        } else {
+          b.classList.remove('active-filter');
+        }
+      });
+
+      // Show only matching section
+      gallerySections.forEach(section => {
+        const sectionType = section.getAttribute('data-section');
+        if (sectionType === filter) {
+          section.classList.remove('hidden');
+          const extraItems = section.querySelectorAll('.gallery-item-extra');
+          extraItems.forEach(item => item.classList.remove('hidden'));
+          const showMoreContainer = section.querySelector('.show-more-container');
+          if (showMoreContainer) showMoreContainer.classList.add('hidden');
+        } else {
+          section.classList.add('hidden');
+        }
+      });
+    }
+
+    // Filter button click handlers
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const filter = btn.getAttribute('data-filter');
+        if (!filter) return;
+
+        // Toggle off if already active
+        if (activeFilter === filter) {
+          setGalleryFilter(null);
+          return;
+        }
+
+        // Set new active filter
+        setGalleryFilter(filter);
+      });
+    });
+
+    // Show more buttons
+    document.querySelectorAll('.show-more-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const showType = btn.getAttribute('data-show');
+        if (!showType) return;
+
+        // Trigger the corresponding filter button click
+        const filterBtn = document.querySelector(`.gallery-filter-btn[data-filter="${showType}"]`) as HTMLElement | null;
+        if (filterBtn) {
+          filterBtn.click();
+        }
+      });
+    });
+
+    // Work data store
+    let editingWorkId: string | null = null;
+
+    // Work editing - click on edit buttons
+    document.querySelectorAll('.edit-work-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = btn.getAttribute('data-id');
+        const category = btn.getAttribute('data-category');
+        if (id && category) {
+          startEdit(id, category);
+        }
+      });
+    });
+
+    // Work deletion
+    document.querySelectorAll('.delete-work-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const id = btn.getAttribute('data-id');
+        if (!id) return;
+        
+        if (!confirm('Are you sure you want to delete this work? This cannot be undone.')) return;
+        
+        const csrfMatch = document.cookie.match(/csrf_token=([^;]+)/);
+        const csrfToken = csrfMatch ? csrfMatch[1] : '';
+        
+        try {
+          const res = await fetch(`/api/admin/works?id=${encodeURIComponent(id)}`, {
+            method: 'DELETE',
+            credentials: 'include',
+            headers: { 'X-CSRF-Token': csrfToken }
+          });
+          
+          if (!res.ok) throw new Error('Delete failed');
+          
+          // Remove the card from DOM
+          const card = btn.closest('[data-id]') as HTMLElement | null;
+          if (card) {
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.9)';
+            setTimeout(() => card.remove(), 300);
+          }
+          
+          showFeedback('Work deleted successfully', 'success');
+          
+          // If we were editing this work, cancel the edit
+          if (editingWorkId === id) {
+            cancelEdit();
+          }
+        } catch (e) {
+          showFeedback('Failed to delete work', 'error');
+        }
+      });
+    });
+
+    // Form handling
+    const form = document.getElementById('work-form') as HTMLFormElement;
+    const formTitle = document.getElementById('form-title') as HTMLElement;
+    const workIdInput = document.getElementById('work-id') as HTMLInputElement;
+    const cancelBtn = document.getElementById('cancel-btn') as HTMLButtonElement;
+    const saveBtn = document.getElementById('save-btn') as HTMLButtonElement;
+    const feedback = document.getElementById('form-feedback') as HTMLElement;
+    const forSaleCheckbox = document.getElementById('for-sale') as HTMLInputElement;
+    const priceField = document.getElementById('price-field') as HTMLElement;
+    const titleInput = document.getElementById('title') as HTMLInputElement;
+    const slugInput = document.getElementById('slug') as HTMLInputElement;
+
+    // Auto-generate slug from title
+    function generateSlug(title: string): string {
+      return title
+        .toLowerCase()
+        .trim()
+        .replace(/[^\w\s-]/g, '')      // Remove special characters
+        .replace(/\s+/g, '-')           // Replace spaces with hyphens
+        .replace(/-+/g, '-');          // Collapse multiple hyphens
+    }
+
+    titleInput?.addEventListener('input', () => {
+      // Don't auto-generate slug when editing an existing work
+      if (editingWorkId) return;
+      
+      // Only auto-generate if slug is empty or matches previous auto-generated value
+      const currentSlug = slugInput?.value || '';
+      const currentTitle = titleInput?.value || '';
+      const expectedSlug = generateSlug(currentTitle);
+      const previousExpectedSlug = generateSlug(titleInput.dataset.previousTitle || '');
+
+      if (currentSlug === '' || currentSlug === previousExpectedSlug) {
+        slugInput.value = expectedSlug;
+      }
+
+      // Store current title for next comparison
+      titleInput.dataset.previousTitle = currentTitle;
+    });
+
+    // Show/hide price field based on for sale checkbox
+    forSaleCheckbox?.addEventListener('change', () => {
+      if (forSaleCheckbox.checked) {
+        priceField.classList.remove('hidden');
+      } else {
+        priceField.classList.add('hidden');
+      }
+    });
+
+    // Show feedback message
+    function showFeedback(message: string, type: 'success' | 'error') {
+      feedback.textContent = message;
+      feedback.className = `mt-4 p-3 rounded-md text-sm ${type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`;
+      feedback.classList.remove('hidden');
+      setTimeout(() => feedback.classList.add('hidden'), 3000);
+    }
+
+    // Cancel button
+    cancelBtn?.addEventListener('click', cancelEdit);
+
+    // Form submission
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const csrfMatch = document.cookie.match(/csrf_token=([^;]+)/);
+      const csrfToken = csrfMatch ? csrfMatch[1] : '';
+
+      const formData = new FormData(form);
+      const data = {
+        id: workIdInput.value || undefined,
+        category: formData.get('category') as string,
+        title: formData.get('title') as string,
+        slug: formData.get('slug') as string,
+        description: formData.get('description') as string || undefined,
+        year: formData.get('year') ? parseInt(formData.get('year') as string) : undefined,
+        forSale: formData.get('forSale') === 'on',
+        price: formData.get('price') ? (formData.get('price') as string) : undefined,
+        externalUrl: formData.get('externalUrl') as string || undefined,
+        mediaIds: selectedMediaIds,
+      };
+
+      saveBtn.disabled = true;
+      saveBtn.textContent = workIdInput.value ? 'Updating...' : 'Creating...';
+
+      try {
+        const res = await fetch('/api/admin/works', {
+          method: workIdInput.value ? 'PUT' : 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': csrfToken
+          },
+          credentials: 'include',
+          body: JSON.stringify(data)
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || 'Save failed');
+        }
+
+        const result = await res.json();
+        showFeedback(workIdInput.value ? 'Work updated' : 'Work created', 'success');
+        
+        // Reset form and reload page to show updated gallery
+        cancelEdit();
+        setTimeout(() => window.location.reload(), 500);
+      } catch (e) {
+        showFeedback(e instanceof Error ? e.message : 'Failed to save work', 'error');
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = workIdInput.value ? 'Update Work' : 'Save Work';
+      }
+    });
+
+    // Media selection
+    let selectedMediaIds: string[] = [];
+    let selectedMediaItems: Array<{id: string; url: string; type: string}> = [];
+
+    const mediaModal = document.getElementById('media-modal') as HTMLElement;
+    const mediaModalBackdrop = document.getElementById('media-modal-backdrop') as HTMLElement;
+    const closeMediaModalBtn = document.getElementById('close-media-modal-btn') as HTMLButtonElement;
+    const chooseMediaBtn = document.getElementById('choose-media-btn') as HTMLButtonElement;
+    const confirmMediaBtn = document.getElementById('confirm-media-selection-btn') as HTMLButtonElement;
+    const clearMediaSelectionBtn = document.getElementById('clear-media-selection-btn') as HTMLButtonElement;
+    const mediaPreview = document.getElementById('media-preview') as HTMLElement;
+    const mediaPreviewGrid = document.getElementById('media-preview-grid') as HTMLElement;
+    const clearMediaBtn = document.getElementById('clear-media') as HTMLButtonElement;
+
+    function openMediaModal() {
+      mediaModal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      loadMediaGallery();
+    }
+
+    function closeMediaModal() {
+      mediaModal.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    chooseMediaBtn?.addEventListener('click', openMediaModal);
+    closeMediaModalBtn?.addEventListener('click', closeMediaModal);
+    mediaModalBackdrop?.addEventListener('click', closeMediaModal);
+
+    // Modal upload functionality
+    const modalDropzone = document.getElementById('modal-upload-dropzone') as HTMLElement;
+    const modalFileInput = document.getElementById('modal-file-input') as HTMLInputElement;
+    const modalUploadStatus = document.getElementById('modal-upload-status') as HTMLElement;
+
+    if (modalDropzone && modalFileInput) {
+      // Prevent default drag behaviors
+      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        modalDropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        });
+      });
+
+      // Highlight dropzone on drag enter/over
+      ['dragenter', 'dragover'].forEach(eventName => {
+        modalDropzone.addEventListener(eventName, () => {
+          modalDropzone.setAttribute('data-dragover', 'true');
+        });
+      });
+
+      // Remove highlight on drag leave/drop
+      ['dragleave', 'drop'].forEach(eventName => {
+        modalDropzone.addEventListener(eventName, () => {
+          modalDropzone.removeAttribute('data-dragover');
+        });
+      });
+
+      // Handle click to browse
+      modalDropzone.addEventListener('click', () => {
+        modalFileInput.click();
+      });
+
+      // Handle file selection
+      modalFileInput.addEventListener('change', () => {
+        if (modalFileInput.files && modalFileInput.files.length > 0) {
+          handleModalFiles(modalFileInput.files);
+        }
+      });
+
+      // Handle dropped files
+      modalDropzone.addEventListener('drop', (e: DragEvent) => {
+        const files = e.dataTransfer?.files;
+        if (files && files.length > 0) {
+          handleModalFiles(files);
+        }
+      });
+    }
+
+    async function uploadFile(file: File): Promise<{ id: string }> {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const csrfMatch = document.cookie.match(/csrf_token=([^;]+)/);
+      const csrfToken = csrfMatch ? csrfMatch[1] : '';
+
+      const uploadUrl = new URL('/api/admin/media/upload', window.location.href).href;
+
+      const res = await fetch(uploadUrl, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+        headers: {
+          'X-CSRF-Token': csrfToken
+        }
+      });
+
+      if (res.status === 401) {
+        const err = await res.json().catch(() => ({}));
+        const reason = err?.reason || 'session_expired';
+        window.location.href = `/admin/login?session=expired&reason=${encodeURIComponent(reason)}`;
+        throw new Error('Session expired');
+      }
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error || 'Upload failed');
+      }
+      return res.json();
+    }
+
+    async function processPendingMedia(): Promise<{ processed: number; succeeded: number }> {
+      const csrfMatch = document.cookie.match(/csrf_token=([^;]+)/);
+      const csrfToken = csrfMatch ? csrfMatch[1] : '';
+
+      const res = await fetch('/api/admin/media/process-pending', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'X-CSRF-Token': csrfToken
+        }
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error || 'Processing failed');
+      }
+
+      return res.json();
+    }
+
+    async function handleModalFiles(fileList: FileList) {
+      const files = Array.from(fileList).filter(file => file.type.startsWith('image/'));
+      if (files.length === 0) {
+        showFeedback('Please select image files only', 'error');
+        return;
+      }
+
+      // Show upload status
+      if (modalUploadStatus) {
+        modalUploadStatus.classList.remove('hidden');
+        modalUploadStatus.innerHTML = `<span class="text-sm text-blue-600">Uploading ${files.length} file(s)...</span>`;
+      }
+
+      const uploadedIds: string[] = [];
+
+      // Upload all files
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        try {
+          if (modalUploadStatus) {
+            modalUploadStatus.innerHTML = `<span class="text-sm text-blue-600">Uploading ${i + 1}/${files.length}: "${file.name}"...</span>`;
+          }
+          const result = await uploadFile(file);
+          uploadedIds.push(result.id);
+        } catch (e) {
+          console.error(`Failed to upload ${file.name}:`, e);
+        }
+      }
+
+      // Process pending files
+      if (uploadedIds.length > 0) {
+        if (modalUploadStatus) {
+          modalUploadStatus.innerHTML = `<span class="text-sm text-amber-600">Processing ${uploadedIds.length} file(s)...</span>`;
+        }
+
+        try {
+          await processPendingMedia();
+          if (modalUploadStatus) {
+            modalUploadStatus.innerHTML = `<span class="text-sm text-green-600">${uploadedIds.length} file(s) uploaded successfully!</span>`;
+          }
+          // Refresh the media grid to show newly uploaded images
+          setTimeout(() => {
+            loadMediaGallery();
+            if (modalUploadStatus) {
+              modalUploadStatus.classList.add('hidden');
+            }
+          }, 1000);
+        } catch (e) {
+          if (modalUploadStatus) {
+            modalUploadStatus.innerHTML = `<span class="text-sm text-red-600">Processing failed</span>`;
+          }
+        }
+      } else {
+        if (modalUploadStatus) {
+          modalUploadStatus.innerHTML = `<span class="text-sm text-red-600">Upload failed</span>`;
+        }
+      }
+    }
+
+    // Clear media selection
+    function clearMediaSelection() {
+      selectedMediaIds = [];
+      selectedMediaItems = [];
+      updateMediaPreview();
+    }
+
+    clearMediaBtn?.addEventListener('click', clearMediaSelection);
+    clearMediaSelectionBtn?.addEventListener('click', () => {
+      selectedMediaIds = [];
+      selectedMediaItems = [];
+      renderMediaGrid();
+      updateClearButton();
+    });
+
+    confirmMediaBtn?.addEventListener('click', () => {
+      updateMediaPreview();
+      closeMediaModal();
+    });
+
+    function updateClearButton() {
+      if (selectedMediaIds.length > 0) {
+        clearMediaSelectionBtn.classList.remove('hidden');
+      } else {
+        clearMediaSelectionBtn.classList.add('hidden');
+      }
+    }
+
+    function updateMediaPreview() {
+      if (selectedMediaItems.length === 0) {
+        mediaPreview.classList.add('hidden');
+        return;
+      }
+
+      mediaPreview.classList.remove('hidden');
+      mediaPreviewGrid.innerHTML = selectedMediaItems.map(item => `
+        <div class="aspect-square rounded-md overflow-hidden border border-gray-200">
+          <img src="${item.url}" alt="" class="w-full h-full object-cover" />
+        </div>
+      `).join('');
+    }
+
+    // Start editing a work
+    async function startEdit(id: string, category: string) {
+      try {
+        const res = await fetch(`/api/admin/works?id=${encodeURIComponent(id)}`, { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to load work');
+
+        const work = await res.json();
+
+        editingWorkId = id;
+        workIdInput.value = id;
+        formTitle.textContent = 'Edit Work';
+        saveBtn.textContent = 'Update Work';
+        cancelBtn.classList.remove('hidden');
+
+        // Set category
+        setFormCategory(category);
+
+        // Populate form fields
+        (document.getElementById('title') as HTMLInputElement).value = work.title || '';
+        (document.getElementById('slug') as HTMLInputElement).value = work.slug || '';
+        (document.getElementById('description') as HTMLTextAreaElement).value = work.description || '';
+        (document.getElementById('year') as HTMLInputElement).value = work.year ? String(work.year) : '';
+        (document.getElementById('external-url') as HTMLInputElement).value = work.externalUrl || '';
+
+        // Handle for sale
+        const forSaleCheckbox = document.getElementById('for-sale') as HTMLInputElement;
+        forSaleCheckbox.checked = work.forSale || false;
+        if (work.forSale) {
+          priceField.classList.remove('hidden');
+          (document.getElementById('price') as HTMLInputElement).value = work.price || '';
+        } else {
+          priceField.classList.add('hidden');
+        }
+
+        // Load media
+        if (work.media && work.media.length > 0) {
+          selectedMediaIds = work.media.map((m: any) => m.id);
+          selectedMediaItems = work.media.map((m: any) => ({
+            id: m.id,
+            url: m.url,
+            type: m.type || 'image'
+          }));
+          updateMediaPreview();
+        } else {
+          clearMediaSelection();
+        }
+
+        // Filter gallery to show this category
+        setGalleryFilter(category);
+
+        showFeedback('Work loaded for editing', 'success');
+      } catch (e) {
+        showFeedback('Failed to load work for editing', 'error');
+        console.error(e);
+      }
+    }
+
+    // Cancel editing
+    function cancelEdit() {
+      editingWorkId = null;
+      workIdInput.value = '';
+      formTitle.textContent = 'New Work';
+      saveBtn.textContent = 'Save Work';
+      cancelBtn.classList.add('hidden');
+      form.reset();
+      priceField.classList.add('hidden');
+      clearMediaSelection();
+      setFormCategory(null);
+      setGalleryFilter(null);
+    }
+
+    // Load media for modal
+    async function loadMediaGallery() {
+      const loadingEl = document.getElementById('modal-media-loading') as HTMLElement;
+      const emptyEl = document.getElementById('modal-media-empty') as HTMLElement;
+      const gridEl = document.getElementById('modal-media-grid') as HTMLElement;
+
+      loadingEl.classList.remove('hidden');
+      emptyEl.classList.add('hidden');
+      gridEl.classList.add('hidden');
+
+      try {
+        const res = await fetch('/data/media-manifest.json', { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to load media');
+
+        const manifest = await res.json();
+        const images = Object.values(manifest.images || {}).sort((a: any, b: any) => {
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        }) as any[];
+
+        renderMediaGrid(images);
+      } catch (e) {
+        console.error('Error loading media:', e);
+        loadingEl.classList.add('hidden');
+        emptyEl.classList.remove('hidden');
+      }
+    }
+
+    function renderMediaGrid(images?: any[]) {
+      const loadingEl = document.getElementById('modal-media-loading') as HTMLElement;
+      const emptyEl = document.getElementById('modal-media-empty') as HTMLElement;
+      const gridEl = document.getElementById('modal-media-grid') as HTMLElement;
+
+      loadingEl.classList.add('hidden');
+
+      if (!images || images.length === 0) {
+        emptyEl.classList.remove('hidden');
+        gridEl.classList.add('hidden');
+        return;
+      }
+
+      emptyEl.classList.add('hidden');
+      gridEl.classList.remove('hidden');
+
+      gridEl.innerHTML = images.map((img: {id: string; variants: Record<string, {url?: string}>; originalName: string}) => {
+        const imageUrl = img.variants.md?.url || img.variants.sm?.url || Object.values(img.variants)[0]?.url || '';
+        const fullUrl = imageUrl?.startsWith('http') ? imageUrl : `${window.location.origin}${imageUrl}`;
+        const isSelected = selectedMediaIds.includes(img.id);
+        
+        return `
+          <div 
+            class="group relative aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 cursor-pointer transition-all ${isSelected ? 'border-blue-500 ring-2 ring-blue-200' : 'border-transparent hover:border-blue-300'}"
+            data-id="${img.id}"
+            data-url="${fullUrl}"
+          >
+            <img 
+              src="${fullUrl}" 
+              alt="${img.originalName}"
+              class="w-full h-full object-cover"
+              loading="lazy"
+            />
+            ${isSelected ? `
+              <div class="absolute inset-0 bg-blue-500/20 flex items-center justify-center">
+                <div class="bg-blue-600 text-white rounded-full p-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+
+      // Attach click handlers
+      gridEl.querySelectorAll('[data-id]').forEach(el => {
+        el.addEventListener('click', () => {
+          const id = el.getAttribute('data-id')!;
+          const url = el.getAttribute('data-url')!;
+          
+          if (selectedMediaIds.includes(id)) {
+            // Deselect
+            selectedMediaIds = selectedMediaIds.filter(mid => mid !== id);
+            selectedMediaItems = selectedMediaItems.filter(item => item.id !== id);
+          } else {
+            // Select (allow multiple)
+            selectedMediaIds.push(id);
+            selectedMediaItems.push({ id, url, type: 'image' });
+          }
+          
+          renderMediaGrid(images);
+          updateClearButton();
+        });
+      });
+
+      updateClearButton();
+    }
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !mediaModal.classList.contains('hidden')) {
+        closeMediaModal();
+      }
+    });
+  </script>
 
   <style>
     .gallery-filter-btn.active-filter {
