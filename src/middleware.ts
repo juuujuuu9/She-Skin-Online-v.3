@@ -73,7 +73,7 @@ function buildCSP(directives: Record<string, string[]>): string {
 
 // Define admin routes that need protection
 const isAdminRoute = createRouteMatcher(['/admin(.*)']);
-const isPublicAdminRoute = createRouteMatcher(['/admin/login', '/admin/forgot-password', '/admin/reset-password']);
+const isPublicAdminRoute = createRouteMatcher(['/admin/login']);
 
 // Clerk middleware with auth protection
 export const onRequest = clerkMiddleware(async (auth, context, next) => {
