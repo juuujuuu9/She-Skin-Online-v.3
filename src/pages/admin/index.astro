@@ -316,11 +316,7 @@ const isActive = (href: string) => {
                     </div>
                   )}
                 </div>
-              </div>
-              <div>
-                <div class="text-2xl font-semibold text-white">{video.length}</div>
-                <div class="text-xs text-gray-500 uppercase">Video</div>
-              </div>
+              )}
             </div>
           </div>
 
@@ -382,7 +378,7 @@ const isActive = (href: string) => {
                         <div class="flex items-center gap-3">
                           <button
                             class="delete-btn absolute top-2 right-2 p-1.5 bg-red-500/80 hover:bg-red-600 text-white rounded opacity-0 group-hover:opacity-100 transition-all"
-                            data-id={item.id}
+                            data-id={track.id}
                             title="Delete"
                           >
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -392,7 +388,7 @@ const isActive = (href: string) => {
 
                           {/* Type badge */}
                           <span class="absolute top-2 left-2 text-xs text-white bg-black/50 px-2 py-0.5 rounded uppercase">
-                            {item.mediaType}
+                            {track.mediaType}
                           </span>
                         </div>
 
@@ -1102,30 +1098,28 @@ const isActive = (href: string) => {
           });
 
           if (res.ok) {
-            const card = btn.closest('.media-item');
+            // Remove the card from DOM
+            const card = document.querySelector(`[data-media-id="${item.id}"]`);
             card?.remove();
-          } else if (res.status === 409) {
-            const forceDelete = confirm('This file is in use. Delete anyway?');
-            if (forceDelete) {
-              const forceRes = await fetch(`/api/admin/media/${id}?force=true`, {
-                method: 'DELETE',
-                credentials: 'include',
-                headers: { 'X-CSRF-Token': csrfToken }
-              });
-              if (forceRes.ok) {
-                const card = btn.closest('.media-item');
-                card?.remove();
-              } else {
-                alert('Delete failed');
-              }
-            }
+            successCount++;
+          } else {
+            failCount++;
           }
-        } else {
-          alert('Delete failed');
+        } catch {
+          failCount++;
         }
-      } catch {
-        alert('Delete failed');
       }
+
+      // Show feedback
+      if (failCount === 0) {
+        alert(`Deleted ${successCount} item(s) successfully`);
+      } else {
+        alert(`Deleted ${successCount} item(s), ${failCount} failed`);
+      }
+
+      // Exit multi-select mode and refresh
+      toggleMultiSelectMode(false);
+      setTimeout(() => window.location.reload(), 500);
     });
     }
 

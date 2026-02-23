@@ -38,6 +38,8 @@ const [digitalCount, collaborationsCount, physicalCount] = await Promise.all([
   getCategoryCount('physical'),
 ]);
 
+const totalWorks = digitalCount + collaborationsCount + physicalCount;
+
 // Get works for each category
 const digitalWorks = await getWorksForGrid('digital');
 const collaborationsWorks = await getWorksForGrid('collaborations');
@@ -51,119 +53,95 @@ const physicalWorks = await getWorksForGrid('physical');
     <div class="flex-1 flex gap-6 min-h-0">
       {/* Works Gallery - takes 2/3 of space */}
       <div class="w-2/3 min-w-0 flex flex-col bg-[#1a1a1a] rounded-lg shadow-sm border border-[#333] min-h-0">
-        <div class="px-6 py-4 border-b border-[#333] flex items-center gap-2 text-sm shrink-0">
-          <button
-
-const totalWorks = digitalCount + collaborationsCount + physicalCount;
-            type="button"
-            class="gallery-filter-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-gray-400 hover:bg-white/10 hover:text-white transition-all"
-            data-filter="physical"
-            title="Show only physical works"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-            </svg>
-            <span>Physical</span>
-            <span class="text-gray-400">{physicalCount}</span>
-          </button>
+        <div class="px-6 py-4 border-b border-[#333] flex items-center justify-between shrink-0">
+          <div class="flex items-center gap-3">
+            <h2 class="text-lg font-medium text-white">Works Gallery</h2>
+            <span class="text-sm text-gray-400 bg-white/10 px-2 py-1 rounded-full">
+              {totalWorks} items
+            </span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              id="select-mode-btn"
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-gray-400 hover:bg-white/10 hover:text-white transition-all text-sm border border-[#444]"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              <span>Select Mode</span>
+            </button>
+            <button
+              type="button"
+              id="delete-selected-btn"
+              class="hidden flex items-center gap-1.5 px-3 py-1.5 rounded-md text-white bg-red-600 hover:bg-red-700 transition-all text-sm"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              <span>Delete Selected</span>
+              <span id="selected-count" class="bg-red-200 text-red-800 text-xs px-1.5 py-0.5 rounded-full">0</span>
+            </button>
+          </div>
         </div>
-        <nav class="flex-1 p-3 min-h-0 overflow-auto">
-          <ul class="space-y-0.5">
-            {adminNavItems.map((item) => (
-              <li>
-                <a
-                  href={item.href}
-                  data-astro-reload
-                  class={`
-                    flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors
-                    ${isActive(item.href) ? 'bg-white text-black' : 'text-white/80 hover:bg-white/10 hover:text-white'}
-                  `}
-                >
-                  <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" set:html={iconPaths[item.icon] ?? ''} />
-                  <span>{item.label}</span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
-        <div class="mx-3 border-t border-white/10" />
-        <nav class="p-3" id="admin-view-site">
-          <ul class="space-y-0.5">
-            <li>
-              <a
-                href="/"
-                data-nav-link
-                class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm text-white/60 hover:bg-white/10 hover:text-white transition-colors"
-              >
-                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-                <span>View Site</span>
-              </a>
-            </li>
-          </ul>
-        </nav>
-      </aside>
-
-      <div class="px-4 sm:px-6 lg:px-8 py-4 flex-1 flex flex-col min-h-0 overflow-hidden">
-        <h1 class="text-2xl font-bold text-gray-900 mb-4 shrink-0">Works</h1>
-
-        {/* Works Gallery */}
-        <div class="flex-1 flex flex-col min-h-0 bg-white rounded-lg shadow-sm border border-gray-200">
-          <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between shrink-0">
-            <div class="flex items-center gap-3">
-              <h2 class="text-lg font-medium text-gray-900">Works Gallery</h2>
-              <span class="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                {totalWorks} items
-              </span>
-            </div>
-            <div class="flex items-center gap-2 text-sm">
-              {digitalCount > 0 && (
-                <button
-                  type="button"
-                  class="gallery-filter-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all"
-                  data-filter="digital"
-                  title="Show only digital works"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                  <span>Digital</span>
-                  <span class="text-gray-400">{digitalCount}</span>
-                </button>
-              )}
-              {collaborationsCount > 0 && (
-                <button
-                  type="button"
-                  class="gallery-filter-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all"
-                  data-filter="collaborations"
-                  title="Show only collaborations"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                  <span>Collaborations</span>
-                  <span class="text-gray-400">{collaborationsCount}</span>
-                </button>
-              )}
-              {physicalCount > 0 && (
-                <button
-                  type="button"
-                  class="gallery-filter-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-all"
-                  data-filter="physical"
-                  title="Show only physical works"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                  </svg>
-                  <span>Physical</span>
-                  <span class="text-gray-400">{physicalCount}</span>
-                </button>
-              )}
-            </div>
+        <div class="px-6 py-3 border-b border-[#333] flex items-center gap-2 text-sm shrink-0">
+          {digitalCount > 0 && (
+            <button
+              type="button"
+              class="gallery-filter-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-gray-400 hover:bg-white/10 hover:text-white transition-all"
+              data-filter="digital"
+              title="Show only digital works"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              <span>Digital</span>
+              <span class="text-gray-500">{digitalCount}</span>
+            </button>
+          )}
+          {collaborationsCount > 0 && (
+            <button
+              type="button"
+              class="gallery-filter-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-gray-400 hover:bg-white/10 hover:text-white transition-all"
+              data-filter="collaborations"
+              title="Show only collaborations"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              <span>Collaborations</span>
+              <span class="text-gray-500">{collaborationsCount}</span>
+            </button>
+          )}
+          {physicalCount > 0 && (
+            <button
+              type="button"
+              class="gallery-filter-btn flex items-center gap-1.5 px-3 py-1.5 rounded-md text-gray-400 hover:bg-white/10 hover:text-white transition-all"
+              data-filter="physical"
+              title="Show only physical works"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+              <span>Physical</span>
+              <span class="text-gray-500">{physicalCount}</span>
+            </button>
+          )}
+        </div>
+        <div class="p-6 flex-1 min-h-0 overflow-auto">
+          {/* Select All Header - shown in select mode */}
+          <div id="select-all-container" class="hidden items-center gap-3 mb-4 pb-4 border-b border-[#333]">
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                id="select-all-checkbox"
+                class="w-4 h-4 text-blue-600 border-gray-500 rounded focus:ring-blue-500"
+              />
+              <span class="text-sm font-medium text-white">Select All</span>
+            </label>
+            <span id="selection-status" class="text-sm text-gray-400 hidden"></span>
           </div>
 
-            <div class="p-6 flex-1 min-h-0 overflow-auto">
               {/* Digital Works Section */}
               {digitalWorks.length > 0 && (
                 <div class="gallery-section mb-8" data-section="digital">
@@ -181,6 +159,15 @@ const totalWorks = digitalCount + collaborationsCount + physicalCount;
                         data-id={work.id}
                         data-category="physical"
                       >
+                        {/* Checkbox for select mode - hidden by default */}
+                        <div class="work-checkbox-container hidden absolute top-2 left-2 z-10">
+                          <input
+                            type="checkbox"
+                            class="work-checkbox w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                            data-id={work.id}
+                            data-title={work.title}
+                          />
+                        </div>
                         <div class="aspect-square relative bg-gray-50 flex items-center justify-center overflow-hidden">
                           {work.image?.src ? (
                             <img
@@ -201,7 +188,7 @@ const totalWorks = digitalCount + collaborationsCount + physicalCount;
                           <p class="text-sm font-medium text-white truncate">{work.title}</p>
                         </div>
                         {/* Edit/Delete buttons - show on hover */}
-                        <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div class="work-actions absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
                             type="button"
                             class="edit-work-btn p-1.5 bg-white/90 hover:bg-blue-500 hover:text-white text-gray-700 rounded-md shadow-sm transition-colors"
@@ -258,6 +245,15 @@ const totalWorks = digitalCount + collaborationsCount + physicalCount;
                         data-id={work.id}
                         data-category="collaborations"
                       >
+                        {/* Checkbox for select mode - hidden by default */}
+                        <div class="work-checkbox-container hidden absolute top-2 left-2 z-10">
+                          <input
+                            type="checkbox"
+                            class="work-checkbox w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                            data-id={work.id}
+                            data-title={work.title}
+                          />
+                        </div>
                         <div class="aspect-square relative bg-gray-50 flex items-center justify-center overflow-hidden">
                           {work.image?.src ? (
                             <img
@@ -278,7 +274,7 @@ const totalWorks = digitalCount + collaborationsCount + physicalCount;
                           <p class="text-sm font-medium text-white truncate">{work.title}</p>
                         </div>
                         {/* Edit/Delete buttons - show on hover */}
-                        <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div class="work-actions absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
                             type="button"
                             class="edit-work-btn p-1.5 bg-white/90 hover:bg-blue-500 hover:text-white text-gray-700 rounded-md shadow-sm transition-colors"
@@ -335,6 +331,15 @@ const totalWorks = digitalCount + collaborationsCount + physicalCount;
                         data-id={work.id}
                         data-category="digital"
                       >
+                        {/* Checkbox for select mode - hidden by default */}
+                        <div class="work-checkbox-container hidden absolute top-2 left-2 z-10">
+                          <input
+                            type="checkbox"
+                            class="work-checkbox w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                            data-id={work.id}
+                            data-title={work.title}
+                          />
+                        </div>
                         <div class="aspect-square relative bg-gray-50 flex items-center justify-center overflow-hidden">
                           {work.image?.src ? (
                             <img
@@ -355,7 +360,7 @@ const totalWorks = digitalCount + collaborationsCount + physicalCount;
                           <p class="text-sm font-medium text-white truncate">{work.title}</p>
                         </div>
                         {/* Edit/Delete buttons - show on hover */}
-                        <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div class="work-actions absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
                             type="button"
                             class="edit-work-btn p-1.5 bg-white/90 hover:bg-blue-500 hover:text-white text-gray-700 rounded-md shadow-sm transition-colors"
@@ -1445,4 +1450,6 @@ const totalWorks = digitalCount + collaborationsCount + physicalCount;
       border-color: #3b82f6;
     }
   </style>
+
+  <script src="/src/lib/admin-client/works-page.ts"></script>
 </AdminLayout>

@@ -89,6 +89,7 @@ const ADMIN_EMAILS = [
 const ADMIN_USER_IDS = [
   'user_3A3KSK7YJjVCi5FvALXuEP1BmRb',
   'user_3A3JbHFyXcTBGi72It9AamcURVr',
+  'user_3A3MysKyiJP01TwwmjCPjZ4gokj',
 ];
 
 // Clerk middleware with auth protection

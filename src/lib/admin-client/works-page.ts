@@ -373,71 +373,8 @@ function initWorksPage() {
     setTimeout(() => feedback.classList.add('hidden'), 3000);
   }
 
-  // Work editing - click on edit buttons using event delegation
-  document.addEventListener('click', (e) => {
-    const target = e.target as HTMLElement;
-    const btn = target.closest('.edit-work-btn') as HTMLElement;
-    if (!btn) return;
-    
-    e.stopPropagation();
-    const id = btn.getAttribute('data-id');
-    const category = btn.getAttribute('data-category');
-    if (id && category) {
-      editingWorkId = id;
-      const workEditor = (window as any).WorkEditor;
-      if (workEditor?.loadWorkForEdit) {
-        workEditor.loadWorkForEdit(id, category);
-      }
-      setGalleryFilter(category);
-    }
-  });
-
-  // Work deletion using event delegation
-  document.addEventListener('click', async (e) => {
-    const target = e.target as HTMLElement;
-    const btn = target.closest('.delete-work-btn') as HTMLElement;
-    if (!btn) return;
-    
-    e.stopPropagation();
-    const id = btn.getAttribute('data-id');
-    if (!id) return;
-
-    if (!confirm('Are you sure you want to delete this work? This cannot be undone.')) return;
-
-    const csrfMatch = document.cookie.match(/csrf_token=([^;]+)/);
-    const csrfToken = csrfMatch ? decodeURIComponent(csrfMatch[1]) : '';
-
-    try {
-      const res = await fetch(`/api/admin/works?id=${encodeURIComponent(id)}`, {
-        method: 'DELETE',
-        credentials: 'include',
-        headers: { 'X-CSRF-Token': csrfToken }
-      });
-
-      if (!res.ok) throw new Error('Delete failed');
-
-      // Remove the card from DOM
-      const card = btn.closest('[data-id]') as HTMLElement | null;
-      if (card) {
-        card.style.opacity = '0';
-        card.style.transform = 'scale(0.9)';
-        setTimeout(() => card.remove(), 300);
-      }
-
-      showFeedback('Work deleted successfully', 'success');
-
-      // If we were editing this work, cancel the edit via WorkEditor
-      if (editingWorkId === id) {
-        const workEditor = (window as any).WorkEditor;
-        if (workEditor?.cancelEdit) {
-          workEditor.cancelEdit();
-        }
-        editingWorkId = null;
-      }
-    } catch (e) {
-      showFeedback('Failed to delete work', 'error');
-    }
-  });
+  // Note: Individual work editing and deletion are handled by the inline script in works.astro
+  // This script focuses on selection mode and bulk operations
 }
 
 // Initialize on DOM ready
