@@ -15,6 +15,7 @@ const CSP_DIRECTIVES = {
     "'unsafe-inline'",
     "'unsafe-eval'",
     'https://*.clerk.accounts.dev',
+    'https://clerk.sheskinv3.thoughtform.world',
     'https://clerk.js',  // Clerk JS
     'blob:',  // Required for Clerk web workers
   ],
@@ -24,6 +25,7 @@ const CSP_DIRECTIVES = {
     "'unsafe-inline'",
     'https://fonts.googleapis.com',
     'https://*.clerk.accounts.dev',
+    'https://clerk.sheskinv3.thoughtform.world',
   ],
   'img-src': [
     "'self'",
@@ -43,6 +45,7 @@ const CSP_DIRECTIVES = {
     'https://*.stripe.com',
     'https://*.neon.tech',
     'https://*.clerk.accounts.dev',
+    'https://clerk.sheskinv3.thoughtform.world',
   ],
   'font-src': [
     "'self'",
@@ -55,6 +58,7 @@ const CSP_DIRECTIVES = {
     'https://www.youtube.com',
     'https://www.youtube-nocookie.com',
     'https://*.clerk.accounts.dev',
+    'https://clerk.sheskinv3.thoughtform.world',
   ],
   'object-src': ["'none'"],
   'base-uri': ["'self'"],
