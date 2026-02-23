@@ -4,12 +4,22 @@
  */
 
 import Layout from '@layouts/Layout.astro';
+import { generateCsrfToken, csrfCookieName } from '@lib/csrf';
 
 interface Props {
   title: string;
 }
 
 const { title } = Astro.props;
+
+// Generate and set CSRF token cookie for admin pages
+const { token, cookie } = generateCsrfToken();
+Astro.cookies.set(csrfCookieName(), token, {
+  path: '/',
+  sameSite: 'lax',
+  httpOnly: false, // Needs to be readable by JavaScript
+  secure: import.meta.env.PROD,
+});
 
 const currentPath = Astro.url.pathname;
 const adminNavItems = [

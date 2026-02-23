@@ -320,24 +320,46 @@ const formatBytes = (bytes: number) => {
         thumbnailHtml = `<div class="flex flex-col items-center justify-center text-[#666]"><svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg><span class="text-xs mt-2">Video</span></div>`;
       }
 
-      div.innerHTML = `
-        <div class="aspect-square relative bg-[#1a1a1a] flex items-center justify-center overflow-hidden">
-          ${thumbnailHtml}
-          <label class="media-checkbox absolute top-2 right-2 p-1 bg-black/50 rounded cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
-            <input type="checkbox" class="media-select w-5 h-5 accent-blue-500" data-id="${item.id}">
-          </label>
-          <button class="delete-btn absolute bottom-2 right-2 p-1.5 bg-red-500/80 hover:bg-red-600 text-white rounded opacity-0 group-hover:opacity-100 transition-all" data-id="${item.id}" title="Delete">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-          </button>
-          <span class="absolute top-2 left-2 text-xs text-white bg-black/50 px-2 py-0.5 rounded uppercase">${item.mediaType}</span>
-        </div>
-        <div class="p-3">
-          <p class="text-sm text-white truncate" title="${item.originalName}">${item.originalName}</p>
-          <p class="text-xs text-gray-500 mt-1">${formatBytes(item.fileSize)}</p>
-        </div>
-      `;
+      // Build the element safely using DOM methods instead of innerHTML to prevent XSS
+      const thumbnailDiv = document.createElement('div');
+      thumbnailDiv.className = 'aspect-square relative bg-[#1a1a1a] flex items-center justify-center overflow-hidden';
+      thumbnailDiv.innerHTML = thumbnailHtml; // This is safe - only trusted HTML
+
+      const checkboxLabel = document.createElement('label');
+      checkboxLabel.className = 'media-checkbox absolute top-2 right-2 p-1 bg-black/50 rounded cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity';
+      checkboxLabel.innerHTML = `<input type="checkbox" class="media-select w-5 h-5 accent-blue-500" data-id="${item.id}">`;
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'delete-btn absolute bottom-2 right-2 p-1.5 bg-red-500/80 hover:bg-red-600 text-white rounded opacity-0 group-hover:opacity-100 transition-all';
+      deleteBtn.setAttribute('data-id', item.id);
+      deleteBtn.title = 'Delete';
+      deleteBtn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>`;
+
+      const typeBadge = document.createElement('span');
+      typeBadge.className = 'absolute top-2 left-2 text-xs text-white bg-black/50 px-2 py-0.5 rounded uppercase';
+      typeBadge.textContent = item.mediaType; // textContent is safe from XSS
+
+      thumbnailDiv.appendChild(checkboxLabel);
+      thumbnailDiv.appendChild(deleteBtn);
+      thumbnailDiv.appendChild(typeBadge);
+
+      const infoDiv = document.createElement('div');
+      infoDiv.className = 'p-3';
+
+      const nameP = document.createElement('p');
+      nameP.className = 'text-sm text-white truncate';
+      nameP.title = item.originalName; // title attribute - safe to assign directly
+      nameP.textContent = item.originalName; // textContent escapes HTML
+
+      const sizeP = document.createElement('p');
+      sizeP.className = 'text-xs text-gray-500 mt-1';
+      sizeP.textContent = formatBytes(item.fileSize);
+
+      infoDiv.appendChild(nameP);
+      infoDiv.appendChild(sizeP);
+
+      div.appendChild(thumbnailDiv);
+      div.appendChild(infoDiv);
 
       // Add event listeners
       const checkbox = div.querySelector('.media-select') as HTMLInputElement;
@@ -434,10 +456,17 @@ const formatBytes = (bytes: number) => {
           if (media) {
             uploadedMedia.push(media);
           }
-          feedback.innerHTML = `<span class="text-blue-400">Uploaded: ${file.name}</span>`;
+          // Use textContent to prevent XSS from file names
+          feedback.innerHTML = `<span class="text-blue-400">Uploaded: </span>`;
+          const uploadSpan = document.createElement('span');
+          uploadSpan.textContent = file.name;
+          feedback.appendChild(uploadSpan);
         } catch (e) {
           failedFiles.push(file.name);
-          feedback.innerHTML = `<span class="text-red-400">Failed: ${file.name}</span>`;
+          feedback.innerHTML = `<span class="text-red-400">Failed: </span>`;
+          const failSpan = document.createElement('span');
+          failSpan.textContent = file.name;
+          feedback.appendChild(failSpan);
           // Continue with next file instead of returning
           continue;
         }
@@ -468,16 +497,22 @@ const formatBytes = (bytes: number) => {
         updateStats();
       }
 
-      // Show appropriate completion message
+      // Show appropriate completion message using safe DOM methods
+      feedback.innerHTML = '';
+      const messageSpan = document.createElement('span');
       if (failedFiles.length > 0) {
         if (failedFiles.length === files.length) {
-          feedback.innerHTML = `<span class="text-red-400">All uploads failed</span>`;
+          messageSpan.className = 'text-red-400';
+          messageSpan.textContent = 'All uploads failed';
         } else {
-          feedback.innerHTML = `<span class="text-yellow-400">${uploadedMedia.length} uploaded, ${failedFiles.length} failed</span>`;
+          messageSpan.className = 'text-yellow-400';
+          messageSpan.textContent = `${uploadedMedia.length} uploaded, ${failedFiles.length} failed`;
         }
       } else {
-        feedback.innerHTML = `<span class="text-green-400">${uploadedMedia.length} file(s) uploaded!</span>`;
+        messageSpan.className = 'text-green-400';
+        messageSpan.textContent = `${uploadedMedia.length} file(s) uploaded!`;
       }
+      feedback.appendChild(messageSpan);
 
       // Clear file input after all uploads complete
       if (fileInput) {

@@ -398,11 +398,19 @@ const saveButtonText = isEditMode ? 'Update Work' : 'Save Work';
 
       mediaPreview?.classList.remove('hidden');
       if (mediaPreviewGrid) {
-        mediaPreviewGrid.innerHTML = selectedMediaItems.map(item => `
-          <div class="aspect-square rounded-md overflow-hidden border border-[#333]">
-            <img src="${item.url}" alt="" class="w-full h-full object-cover" />
-          </div>
-        `).join('');
+        mediaPreviewGrid.innerHTML = '';
+        for (const item of selectedMediaItems) {
+          const div = document.createElement('div');
+          div.className = 'aspect-square rounded-md overflow-hidden border border-[#333]';
+
+          const img = document.createElement('img');
+          img.src = item.url; // URLs from server are generally safe, but validate if needed
+          img.alt = '';
+          img.className = 'w-full h-full object-cover';
+
+          div.appendChild(img);
+          mediaPreviewGrid.appendChild(div);
+        }
       }
     }
 

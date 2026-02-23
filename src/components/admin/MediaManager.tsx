@@ -489,7 +489,7 @@ export default function MediaManager({ initialMedia = [] }: MediaManagerProps) {
               opacity: uploadFadingOut ? 0 : 1,
             }}
           >
-            <div style={styles.spinner} />
+            <div style={styles.overlaySpinner} />
             <p style={styles.spinnerText}>Uploading...</p>
             <p style={styles.spinnerSubtext}>Don't close this page until upload completes</p>
             <p style={styles.spinnerFile}>
@@ -1223,7 +1223,7 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: '12px',
     transition: 'opacity 0.3s ease-out',
   },
-  spinner: {
+  overlaySpinner: {
     width: '48px',
     height: '48px',
     border: '4px solid #333',

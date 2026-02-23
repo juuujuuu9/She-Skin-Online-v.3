@@ -79,6 +79,18 @@ function buildCSP(directives: Record<string, string[]>): string {
 const isAdminRoute = createRouteMatcher(['/admin(.*)']);
 const isPublicAdminRoute = createRouteMatcher(['/admin/login']);
 
+// Authorized admin emails - ONLY these users can access admin
+const ADMIN_EMAILS = [
+  // TODO: Add your email and client's email here
+  // 'you@example.com',
+  // 'client@example.com',
+];
+
+// Or use user IDs if you prefer (more secure)
+const ADMIN_USER_IDS = [
+  // Add Clerk user IDs here after they sign up
+];
+
 // Clerk middleware with auth protection
 export const onRequest = clerkMiddleware(async (auth, context, next) => {
   const { request } = context;
@@ -90,6 +102,20 @@ export const onRequest = clerkMiddleware(async (auth, context, next) => {
     if (!authResult.userId) {
       // Not authenticated, redirect to login
       return context.redirect('/admin/login');
+    }
+    
+    // Check if user is authorized (by email or user ID)
+    const userEmail = authResult.sessionClaims?.email;
+    const userId = authResult.userId;
+    
+    const isAuthorized = ADMIN_EMAILS.includes(userEmail) || ADMIN_USER_IDS.includes(userId);
+    
+    if (!isAuthorized) {
+      console.warn(`[Admin] Unauthorized access attempt: ${userEmail || userId}`);
+      return new Response(
+        'Access Denied. You are not authorized to access the admin panel.',
+        { status: 403, headers: { 'Content-Type': 'text/plain' } }
+      );
     }
   }
 
