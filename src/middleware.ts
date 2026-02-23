@@ -98,19 +98,22 @@ export const onRequest = clerkMiddleware(async (auth, context, next) => {
 
   // Protect admin routes (except login pages)
   if (isAdminRoute(request) && !isPublicAdminRoute(request)) {
-    const authResult = auth();
+    let authResult;
+    try {
+      authResult = auth();
+    } catch (err) {
+      console.error('[Admin] Auth error:', err);
+      return context.redirect('/admin/login');
+    }
+    
     if (!authResult.userId) {
       // Not authenticated, redirect to login
       return context.redirect('/admin/login');
     }
     
-    // Check if user is authorized (by email or user ID)
+    // Check if user is authorized (by user ID - Clerk session claims don't include email)
     const userId = authResult.userId;
-    
-    // Note: Clerk session claims don't include email by default
-    // Authorization is done via user ID in ADMIN_USER_IDS
-    
-    const isAuthorized = ADMIN_EMAILS.includes(userEmail) || ADMIN_USER_IDS.includes(userId);
+    const isAuthorized = ADMIN_USER_IDS.includes(userId);
     
     if (!isAuthorized) {
       console.warn(`[Admin] Unauthorized access attempt: ${userId}`);
