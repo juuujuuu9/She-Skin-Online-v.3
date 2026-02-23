@@ -81,9 +81,8 @@ const isPublicAdminRoute = createRouteMatcher(['/admin/login']);
 
 // Authorized admin emails - ONLY these users can access admin
 const ADMIN_EMAILS = [
-  // TODO: Add your email and client's email here
-  // 'you@example.com',
-  // 'client@example.com',
+  'juju.hardee@gmail.com',
+  'jamessfarrell@gmail.com',
 ];
 
 // Or use user IDs if you prefer (more secure)
