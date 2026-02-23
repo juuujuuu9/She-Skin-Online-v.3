@@ -87,7 +87,8 @@ const ADMIN_EMAILS = [
 
 // Or use user IDs if you prefer (more secure)
 const ADMIN_USER_IDS = [
-  // Add Clerk user IDs here after they sign up
+  'user_3A3KSK7YJjVCi5FvALXuEP1BmRb',
+  'user_3A3JbHFyXcTBGi72It9AamcURVr',
 ];
 
 // Clerk middleware with auth protection
@@ -106,29 +107,15 @@ export const onRequest = clerkMiddleware(async (auth, context, next) => {
     // Check if user is authorized (by email or user ID)
     const userId = authResult.userId;
     
-    // Debug: log full session claims to find where email is
-    console.log('[Admin] Full session claims:', JSON.stringify(authResult.sessionClaims, null, 2));
-    
-    // Try to get email from session claims - check multiple possible locations
-    let userEmail = authResult.sessionClaims?.email 
-      || authResult.sessionClaims?.user?.email
-      || authResult.sessionClaims?.primary_email_address
-      || authResult.sessionClaims?.user?.primary_email_address;
-    
-    // Debug logging
-    console.log('[Admin] Auth check:', { userId, userEmail, allClaims: authResult.sessionClaims });
+    // Note: Clerk session claims don't include email by default
+    // Authorization is done via user ID in ADMIN_USER_IDS
     
     const isAuthorized = ADMIN_EMAILS.includes(userEmail) || ADMIN_USER_IDS.includes(userId);
     
     if (!isAuthorized) {
-      console.warn(`[Admin] Unauthorized access attempt: ${userEmail || userId}`);
-      const debugInfo = JSON.stringify({ 
-        userId, 
-        userEmail, 
-        sessionClaims: authResult.sessionClaims 
-      }, null, 2);
+      console.warn(`[Admin] Unauthorized access attempt: ${userId}`);
       return new Response(
-        `Access Denied. You are not authorized to access the admin panel.\n\nDebug Info:\n${debugInfo}`,
+        'Access Denied. You are not authorized to access the admin panel.',
         { status: 403, headers: { 'Content-Type': 'text/plain' } }
       );
     }
