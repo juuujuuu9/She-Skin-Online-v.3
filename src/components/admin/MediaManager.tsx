@@ -632,6 +632,7 @@ export default function MediaManager({ initialMedia = [] }: MediaManagerProps) {
           Loading...
         </div>
       )}
+      </div>
 
       {/* Delete confirmation modal */}
       {deleteConfirm && (

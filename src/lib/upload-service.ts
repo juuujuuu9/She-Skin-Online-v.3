@@ -460,3 +460,58 @@ export async function decrementRefCount(id: string): Promise<void> {
     })
     .where(eq(media.id, id));
 }
+
+/**
+ * Media manifest interface
+ */
+export interface MediaManifest {
+  pending: Array<{
+    id: string;
+    status: 'pending' | 'processing' | 'error';
+    createdAt: string;
+    [key: string]: unknown;
+  }>;
+  images: Record<string, {
+    id: string;
+    originalName: string;
+    createdAt: string;
+    metadata: { width?: number; height?: number };
+    variants: Record<string, { url: string; size: number }>;
+  }>;
+  audio: Record<string, {
+    id: string;
+    originalName: string;
+    createdAt: string;
+    metadata: { format?: string };
+    variants: { original?: { url: string; size: number } };
+  }>;
+  video: Record<string, {
+    id: string;
+    originalName: string;
+    createdAt: string;
+    metadata: { format?: string; duration?: number; width?: number; height?: number };
+    variants: { original?: { url: string; size: number } };
+  }>;
+}
+
+/**
+ * Load the media manifest from disk
+ */
+export async function loadManifest(): Promise<MediaManifest> {
+  const { readFile } = await import('fs/promises');
+  const { join } = await import('path');
+  
+  try {
+    const manifestPath = join(process.cwd(), 'public', 'data', 'media-manifest.json');
+    const content = await readFile(manifestPath, 'utf-8');
+    return JSON.parse(content);
+  } catch {
+    // Return empty manifest if file doesn't exist or can't be read
+    return {
+      pending: [],
+      images: {},
+      audio: {},
+      video: {},
+    };
+  }
+}
