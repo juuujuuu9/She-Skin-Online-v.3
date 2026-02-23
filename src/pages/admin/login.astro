@@ -52,8 +52,9 @@ const isSignedIn = !!clerkAuth.userId;
             <div class="h-10 bg-blue-600/30 rounded animate-pulse"></div>
           </div>
           <div id="clerk-signin-container" class="hidden">
+            <!-- Use client:only to prevent SSR hydration issues -->
             <SignIn
-              client:load
+              client:only="react"
               routing="path"
               path="/admin/login"
               fallbackRedirectUrl="/admin"
@@ -71,6 +72,10 @@ const isSignedIn = !!clerkAuth.userId;
                 }
               }}
             />
+          </div>
+          <!-- Error message container -->
+          <div id="clerk-error" class="hidden mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-md">
+            <p class="text-red-400 text-sm">Failed to load login form. Please refresh the page or try again later.</p>
           </div>
         </div>
       )}
@@ -107,22 +112,38 @@ const isSignedIn = !!clerkAuth.userId;
     // Show Clerk sign-in when it loads, hide loading skeleton
     const loadingEl = document.getElementById('clerk-loading');
     const signinContainer = document.getElementById('clerk-signin-container');
+    const errorEl = document.getElementById('clerk-error');
+
+    let checkCount = 0;
+    const maxChecks = 100; // 10 seconds max
 
     function checkClerkLoaded() {
+      checkCount++;
+      
       // Clerk adds elements to the DOM when loaded
       const clerkForm = document.querySelector('.cl-rootBox, .cl-card, [data-clerk-component]');
       if (clerkForm && signinContainer) {
         signinContainer.classList.remove('hidden');
         loadingEl?.remove();
-      } else {
-        // Check again in 100ms
-        setTimeout(checkClerkLoaded, 100);
+        return;
       }
+
+      // Check if we've exceeded max attempts
+      if (checkCount >= maxChecks) {
+        console.error('Clerk failed to load after 10 seconds');
+        loadingEl?.classList.add('hidden');
+        errorEl?.classList.remove('hidden');
+        return;
+      }
+
+      // Check again in 100ms
+      setTimeout(checkClerkLoaded, 100);
     }
 
     // Start checking for Clerk load
     if (signinContainer) {
-      setTimeout(checkClerkLoaded, 100);
+      // Delay initial check to allow client:only component to mount
+      setTimeout(checkClerkLoaded, 500);
     }
   </script>
 </Layout>

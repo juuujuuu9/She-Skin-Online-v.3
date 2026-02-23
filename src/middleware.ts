@@ -16,10 +16,10 @@ const CSP_DIRECTIVES = {
     "'unsafe-eval'",
     'https://*.clerk.accounts.dev',
     'https://clerk.sheskinv3.thoughtform.world',
-    'https://clerk.js',  // Clerk JS
-    'blob:',  // Required for Clerk web workers
+    'https://clerk.js',
+    'blob:',
   ],
-  'worker-src': ["'self'", 'blob:'],  // Clerk uses blob workers
+  'worker-src': ["'self'", 'blob:'],
   'style-src': [
     "'self'",
     "'unsafe-inline'",
@@ -79,13 +79,7 @@ function buildCSP(directives: Record<string, string[]>): string {
 const isAdminRoute = createRouteMatcher(['/admin(.*)']);
 const isPublicAdminRoute = createRouteMatcher(['/admin/login']);
 
-// Authorized admin emails - ONLY these users can access admin
-const ADMIN_EMAILS = [
-  'juju.hardee@gmail.com',
-  'jamessfarrell@gmail.com',
-];
-
-// Or use user IDs if you prefer (more secure)
+// Authorized admin user IDs - ONLY these users can access admin
 const ADMIN_USER_IDS = [
   'user_3A3KSK7YJjVCi5FvALXuEP1BmRb',
   'user_3A3JbHFyXcTBGi72It9AamcURVr',
@@ -112,7 +106,7 @@ export const onRequest = clerkMiddleware(async (auth, context, next) => {
       return context.redirect('/admin/login');
     }
     
-    // Check if user is authorized (by user ID - Clerk session claims don't include email)
+    // Check if user is authorized
     const userId = authResult.userId;
     const isAuthorized = ADMIN_USER_IDS.includes(userId);
     
