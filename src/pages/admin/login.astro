@@ -42,27 +42,36 @@ const isSignedIn = !!clerkAuth.userId;
           </div>
         </div>
       ) : (
-        <!-- Show sign in form -->
+        <!-- Show sign in form with loading state -->
         <div class="bg-[#1a1a1a] border border-[#333] rounded-xl p-6">
-          <SignIn
-            client:load
-            routing="path"
-            path="/admin/login"
-            redirectUrl="/admin"
-            appearance={{
-              elements: {
-                formButtonPrimary: 'bg-blue-600 hover:bg-blue-700 text-white',
-                card: 'bg-transparent shadow-none',
-                headerTitle: 'text-white',
-                headerSubtitle: 'text-gray-400',
-                formFieldLabel: 'text-gray-300',
-                formFieldInput: 'bg-[#222] border-[#444] text-white rounded-md',
-                footerActionLink: 'text-blue-400 hover:text-blue-300',
-                identityPreview: 'bg-[#222] border-[#444] text-white',
-                alert: 'bg-red-500/10 border-red-500/20 text-red-400',
-              }
-            }}
-          />
+          <!-- Loading skeleton shown while Clerk initializes -->
+          <div id="clerk-loading" class="space-y-4">
+            <div class="h-8 bg-[#222] rounded animate-pulse"></div>
+            <div class="h-12 bg-[#222] rounded animate-pulse"></div>
+            <div class="h-12 bg-[#222] rounded animate-pulse"></div>
+            <div class="h-10 bg-blue-600/30 rounded animate-pulse"></div>
+          </div>
+          <div id="clerk-signin-container" class="hidden">
+            <SignIn
+              client:load
+              routing="path"
+              path="/admin/login"
+              fallbackRedirectUrl="/admin"
+              appearance={{
+                elements: {
+                  formButtonPrimary: 'bg-blue-600 hover:bg-blue-700 text-white',
+                  card: 'bg-transparent shadow-none',
+                  headerTitle: 'text-white',
+                  headerSubtitle: 'text-gray-400',
+                  formFieldLabel: 'text-gray-300',
+                  formFieldInput: 'bg-[#222] border-[#444] text-white rounded-md',
+                  footerActionLink: 'text-blue-400 hover:text-blue-300',
+                  identityPreview: 'bg-[#222] border-[#444] text-white',
+                  alert: 'bg-red-500/10 border-red-500/20 text-red-400',
+                }
+              }}
+            />
+          </div>
         </div>
       )}
 
@@ -94,5 +103,26 @@ const isSignedIn = !!clerkAuth.userId;
         window.location.reload();
       }
     });
+
+    // Show Clerk sign-in when it loads, hide loading skeleton
+    const loadingEl = document.getElementById('clerk-loading');
+    const signinContainer = document.getElementById('clerk-signin-container');
+
+    function checkClerkLoaded() {
+      // Clerk adds elements to the DOM when loaded
+      const clerkForm = document.querySelector('.cl-rootBox, .cl-card, [data-clerk-component]');
+      if (clerkForm && signinContainer) {
+        signinContainer.classList.remove('hidden');
+        loadingEl?.remove();
+      } else {
+        // Check again in 100ms
+        setTimeout(checkClerkLoaded, 100);
+      }
+    }
+
+    // Start checking for Clerk load
+    if (signinContainer) {
+      setTimeout(checkClerkLoaded, 100);
+    }
   </script>
 </Layout>
