@@ -379,11 +379,11 @@ const formatBytes = (bytes: number) => {
         });
       }
 
-      const deleteBtn = div.querySelector('.delete-btn') as HTMLButtonElement;
-      if (deleteBtn) {
-        deleteBtn.addEventListener('click', async (e) => {
+      const deleteButton = div.querySelector('.delete-btn') as HTMLButtonElement;
+      if (deleteButton) {
+        deleteButton.addEventListener('click', async (e) => {
           e.stopPropagation();
-          const id = deleteBtn.getAttribute('data-id');
+          const id = deleteButton.getAttribute('data-id');
           if (!id || !confirm('Delete this file?')) return;
 
           const csrfMatch = document.cookie.match(/csrf_token=([^;]+)/);
