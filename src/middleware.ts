@@ -111,24 +111,33 @@ export const onRequest = clerkMiddleware(async (auth, context, next) => {
     let userEmail = authResult.sessionClaims?.email || authResult.sessionClaims?.user?.email;
     
     // If email not in claims, fetch from Clerk
+    let fetchError = null;
+    let userData = null;
     if (!userEmail && userId) {
       try {
-        const user = await clerkClient.users.getUser(userId);
-        userEmail = user.emailAddresses[0]?.emailAddress;
+        userData = await clerkClient.users.getUser(userId);
+        console.log('[Admin] Clerk user data:', JSON.stringify({
+          id: userData.id,
+          emailAddresses: userData.emailAddresses,
+          primaryEmailAddressId: userData.primaryEmailAddressId,
+        }));
+        userEmail = userData.emailAddresses?.[0]?.emailAddress;
       } catch (err) {
-        console.error('[Admin] Failed to fetch user from Clerk:', err);
+        fetchError = err instanceof Error ? err.message : String(err);
+        console.error('[Admin] Failed to fetch user from Clerk:', fetchError);
       }
     }
     
     // Debug logging
-    console.log('[Admin] Auth check:', { userId, userEmail });
+    console.log('[Admin] Auth check:', { userId, userEmail, hasClaims: !!authResult.sessionClaims, fetchError });
     
     const isAuthorized = ADMIN_EMAILS.includes(userEmail) || ADMIN_USER_IDS.includes(userId);
     
     if (!isAuthorized) {
       console.warn(`[Admin] Unauthorized access attempt: ${userEmail || userId}`);
+      const debugInfo = JSON.stringify({ userId, userEmail, hasClaims: !!authResult.sessionClaims, fetchError }, null, 2);
       return new Response(
-        `Access Denied. You are not authorized to access the admin panel. Email: ${userEmail || 'unknown'}`,
+        `Access Denied. You are not authorized to access the admin panel.\n\nDebug Info:\n${debugInfo}`,
         { status: 403, headers: { 'Content-Type': 'text/plain' } }
       );
     }
