@@ -7,6 +7,10 @@ export const prerender = false;
 
 import Layout from '@layouts/Layout.astro';
 import { SignIn } from '@clerk/astro/react';
+
+// Check if user is already signed in server-side
+const clerkAuth = Astro.locals.auth();
+const isSignedIn = !!clerkAuth.userId;
 ---
 
 <Layout title="Admin Login - she_skin">
@@ -16,30 +20,52 @@ import { SignIn } from '@clerk/astro/react';
         <h2 class="text-3xl font-bold text-white">she_skin Admin</h2>
         <p class="mt-2 text-gray-400">Media Management Dashboard</p>
       </div>
-      
-      <div class="bg-[#1a1a1a] border border-[#333] rounded-xl p-6">
-        <SignIn
-          client:load
-          routing="path"
-          path="/admin/login"
-          signUpUrl={null}
-          redirectUrl="/admin"
-          appearance={{
-            elements: {
-              formButtonPrimary: 'bg-blue-600 hover:bg-blue-700 text-white',
-              card: 'bg-transparent shadow-none',
-              headerTitle: 'text-white',
-              headerSubtitle: 'text-gray-400',
-              formFieldLabel: 'text-gray-300',
-              formFieldInput: 'bg-[#222] border-[#444] text-white rounded-md',
-              footerActionLink: 'text-blue-400 hover:text-blue-300',
-              identityPreview: 'bg-[#222] border-[#444] text-white',
-              alert: 'bg-red-500/10 border-red-500/20 text-red-400',
-            }
-          }}
-        />
-      </div>
-      
+
+      {isSignedIn ? (
+        <!-- User is already signed in - show options -->
+        <div class="bg-[#1a1a1a] border border-[#333] rounded-xl p-6 text-center">
+          <p class="text-gray-300 mb-4">You are already signed in.</p>
+          <div class="flex flex-col gap-3">
+            <a
+              href="/admin"
+              class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+            >
+              Go to Admin Dashboard
+            </a>
+            <button
+              id="login-page-logout-btn"
+              type="button"
+              class="w-full border border-[#444] hover:bg-[#222] text-gray-300 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+            >
+              Sign Out
+            </button>
+          </div>
+        </div>
+      ) : (
+        <!-- Show sign in form -->
+        <div class="bg-[#1a1a1a] border border-[#333] rounded-xl p-6">
+          <SignIn
+            client:load
+            routing="path"
+            path="/admin/login"
+            redirectUrl="/admin"
+            appearance={{
+              elements: {
+                formButtonPrimary: 'bg-blue-600 hover:bg-blue-700 text-white',
+                card: 'bg-transparent shadow-none',
+                headerTitle: 'text-white',
+                headerSubtitle: 'text-gray-400',
+                formFieldLabel: 'text-gray-300',
+                formFieldInput: 'bg-[#222] border-[#444] text-white rounded-md',
+                footerActionLink: 'text-blue-400 hover:text-blue-300',
+                identityPreview: 'bg-[#222] border-[#444] text-white',
+                alert: 'bg-red-500/10 border-red-500/20 text-red-400',
+              }
+            }}
+          />
+        </div>
+      )}
+
       <div class="text-center mt-6">
         <a href="/" class="text-sm text-gray-500 hover:text-gray-300 transition-colors">
           ← Back to site
@@ -47,4 +73,26 @@ import { SignIn } from '@clerk/astro/react';
       </div>
     </div>
   </div>
+
+  <script>
+    // Handle logout button on login page (for already-signed-in users)
+    document.getElementById('login-page-logout-btn')?.addEventListener('click', async () => {
+      const btn = document.getElementById('login-page-logout-btn') as HTMLButtonElement | null;
+      if (btn) {
+        btn.textContent = 'Signing out...';
+        btn.disabled = true;
+      }
+
+      try {
+        if (typeof window.Clerk !== 'undefined') {
+          await window.Clerk.signOut();
+          // Reload the page to show the sign-in form
+          window.location.reload();
+        }
+      } catch (err) {
+        console.error('Sign out error:', err);
+        window.location.reload();
+      }
+    });
+  </script>
 </Layout>
