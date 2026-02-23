@@ -26,6 +26,9 @@ const categoryProp = category as WorkCategory;
 // Single source: database for all categories
 const gridItems = await getWorksForGrid(categoryProp);
 
+// Diagnostic logging for production troubleshooting
+console.log(`[Works Category] ${categoryProp}: fetched ${gridItems.length} works`);
+
 // Category display config
 const categoryConfig = {
   audio: {

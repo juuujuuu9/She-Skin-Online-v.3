@@ -505,7 +505,11 @@ export interface CollaborationItem {
 /** Get all works by category */
 export async function getWorksByCategory(category: string): Promise<WorkWithMedia[]> {
   const results = await db.query.works.findMany({
-    where: and(eq(works.category, category), eq(works.published, true)),
+    where: and(
+      eq(works.category, category),
+      eq(works.published, true),
+      isNull(works.deletedAt)
+    ),
     orderBy: [asc(works.sortOrder), desc(works.createdAt)],
     with: {
       media: {
@@ -519,7 +523,7 @@ export async function getWorksByCategory(category: string): Promise<WorkWithMedi
 /** Get single work by slug */
 export async function getWorkBySlug(slug: string): Promise<WorkWithMedia | null> {
   const result = await db.query.works.findFirst({
-    where: eq(works.slug, slug),
+    where: and(eq(works.slug, slug), isNull(works.deletedAt)),
     with: {
       media: {
         orderBy: [asc(workMedia.sortOrder)],
@@ -532,7 +536,7 @@ export async function getWorkBySlug(slug: string): Promise<WorkWithMedia | null>
 /** Get single work by id */
 export async function getWorkById(id: string): Promise<WorkWithMedia | null> {
   const result = await db.query.works.findFirst({
-    where: eq(works.id, id),
+    where: and(eq(works.id, id), isNull(works.deletedAt)),
     with: {
       media: {
         orderBy: [asc(workMedia.sortOrder)],
@@ -545,7 +549,11 @@ export async function getWorkById(id: string): Promise<WorkWithMedia | null> {
 /** Get audio works with media and audioTrack (for admin audio list) */
 export async function getAudioWorks(): Promise<WorkWithMediaAndAudio[]> {
   const results = await db.query.works.findMany({
-    where: and(eq(works.category, 'audio'), eq(works.published, true)),
+    where: and(
+      eq(works.category, 'audio'),
+      eq(works.published, true),
+      isNull(works.deletedAt)
+    ),
     orderBy: [desc(works.createdAt)],
     with: {
       media: { orderBy: [asc(workMedia.sortOrder)] },

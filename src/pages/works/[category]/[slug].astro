@@ -27,6 +27,9 @@ const categoryProp = category as WorkCategory;
 // Fetch the work from database
 const work = await getWorkBySlug(slug);
 
+// Diagnostic logging for production troubleshooting
+console.log(`[Work Detail] ${categoryProp}/${slug}: work ${work ? 'found' : 'NOT found'}`);
+
 // If work not found, or category doesn't match, redirect to 404
 if (!work || work.category !== categoryProp) {
   return Astro.redirect('/404');
