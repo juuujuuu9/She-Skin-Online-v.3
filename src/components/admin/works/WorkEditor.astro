@@ -377,24 +377,6 @@ const saveButtonText = isEditMode ? 'Update Work' : 'Save Work';
 
     function closeMediaModal() {
       mediaModal?.classList.add('hidden');
-  // Media selection handler
-  window.addEventListener('mediaSelected', ((e: CustomEvent) => {
-    const media = e.detail;
-    const id = media.id;
-    const url = media.variants?.sm?.url || media.variants?.md?.url || media.url;
-
-    if (selectedMediaIds.includes(id)) {
-      selectedMediaIds = selectedMediaIds.filter(mid => mid !== id);
-      selectedMediaItems = selectedMediaItems.filter(item => item.id !== id);
-    } else {
-      selectedMediaIds.push(id);
-      selectedMediaItems.push({ id, url, type: 'image' });
-    }
-
-    updateMediaPreview();
-  }) as EventListener);
-
-    if (!media) return;
       document.body.style.overflow = '';
     }
 
@@ -414,6 +396,31 @@ const saveButtonText = isEditMode ? 'Update Work' : 'Save Work';
     }
   });
 
+  // Media selection handler
+  window.addEventListener('mediaSelected', ((e: CustomEvent) => {
+    const media = e.detail;
+    const id = media.id;
+    const url = media.variants?.sm?.url || media.variants?.md?.url || media.url;
+
+    if (selectedMediaIds.includes(id)) {
+      selectedMediaIds = selectedMediaIds.filter(mid => mid !== id);
+      selectedMediaItems = selectedMediaItems.filter(item => item.id !== id);
+    } else {
+      selectedMediaIds.push(id);
+      selectedMediaItems.push({ id, url, type: 'image' });
+    }
+
+    updateMediaPreview();
+
+    // Close the modal after selection
+    document.getElementById('media-modal')?.classList.add('hidden');
+    document.body.style.overflow = '';
+  }) as EventListener);
+
+  function updateMediaPreview() {
+    if (selectedMediaItems.length === 0) {
+      mediaPreview?.classList.add('hidden');
+    } else {
       mediaPreview?.classList.remove('hidden');
       if (mediaPreviewGrid) {
         mediaPreviewGrid.innerHTML = '';
@@ -431,8 +438,9 @@ const saveButtonText = isEditMode ? 'Update Work' : 'Save Work';
         }
       }
     }
+  }
 
-    function clearMediaSelection() {
+  function clearMediaSelection() {
       selectedMediaIds = [];
       selectedMediaItems = [];
       updateMediaPreview();

@@ -45,3 +45,4 @@ public/media/digital/*
 *.log
 npm-debug.log*
 tmp/
+.vercel

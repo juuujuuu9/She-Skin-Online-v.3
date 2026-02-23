@@ -1232,7 +1232,7 @@ const physicalWorks = await getWorksForGrid('physical');
       setGalleryFilter(null);
     }
 
-    // Load media for modal
+    // Load media for modal from API (like MediaManager)
     async function loadMediaGallery() {
       const loadingEl = document.getElementById('modal-media-loading') as HTMLElement;
       const emptyEl = document.getElementById('modal-media-empty') as HTMLElement;
@@ -1243,13 +1243,14 @@ const physicalWorks = await getWorksForGrid('physical');
       gridEl.classList.add('hidden');
 
       try {
-        const res = await fetch('/data/media-manifest.json', { credentials: 'include' });
+        // Use the same API endpoint as MediaManager
+        const res = await fetch('/api/admin/media?limit=100&type=image', { credentials: 'include' });
         if (!res.ok) throw new Error('Failed to load media');
 
-        const manifest = await res.json();
-        const images = Object.values(manifest.images || {}).sort((a: any, b: any) => {
+        const data = await res.json();
+        const images = (data.media || []).sort((a: any, b: any) => {
           return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        }) as any[];
+        });
 
         renderMediaGrid(images);
       } catch (e) {
@@ -1275,8 +1276,12 @@ const physicalWorks = await getWorksForGrid('physical');
       emptyEl.classList.add('hidden');
       gridEl.classList.remove('hidden');
 
-      gridEl.innerHTML = images.map((img: {id: string; variants: Record<string, {url?: string}>; originalName: string}) => {
-        const imageUrl = img.variants.md?.url || img.variants.sm?.url || Object.values(img.variants)[0]?.url || '';
+      gridEl.innerHTML = images.map((img: {id: string; url?: string; variants?: Record<string, {url?: string}>; filename?: string; originalName?: string}) => {
+        // Handle both API format (url) and manifest format (variants)
+        let imageUrl = img.url;
+        if (!imageUrl && img.variants) {
+          imageUrl = img.variants.md?.url || img.variants.sm?.url || Object.values(img.variants)[0]?.url || '';
+        }
         const fullUrl = imageUrl?.startsWith('http') ? imageUrl : `${window.location.origin}${imageUrl}`;
         const isSelected = selectedMediaIds.includes(img.id);
         
