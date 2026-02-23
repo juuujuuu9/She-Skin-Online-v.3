@@ -10,13 +10,18 @@ import type { APIRoute } from 'astro';
 import { db } from '@lib/db';
 import { audioPosts } from '@lib/db/schema';
 import { eq, desc, and, isNull } from 'drizzle-orm';
-import { requireAdminAuth } from '@lib/admin-auth';
 import { nanoid } from '@lib/nanoid';
 
 // GET: List all audio posts
-export const GET: APIRoute = async ({ request }) => {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+export const GET: APIRoute = async ({ locals }) => {
+  // Auth is handled by Clerk middleware
+  const auth = locals.auth();
+  if (!auth.userId) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 
   try {
     const posts = await db.query.audioPosts.findMany({
@@ -38,9 +43,15 @@ export const GET: APIRoute = async ({ request }) => {
 };
 
 // POST: Create new audio post
-export const POST: APIRoute = async ({ request }) => {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+export const POST: APIRoute = async ({ request, locals }) => {
+  // Auth is handled by Clerk middleware
+  const auth = locals.auth();
+  if (!auth.userId) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 
   try {
     const body = await request.json();
@@ -106,9 +117,15 @@ export const POST: APIRoute = async ({ request }) => {
 };
 
 // PUT: Update existing audio post
-export const PUT: APIRoute = async ({ request }) => {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+export const PUT: APIRoute = async ({ request, locals }) => {
+  // Auth is handled by Clerk middleware
+  const auth = locals.auth();
+  if (!auth.userId) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 
   try {
     const body = await request.json();
@@ -180,9 +197,15 @@ export const PUT: APIRoute = async ({ request }) => {
 };
 
 // DELETE: Soft delete audio post
-export const DELETE: APIRoute = async ({ request, url }) => {
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+export const DELETE: APIRoute = async ({ request, url, locals }) => {
+  // Auth is handled by Clerk middleware
+  const auth = locals.auth();
+  if (!auth.userId) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 
   const id = url.searchParams.get('id');
 

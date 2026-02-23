@@ -9,15 +9,19 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { requireAdminAuth } from '@lib/admin-auth';
 import { validateCsrfToken } from '@lib/csrf';
 import { uploadMedia, listMedia, getMedia } from '@lib/upload-service';
 
 // POST: Upload new media
-export const POST: APIRoute = async ({ request }) => {
-  // Check auth
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+export const POST: APIRoute = async ({ request, locals }) => {
+  // Auth is handled by Clerk middleware
+  const auth = locals.auth();
+  if (!auth.userId) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 
   // Check CSRF
   if (!validateCsrfToken(request)) {
@@ -69,10 +73,15 @@ export const POST: APIRoute = async ({ request }) => {
 };
 
 // GET: List media or get single item
-export const GET: APIRoute = async ({ request, url }) => {
-  // Check auth
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+export const GET: APIRoute = async ({ request, url, locals }) => {
+  // Auth is handled by Clerk middleware
+  const auth = locals.auth();
+  if (!auth.userId) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 
   const id = url.searchParams.get('id');
 

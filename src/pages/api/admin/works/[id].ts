@@ -7,7 +7,6 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { checkAdminAuth } from '@lib/admin-auth';
 import { validateCsrfToken } from '@lib/csrf';
 import { softDeleteWork, hardDeleteWork, restoreWork } from '@lib/db/queries';
 import { db } from '@lib/db';
@@ -15,9 +14,10 @@ import { works } from '@lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { validateParam, idSchema, deleteWorkSchema, validateQuery } from '@lib/validation';
 
-export const DELETE: APIRoute = async ({ request, params }) => {
-  const auth = await checkAdminAuth(request);
-  if (!auth.valid) {
+export const DELETE: APIRoute = async ({ request, params, locals }) => {
+  // Auth is handled by Clerk middleware
+  const auth = locals.auth();
+  if (!auth.userId) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
       headers: { 'Content-Type': 'application/json' },
@@ -74,7 +74,7 @@ export const DELETE: APIRoute = async ({ request, params }) => {
       );
     } else {
       // Soft delete (default)
-      const success = await softDeleteWork(id, auth.userId || 'unknown');
+      const success = await softDeleteWork(id, auth.userId);
       
       if (!success) {
         return new Response(JSON.stringify({ error: 'Work not found' }), {
@@ -98,9 +98,10 @@ export const DELETE: APIRoute = async ({ request, params }) => {
 };
 
 /** Restore a soft-deleted work */
-export const POST: APIRoute = async ({ request, params }) => {
-  const auth = await checkAdminAuth(request);
-  if (!auth.valid) {
+export const POST: APIRoute = async ({ request, params, locals }) => {
+  // Auth is handled by Clerk middleware
+  const auth = locals.auth();
+  if (!auth.userId) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
       headers: { 'Content-Type': 'application/json' },

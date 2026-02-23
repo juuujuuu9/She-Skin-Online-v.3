@@ -2,10 +2,9 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { validateCsrfToken } from '@lib/csrf';
-import { requireAdminAuth } from '@lib/admin-auth';
 import { setHomepageVideo, clearHomepageVideo, getHomepageVideo } from '@lib/db/queries';
 
-export const GET: APIRoute = async ({ request }) => {
+export const GET: APIRoute = async () => {
   const video = await getHomepageVideo();
   return new Response(JSON.stringify({ video }), {
     status: 200,
@@ -13,7 +12,7 @@ export const GET: APIRoute = async ({ request }) => {
   });
 };
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
   // 1. CSRF first
   if (!validateCsrfToken(request)) {
     return new Response(JSON.stringify({ error: 'Invalid CSRF token' }), {
@@ -22,9 +21,14 @@ export const POST: APIRoute = async ({ request }) => {
     });
   }
 
-  // 2. Auth second
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  // 2. Auth is handled by Clerk middleware
+  const auth = locals.auth();
+  if (!auth.userId) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 
   // 3. Handle request
   try {
@@ -59,7 +63,7 @@ export const POST: APIRoute = async ({ request }) => {
   }
 };
 
-export const DELETE: APIRoute = async ({ request }) => {
+export const DELETE: APIRoute = async ({ request, locals }) => {
   // 1. CSRF first
   if (!validateCsrfToken(request)) {
     return new Response(JSON.stringify({ error: 'Invalid CSRF token' }), {
@@ -68,9 +72,14 @@ export const DELETE: APIRoute = async ({ request }) => {
     });
   }
 
-  // 2. Auth second
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+  // 2. Auth is handled by Clerk middleware
+  const auth = locals.auth();
+  if (!auth.userId) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 
   // 3. Clear video
   await clearHomepageVideo();

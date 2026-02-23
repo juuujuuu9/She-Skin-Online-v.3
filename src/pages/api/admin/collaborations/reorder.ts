@@ -6,15 +6,14 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { checkAdminAuth } from '@lib/admin-auth';
 import { db } from '@lib/db';
 import { works } from '@lib/db/schema';
 import { eq } from 'drizzle-orm';
 
-export const POST: APIRoute = async ({ request }) => {
-  // Check auth
-  const auth = await checkAdminAuth(request);
-  if (!auth.valid) {
+export const POST: APIRoute = async ({ request, locals }) => {
+  // Auth is handled by Clerk middleware
+  const auth = locals.auth();
+  if (!auth.userId) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
       headers: { 'Content-Type': 'application/json' },

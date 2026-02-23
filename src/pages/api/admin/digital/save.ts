@@ -5,14 +5,14 @@ export const prerender = false;
  */
 
 import type { APIRoute } from 'astro';
-import { checkAdminAuth } from '@lib/admin-auth';
 import { createWork, updateWork, getWorkBySlug, addWorkMedia, updateWorkMedia } from '@lib/db/queries';
 
 type DigitalItem = { id?: string; slug: string; title: string; year: number; forSale: boolean; image: string };
 
-export const POST: APIRoute = async ({ request }) => {
-  const auth = await checkAdminAuth(request);
-  if (!auth.valid) {
+export const POST: APIRoute = async ({ request, locals }) => {
+  // Auth is handled by Clerk middleware
+  const auth = locals.auth();
+  if (!auth.userId) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
       headers: { 'Content-Type': 'application/json' },

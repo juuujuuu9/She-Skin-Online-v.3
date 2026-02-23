@@ -9,7 +9,6 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { checkAdminAuth } from '@lib/admin-auth';
 import { validateCsrfToken } from '@lib/csrf';
 import { createWork, updateWork, getWorkById, addWorkMedia, updateWorkMedia, deleteWorkMedia, deleteWork } from '@lib/db/queries';
 import { incrementRefCount, decrementRefCount } from '@lib/upload-service';
@@ -33,10 +32,10 @@ const workSchema = z.object({
 });
 
 // GET - Fetch a single work by ID
-export const GET: APIRoute = async ({ request }) => {
-  // Check auth
-  const auth = await checkAdminAuth(request);
-  if (!auth.valid) {
+export const GET: APIRoute = async ({ request, locals }) => {
+  // Auth is handled by Clerk middleware, but we double-check here
+  const auth = locals.auth();
+  if (!auth.userId) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
       headers: { 'Content-Type': 'application/json' },
@@ -77,10 +76,10 @@ export const GET: APIRoute = async ({ request }) => {
 };
 
 // DELETE - Delete a work
-export const DELETE: APIRoute = async ({ request }) => {
-  // Check auth
-  const auth = await checkAdminAuth(request);
-  if (!auth.valid) {
+export const DELETE: APIRoute = async ({ request, locals }) => {
+  // Auth is handled by Clerk middleware
+  const auth = locals.auth();
+  if (!auth.userId) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
       headers: { 'Content-Type': 'application/json' },
@@ -132,10 +131,10 @@ export const DELETE: APIRoute = async ({ request }) => {
   }
 };
 
-export const POST: APIRoute = async ({ request }) => {
-  // Check auth
-  const auth = await checkAdminAuth(request);
-  if (!auth.valid) {
+export const POST: APIRoute = async ({ request, locals }) => {
+  // Auth is handled by Clerk middleware
+  const auth = locals.auth();
+  if (!auth.userId) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
       headers: { 'Content-Type': 'application/json' },
@@ -231,10 +230,10 @@ export const POST: APIRoute = async ({ request }) => {
   }
 };
 
-export const PUT: APIRoute = async ({ request }) => {
-  // Check auth
-  const auth = await checkAdminAuth(request);
-  if (!auth.valid) {
+export const PUT: APIRoute = async ({ request, locals }) => {
+  // Auth is handled by Clerk middleware
+  const auth = locals.auth();
+  if (!auth.userId) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
       headers: { 'Content-Type': 'application/json' },

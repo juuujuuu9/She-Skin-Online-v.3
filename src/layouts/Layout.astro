@@ -4,7 +4,6 @@ import 'lenis/dist/lenis.css';
 import { ClientRouter } from 'astro:transitions';
 import { AudioPlayer } from '@components/AudioPlayer';
 import { LenisSmoothScroll } from '@components/Lenis';
-import { checkAdminAuth } from '@lib/admin-auth';
 
 interface Props {
   title: string;
@@ -16,8 +15,8 @@ interface Props {
 
 const { title, description = 'SheSkin — Artist Portfolio & Shop', hideHeader = false, transparentHeader = false, neonGreenMenu = false } = Astro.props;
 
-const auth = await checkAdminAuth(Astro.request);
-const isAdminPage = auth.valid && Astro.url.pathname.startsWith('/admin');
+// Detect admin pages by URL path (Clerk handles auth in middleware)
+const isAdminPage = Astro.url.pathname.startsWith('/admin');
 
 const navItems = [
   { href: '/shop', label: 'Shop' },

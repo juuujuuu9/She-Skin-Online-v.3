@@ -1,11 +1,10 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { checkAdminAuth } from '@lib/admin-auth';
 import { validateCsrfToken } from '@lib/csrf';
 import { uploadMedia } from '@lib/upload-service';
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
   // Check CSRF first
   if (!validateCsrfToken(request)) {
     return new Response(
@@ -14,11 +13,11 @@ export const POST: APIRoute = async ({ request }) => {
     );
   }
 
-  // Check auth
-  const auth = await checkAdminAuth(request);
-  if (!auth.valid) {
+  // Auth is handled by Clerk middleware
+  const auth = locals.auth();
+  if (!auth.userId) {
     return new Response(
-      JSON.stringify({ error: 'Unauthorized', reason: auth.debug || 'unknown' }),
+      JSON.stringify({ error: 'Unauthorized' }),
       { status: 401, headers: { 'Content-Type': 'application/json' } }
     );
   }

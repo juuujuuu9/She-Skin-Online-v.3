@@ -6,7 +6,6 @@
  */
 
 import type { APIRoute } from 'astro';
-import { checkAdminAuth } from '@lib/admin-auth';
 import { uploadToBunny } from '@lib/bunny';
 import { createWork, addWorkMedia, insertAudioTrack } from '@lib/db/queries';
 import { db } from '@lib/db';
@@ -14,9 +13,10 @@ import { media } from '@lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { incrementRefCount } from '@lib/upload-service';
 
-export const POST: APIRoute = async ({ request }) => {
-  const auth = await checkAdminAuth(request);
-  if (!auth.valid) {
+export const POST: APIRoute = async ({ request, locals }) => {
+  // Auth is handled by Clerk middleware
+  const auth = locals.auth();
+  if (!auth.userId) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
       headers: { 'Content-Type': 'application/json' },

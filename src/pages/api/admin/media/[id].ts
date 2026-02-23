@@ -8,15 +8,19 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { requireAdminAuth } from '@lib/admin-auth';
 import { validateCsrfToken } from '@lib/csrf';
 import { deleteMedia, updateMedia, getMedia } from '@lib/upload-service';
 
 // DELETE: Delete media item
-export const DELETE: APIRoute = async ({ request, params }) => {
-  // Check auth
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+export const DELETE: APIRoute = async ({ request, params, locals }) => {
+  // Auth is handled by Clerk middleware
+  const auth = locals.auth();
+  if (!auth.userId) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 
   // Check CSRF
   if (!validateCsrfToken(request)) {
@@ -73,10 +77,15 @@ export const DELETE: APIRoute = async ({ request, params }) => {
 };
 
 // PATCH: Update media metadata
-export const PATCH: APIRoute = async ({ request, params }) => {
-  // Check auth
-  const authError = await requireAdminAuth(request);
-  if (authError) return authError;
+export const PATCH: APIRoute = async ({ request, params, locals }) => {
+  // Auth is handled by Clerk middleware
+  const auth = locals.auth();
+  if (!auth.userId) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 
   const { id } = params;
   if (!id) {
