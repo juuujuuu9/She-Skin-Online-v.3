@@ -104,8 +104,12 @@ export const onRequest = clerkMiddleware(async (auth, context, next) => {
     }
     
     // Check if user is authorized (by email or user ID)
-    const userEmail = authResult.sessionClaims?.email;
+    // Clerk session claims may have email in different locations
+    const userEmail = authResult.sessionClaims?.email || authResult.sessionClaims?.user?.email;
     const userId = authResult.userId;
+    
+    // Debug logging to see what's in session claims
+    console.log('[Admin] Auth check:', { userId, userEmail, sessionClaims: authResult.sessionClaims });
     
     const isAuthorized = ADMIN_EMAILS.includes(userEmail) || ADMIN_USER_IDS.includes(userId);
     
