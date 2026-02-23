@@ -6,6 +6,7 @@
 
 import { clerkMiddleware } from '@clerk/astro/server';
 import { createRouteMatcher } from '@clerk/astro/server';
+import { clerkClient } from '@clerk/astro/server';
 
 // Content Security Policy
 const CSP_DIRECTIVES = {
@@ -104,19 +105,30 @@ export const onRequest = clerkMiddleware(async (auth, context, next) => {
     }
     
     // Check if user is authorized (by email or user ID)
-    // Clerk session claims may have email in different locations
-    const userEmail = authResult.sessionClaims?.email || authResult.sessionClaims?.user?.email;
     const userId = authResult.userId;
     
-    // Debug logging to see what's in session claims
-    console.log('[Admin] Auth check:', { userId, userEmail, sessionClaims: authResult.sessionClaims });
+    // Try to get email from session claims first, then fall back to fetching user
+    let userEmail = authResult.sessionClaims?.email || authResult.sessionClaims?.user?.email;
+    
+    // If email not in claims, fetch from Clerk
+    if (!userEmail && userId) {
+      try {
+        const user = await clerkClient.users.getUser(userId);
+        userEmail = user.emailAddresses[0]?.emailAddress;
+      } catch (err) {
+        console.error('[Admin] Failed to fetch user from Clerk:', err);
+      }
+    }
+    
+    // Debug logging
+    console.log('[Admin] Auth check:', { userId, userEmail });
     
     const isAuthorized = ADMIN_EMAILS.includes(userEmail) || ADMIN_USER_IDS.includes(userId);
     
     if (!isAuthorized) {
       console.warn(`[Admin] Unauthorized access attempt: ${userEmail || userId}`);
       return new Response(
-        'Access Denied. You are not authorized to access the admin panel.',
+        `Access Denied. You are not authorized to access the admin panel. Email: ${userEmail || 'unknown'}`,
         { status: 403, headers: { 'Content-Type': 'text/plain' } }
       );
     }
