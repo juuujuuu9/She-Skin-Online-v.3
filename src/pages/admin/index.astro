@@ -292,7 +292,8 @@ const formatBytes = (bytes: number) => {
         xhr.addEventListener('abort', () => reject(new Error('Upload aborted')));
 
         xhr.open('POST', '/api/admin/media/upload', true);
-        xhr.setRequestHeader('X-CSRF-Token', document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '');
+        const csrfMatch = document.cookie.match(/csrf_token=([^;]+)/);
+        xhr.setRequestHeader('X-CSRF-Token', csrfMatch ? decodeURIComponent(csrfMatch[1]) : '');
         xhr.withCredentials = true;
         xhr.send(formData);
       });
@@ -386,7 +387,7 @@ const formatBytes = (bytes: number) => {
           if (!id || !confirm('Delete this file?')) return;
 
           const csrfMatch = document.cookie.match(/csrf_token=([^;]+)/);
-          const csrfToken = csrfMatch ? csrfMatch[1] : '';
+          const csrfToken = csrfMatch ? decodeURIComponent(csrfMatch[1]) : '';
 
           try {
             const res = await fetch('/api/admin/media/' + id, {
@@ -663,7 +664,7 @@ const formatBytes = (bytes: number) => {
       const forceDelete = confirm('Items that are in use will not be deleted. Click OK to force delete all items anyway.');
 
       const csrfMatch = document.cookie.match(/csrf_token=([^;]+)/);
-      const csrfToken = csrfMatch ? csrfMatch[1] : '';
+      const csrfToken = csrfMatch ? decodeURIComponent(csrfMatch[1]) : '';
 
       let deletedCount = 0;
       let failedCount = 0;
@@ -718,7 +719,7 @@ const formatBytes = (bytes: number) => {
       if (!id || !confirm('Delete this file?')) return;
 
       const csrfMatch = document.cookie.match(/csrf_token=([^;]+)/);
-      const csrfToken = csrfMatch ? csrfMatch[1] : '';
+      const csrfToken = csrfMatch ? decodeURIComponent(csrfMatch[1]) : '';
 
       try {
         const res = await fetch(`/api/admin/media/${id}`, {

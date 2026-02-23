@@ -18,7 +18,7 @@ let editingPostId: string | null = null;
 
 function getCsrfToken(): string {
   const csrfMatch = document.cookie.match(/csrf_token=([^;]+)/);
-  return csrfMatch ? csrfMatch[1] : '';
+  return csrfMatch ? decodeURIComponent(csrfMatch[1]) : '';
 }
 
 function showFeedback(

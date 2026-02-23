@@ -449,7 +449,7 @@ const saveButtonText = isEditMode ? 'Update Work' : 'Save Work';
       e.preventDefault();
 
       const csrfMatch = document.cookie.match(/csrf_token=([^;]+)/);
-      const csrfToken = csrfMatch ? csrfMatch[1] : '';
+      const csrfToken = csrfMatch ? decodeURIComponent(csrfMatch[1]) : '';
 
       const formData = new FormData(form);
       const data = {

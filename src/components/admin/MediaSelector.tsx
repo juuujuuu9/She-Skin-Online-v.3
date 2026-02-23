@@ -59,10 +59,10 @@ export default function MediaSelector({
     }
   }, [onCancel]);
 
-  // Get CSRF token from cookie
+  // Get CSRF token from cookie (decodeURIComponent needed as cookie values are URL-encoded)
   const getCsrfToken = () => {
     const match = document.cookie.match(/csrf_token=([^;]+)/);
-    return match ? match[1] : '';
+    return match ? decodeURIComponent(match[1]) : '';
   };
 
   // Fetch media list

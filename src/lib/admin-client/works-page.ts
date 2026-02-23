@@ -277,7 +277,7 @@ function initWorksPage() {
     if (!confirm(confirmMessage)) return;
 
     const csrfMatch = document.cookie.match(/csrf_token=([^;]+)/);
-    const csrfToken = csrfMatch ? csrfMatch[1] : '';
+    const csrfToken = csrfMatch ? decodeURIComponent(csrfMatch[1]) : '';
 
     if (deleteSelectedBtn) {
       deleteSelectedBtn.disabled = true;
@@ -405,7 +405,7 @@ function initWorksPage() {
     if (!confirm('Are you sure you want to delete this work? This cannot be undone.')) return;
 
     const csrfMatch = document.cookie.match(/csrf_token=([^;]+)/);
-    const csrfToken = csrfMatch ? csrfMatch[1] : '';
+    const csrfToken = csrfMatch ? decodeURIComponent(csrfMatch[1]) : '';
 
     try {
       const res = await fetch(`/api/admin/works?id=${encodeURIComponent(id)}`, {
