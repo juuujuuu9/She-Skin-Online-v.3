@@ -254,7 +254,7 @@ export function FilePondUploader({
       }
     : undefined;
 
-  // Get styles based on variant
+  // Get styles based on variant - using CSS variables for theming
   const getStyles = () => {
     switch (variant) {
       case 'compact':
@@ -264,12 +264,12 @@ export function FilePondUploader({
             fontSize: '14px',
           },
           '.filepond--panel-root': {
-            backgroundColor: '#2a2a2a',
+            backgroundColor: 'var(--admin-bg-card)',
             borderRadius: '6px',
           },
           '.filepond--drop-label': {
             minHeight: '60px',
-            color: '#999',
+            color: 'var(--admin-text-muted)',
           },
         };
       case 'minimal':
@@ -279,11 +279,11 @@ export function FilePondUploader({
           },
           '.filepond--panel-root': {
             backgroundColor: 'transparent',
-            border: '1px dashed #444',
+            border: '1px dashed var(--admin-border-secondary)',
           },
           '.filepond--drop-label': {
             minHeight: '40px',
-            color: '#666',
+            color: 'var(--admin-text-muted)',
             fontSize: '12px',
           },
         };
@@ -295,21 +295,21 @@ export function FilePondUploader({
             fontFamily: 'inherit',
           },
           '.filepond--panel-root': {
-            backgroundColor: '#1a1a1a',
-            border: '2px dashed #444',
+            backgroundColor: 'var(--admin-bg-tertiary)',
+            border: '2px dashed var(--admin-border-secondary)',
             borderRadius: '8px',
           },
           '.filepond--drop-label': {
             minHeight: '150px',
-            color: '#999',
+            color: 'var(--admin-text-tertiary)',
             fontSize: '14px',
           },
           '.filepond--panel-root:hover': {
-            borderColor: '#666',
-            backgroundColor: '#222',
+            borderColor: 'var(--admin-border-hover)',
+            backgroundColor: 'var(--admin-bg-hover)',
           },
           '.filepond--drip': {
-            backgroundColor: '#1a3a5c',
+            backgroundColor: 'var(--admin-accent-primary)',
             opacity: '0.1',
           },
         };
@@ -333,38 +333,44 @@ export function FilePondUploader({
               return `${selector} { ${styleString}; }`;
             })
             .join('\n')}
-          
-          /* Custom dark theme overrides */
+
+          /* Theme-aware overrides using CSS variables */
           .filepond--item {
-            background: #2a2a2a;
+            background: var(--admin-bg-card);
             border-radius: 6px;
           }
           .filepond--file {
-            color: #fff;
+            color: var(--admin-text-primary);
           }
           .filepond--file-action-button {
-            background: rgba(255, 255, 255, 0.2);
-            color: #fff;
+            background: var(--admin-border-hover);
+            color: var(--admin-text-primary);
           }
           .filepond--file-action-button:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: var(--admin-accent-danger);
           }
           .filepond--progress-indicator {
-            color: #4a9eff;
+            color: var(--admin-accent-primary);
           }
           .filepond--image-preview {
-            background: #1a1a1a;
+            background: var(--admin-bg-tertiary);
           }
           .filepond--image-preview-overlay {
-            color: #4a9eff;
+            color: var(--admin-accent-primary);
           }
           .filepond--label-action {
-            color: #4a9eff;
+            color: var(--admin-accent-primary);
             text-decoration: none;
             cursor: pointer;
           }
           .filepond--label-action:hover {
             text-decoration: underline;
+          }
+          .filepond--image-preview-wrapper {
+            background: var(--admin-bg-tertiary);
+          }
+          .filepond--image-preview-overlay {
+            background: var(--admin-bg-tertiary);
           }
         `}
       </style>

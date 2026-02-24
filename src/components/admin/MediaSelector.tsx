@@ -131,16 +131,17 @@ export default function MediaSelector({
   // Get thumbnail for media
   const getThumbnail = (mediaItem: Media) => {
     if (mediaItem.mediaType === 'image') {
-      return mediaItem.variants?.sm?.url || mediaItem.url;
+      // Use smallest available variant for thumbnails
+      return mediaItem.variants?.sm?.url || mediaItem.variants?.md?.url || mediaItem.url;
     }
-    // Placeholder icons for audio/video
+    // Placeholder icons for audio/video with better visual distinction
     if (mediaItem.mediaType === 'audio') {
-      return "data:image/svg+xml,%3Csvg fill='%23434343' viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M211.44824,52.50586l-80-24A12.00045,12.00045,0,0,0,116,40V87.73047q-.00587.27539,0,.54785V140.2168A51.97764,51.97764,0,1,0,140,184V104.12842l64.55176,19.36572A12.00045,12.00045,0,0,0,220,112V64A11.99994,11.99994,0,0,0,211.44824,52.50586ZM88,212a28,28,0,1,1,28-28A28.03146,28.03146,0,0,1,88,212ZM196,95.87158,140,79.07129V56.12842l56,16.80029Z'/%3E%3C/svg%3E";
+      return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%239b59b6'%3E%3Cpath d='M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z'/%3E%3C/svg%3E";
     }
     if (mediaItem.mediaType === 'video') {
-      return 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23666"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>';
+      return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e74c3c'%3E%3Cpath d='M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z'/%3E%3C/svg%3E";
     }
-    return 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23666"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>';
+    return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23666'%3E%3Cpath d='M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z'/%3E%3C/svg%3E";
   };
 
   return (

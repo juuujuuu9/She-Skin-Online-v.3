@@ -241,15 +241,18 @@ export default function MediaManager({ initialMedia = [] }: MediaManagerProps) {
   // Get thumbnail for media
   const getThumbnail = (mediaItem: Media) => {
     if (mediaItem.mediaType === 'image') {
-      return mediaItem.variants?.sm?.url || mediaItem.url;
+      // Use smallest available variant for thumbnails, fallback to full URL
+      return mediaItem.variants?.sm?.url || mediaItem.variants?.md?.url || mediaItem.url;
     }
     if (mediaItem.mediaType === 'audio') {
-      return "data:image/svg+xml,%3Csvg viewBox='0 -0.5 17 17' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6.021,2.188 L6.021,11.362 C5.46,11.327 4.843,11.414 4.229,11.663 C2.624,12.312 1.696,13.729 2.155,14.825 C2.62,15.924 4.294,16.284 5.898,15.634 C7.131,15.134 7.856,14.184 7.965,13.272 L7.958,4.387 L15.02,3.028 L15.02,9.406 C14.422,9.343 13.746,9.432 13.076,9.703 C11.471,10.353 10.544,11.77 11.004,12.866 C11.467,13.964 13.141,14.325 14.746,13.675 C15.979,13.174 16.836,12.224 16.947,11.313 L16.958,0.00199999998 L6.021,2.188 L6.021,2.188 Z' fill='%23434343'/%3E%3C/svg%3E";
+      // Purple audio icon
+      return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%239b59b6'%3E%3Cpath d='M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z'/%3E%3C/svg%3E";
     }
     if (mediaItem.mediaType === 'video') {
-      return 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23666"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>';
+      // Red video icon
+      return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e74c3c'%3E%3Cpath d='M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z'/%3E%3C/svg%3E";
     }
-    return 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23666"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>';
+    return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23666'%3E%3Cpath d='M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z'/%3E%3C/svg%3E";
   };
 
   // Format file size
@@ -636,11 +639,11 @@ export default function MediaManager({ initialMedia = [] }: MediaManagerProps) {
   );
 }
 
-// Styles
+// Styles using CSS variables for theming
 const styles: Record<string, React.CSSProperties> = {
   container: {
     padding: '20px',
-    color: '#fff',
+    color: 'var(--admin-text-primary)',
   },
   header: {
     display: 'flex',
@@ -657,7 +660,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   count: {
     fontSize: '14px',
-    color: '#999',
+    color: 'var(--admin-text-muted)',
     fontWeight: 'normal',
   },
   uploadSection: {
@@ -667,7 +670,7 @@ const styles: Record<string, React.CSSProperties> = {
   uploadLabel: {
     display: 'inline-block',
     padding: '10px 20px',
-    background: '#4a9eff',
+    background: 'var(--admin-accent-primary)',
     borderRadius: '6px',
     color: '#fff',
     fontSize: '14px',
@@ -676,9 +679,9 @@ const styles: Record<string, React.CSSProperties> = {
   uploadingText: {
     display: 'inline-block',
     padding: '10px 20px',
-    background: '#333',
+    background: 'var(--admin-bg-hover)',
     borderRadius: '6px',
-    color: '#999',
+    color: 'var(--admin-text-muted)',
     fontSize: '14px',
   },
   filepondContainer: {
@@ -706,39 +709,39 @@ const styles: Record<string, React.CSSProperties> = {
     width: '18px',
     height: '18px',
     cursor: 'pointer',
-    accentColor: '#4a9eff',
+    accentColor: 'var(--admin-accent-primary)',
   },
   checkboxInput: {
     width: '20px',
     height: '20px',
     cursor: 'pointer',
-    accentColor: '#4a9eff',
+    accentColor: 'var(--admin-accent-primary)',
   },
   selectAllText: {
     fontSize: '14px',
-    color: '#ccc',
+    color: 'var(--admin-text-secondary)',
   },
   searchInput: {
     flex: 1,
     padding: '10px 12px',
-    background: '#2a2a2a',
-    border: '1px solid #444',
+    background: 'var(--admin-bg-input)',
+    border: '1px solid var(--admin-border-secondary)',
     borderRadius: '6px',
-    color: '#fff',
+    color: 'var(--admin-text-primary)',
     fontSize: '14px',
     minWidth: '200px',
   },
   filterSelect: {
     padding: '10px 12px',
-    background: '#2a2a2a',
-    border: '1px solid #444',
+    background: 'var(--admin-bg-input)',
+    border: '1px solid var(--admin-border-secondary)',
     borderRadius: '6px',
-    color: '#fff',
+    color: 'var(--admin-text-primary)',
     fontSize: '14px',
   },
   viewToggle: {
     display: 'flex',
-    background: '#2a2a2a',
+    background: 'var(--admin-bg-input)',
     borderRadius: '6px',
     overflow: 'hidden',
   },
@@ -746,27 +749,28 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '10px 16px',
     background: 'none',
     border: 'none',
-    color: '#999',
+    color: 'var(--admin-text-muted)',
     cursor: 'pointer',
     fontSize: '14px',
   },
   viewButtonActive: {
-    background: '#444',
-    color: '#fff',
+    background: 'var(--admin-bg-hover)',
+    color: 'var(--admin-text-primary)',
   },
   bulkActionsBar: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: '12px 16px',
-    background: '#1a3a5c',
+    background: 'var(--admin-accent-primary)',
+    opacity: 0.2,
     borderRadius: '8px',
     marginBottom: '20px',
-    border: '1px solid #2a5a8c',
+    border: '1px solid var(--admin-accent-primary)',
   },
   bulkActionsText: {
     fontSize: '14px',
-    color: '#fff',
+    color: 'var(--admin-text-primary)',
     fontWeight: 500,
   },
   bulkActionsButtons: {
@@ -776,15 +780,15 @@ const styles: Record<string, React.CSSProperties> = {
   bulkCancelButton: {
     padding: '8px 16px',
     background: 'none',
-    border: '1px solid #666',
+    border: '1px solid var(--admin-border-secondary)',
     borderRadius: '6px',
-    color: '#fff',
+    color: 'var(--admin-text-primary)',
     cursor: 'pointer',
     fontSize: '13px',
   },
   bulkDeleteButton: {
     padding: '8px 16px',
-    background: '#ff4444',
+    background: 'var(--admin-accent-danger)',
     border: 'none',
     borderRadius: '6px',
     color: '#fff',
@@ -793,9 +797,9 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 500,
   },
   error: {
-    background: '#ff444422',
-    border: '1px solid #ff4444',
-    color: '#ff6666',
+    background: 'rgba(239, 68, 68, 0.2)',
+    border: '1px solid var(--admin-accent-danger)',
+    color: 'var(--admin-accent-danger)',
     padding: '12px 16px',
     marginBottom: '20px',
     borderRadius: '6px',
@@ -806,14 +810,14 @@ const styles: Record<string, React.CSSProperties> = {
   errorClose: {
     background: 'none',
     border: 'none',
-    color: '#ff6666',
+    color: 'var(--admin-accent-danger)',
     fontSize: '18px',
     cursor: 'pointer',
   },
   empty: {
     textAlign: 'center',
     padding: '60px 20px',
-    color: '#666',
+    color: 'var(--admin-text-muted)',
   },
   emptyIcon: {
     fontSize: '48px',
@@ -825,7 +829,7 @@ const styles: Record<string, React.CSSProperties> = {
     gap: '16px',
   },
   gridItem: {
-    background: '#2a2a2a',
+    background: 'var(--admin-bg-card)',
     borderRadius: '8px',
     overflow: 'hidden',
     position: 'relative',
@@ -833,22 +837,22 @@ const styles: Record<string, React.CSSProperties> = {
     transition: 'border-color 0.2s',
   },
   gridItemSelected: {
-    borderColor: '#4a9eff',
-    boxShadow: '0 0 0 2px #4a9eff33',
+    borderColor: 'var(--admin-accent-primary)',
+    boxShadow: '0 0 0 2px var(--admin-accent-primary)33',
   },
   gridItemCheckbox: {
     position: 'absolute',
     top: '8px',
     right: '8px',
     zIndex: 10,
-    background: 'rgba(0,0,0,0.5)',
+    background: 'var(--admin-border-primary)',
     borderRadius: '4px',
     padding: '4px',
   },
   thumbnailContainer: {
     position: 'relative',
     aspectRatio: '1',
-    background: '#1a1a1a',
+    background: 'var(--admin-bg-tertiary)',
   },
   thumbnail: {
     width: '100%',
@@ -879,7 +883,7 @@ const styles: Record<string, React.CSSProperties> = {
     position: 'absolute',
     top: '8px',
     right: '8px',
-    background: '#e74c3c',
+    background: 'var(--admin-accent-danger)',
     color: '#fff',
     padding: '4px 8px',
     borderRadius: '50%',
@@ -892,7 +896,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   itemName: {
     fontSize: '13px',
-    color: '#fff',
+    color: 'var(--admin-text-primary)',
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
@@ -900,13 +904,13 @@ const styles: Record<string, React.CSSProperties> = {
   },
   itemMeta: {
     fontSize: '11px',
-    color: '#666',
+    color: 'var(--admin-text-muted)',
   },
   deleteButton: {
     position: 'absolute',
     bottom: '8px',
     right: '8px',
-    background: '#ff4444',
+    background: 'var(--admin-accent-danger)',
     border: 'none',
     borderRadius: '4px',
     padding: '6px 10px',
@@ -925,14 +929,14 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     gap: '12px',
     padding: '12px',
-    background: '#2a2a2a',
+    background: 'var(--admin-bg-card)',
     borderRadius: '8px',
     border: '2px solid transparent',
     transition: 'border-color 0.2s',
   },
   listItemSelected: {
-    borderColor: '#4a9eff',
-    boxShadow: '0 0 0 2px #4a9eff33',
+    borderColor: 'var(--admin-accent-primary)',
+    boxShadow: '0 0 0 2px var(--admin-accent-primary)33',
   },
   listItemCheckbox: {
     display: 'flex',
@@ -944,7 +948,7 @@ const styles: Record<string, React.CSSProperties> = {
     height: '60px',
     borderRadius: '4px',
     overflow: 'hidden',
-    background: '#1a1a1a',
+    background: 'var(--admin-bg-tertiary)',
     flexShrink: 0,
   },
   listThumbnailImg: {
@@ -967,7 +971,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   listName: {
     fontSize: '14px',
-    color: '#fff',
+    color: 'var(--admin-text-primary)',
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
@@ -975,11 +979,11 @@ const styles: Record<string, React.CSSProperties> = {
   },
   listMeta: {
     fontSize: '12px',
-    color: '#666',
+    color: 'var(--admin-text-muted)',
   },
   listDeleteButton: {
     padding: '8px 16px',
-    background: '#ff4444',
+    background: 'var(--admin-accent-danger)',
     border: 'none',
     borderRadius: '6px',
     color: '#fff',
@@ -992,17 +996,17 @@ const styles: Record<string, React.CSSProperties> = {
   },
   loadMoreButton: {
     padding: '12px 24px',
-    background: '#2a2a2a',
-    border: '1px solid #444',
+    background: 'var(--admin-bg-card)',
+    border: '1px solid var(--admin-border-secondary)',
     borderRadius: '6px',
-    color: '#fff',
+    color: 'var(--admin-text-primary)',
     cursor: 'pointer',
     fontSize: '14px',
   },
   loading: {
     textAlign: 'center',
     padding: '40px',
-    color: '#999',
+    color: 'var(--admin-text-muted)',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
@@ -1011,8 +1015,8 @@ const styles: Record<string, React.CSSProperties> = {
   spinner: {
     width: '32px',
     height: '32px',
-    border: '3px solid #333',
-    borderTopColor: '#fff',
+    border: '3px solid var(--admin-border-primary)',
+    borderTopColor: 'var(--admin-text-primary)',
     borderRadius: '50%',
     animation: 'spin 1s linear infinite',
   },
@@ -1029,7 +1033,7 @@ const styles: Record<string, React.CSSProperties> = {
     zIndex: 1000,
   },
   modal: {
-    background: '#2a2a2a',
+    background: 'var(--admin-bg-card)',
     borderRadius: '8px',
     padding: '24px',
     maxWidth: '400px',
@@ -1038,14 +1042,14 @@ const styles: Record<string, React.CSSProperties> = {
   modalTitle: {
     margin: '0 0 16px 0',
     fontSize: '18px',
-    color: '#fff',
+    color: 'var(--admin-text-primary)',
   },
   modalFileName: {
-    background: '#1a1a1a',
+    background: 'var(--admin-bg-tertiary)',
     padding: '8px 12px',
     borderRadius: '4px',
     fontSize: '13px',
-    color: '#999',
+    color: 'var(--admin-text-muted)',
     marginTop: '12px',
     wordBreak: 'break-all',
   },
@@ -1058,15 +1062,15 @@ const styles: Record<string, React.CSSProperties> = {
   modalCancel: {
     padding: '10px 16px',
     background: 'none',
-    border: '1px solid #444',
+    border: '1px solid var(--admin-border-secondary)',
     borderRadius: '6px',
-    color: '#fff',
+    color: 'var(--admin-text-primary)',
     cursor: 'pointer',
     fontSize: '14px',
   },
   modalDelete: {
     padding: '10px 16px',
-    background: '#ff4444',
+    background: 'var(--admin-accent-danger)',
     border: 'none',
     borderRadius: '6px',
     color: '#fff',
@@ -1075,7 +1079,8 @@ const styles: Record<string, React.CSSProperties> = {
   },
   modalForceDelete: {
     padding: '10px 16px',
-    background: '#c0392b',
+    background: 'var(--admin-accent-danger)',
+    opacity: 0.8,
     border: 'none',
     borderRadius: '6px',
     color: '#fff',
@@ -1084,12 +1089,12 @@ const styles: Record<string, React.CSSProperties> = {
   },
   modalWarning: {
     fontSize: '13px',
-    color: '#ffaa00',
+    color: 'var(--admin-accent-warning)',
     marginTop: '12px',
     fontStyle: 'italic',
   },
   originalName: {
-    color: '#888',
+    color: 'var(--admin-text-muted)',
     fontStyle: 'italic',
   },
   buttonSpinner: {
@@ -1103,5 +1108,7 @@ const styles: Record<string, React.CSSProperties> = {
   mediaContainer: {
     position: 'relative',
     minHeight: '200px',
+    overflow: 'auto',
+    maxHeight: 'calc(100vh - 320px)',
   },
 };

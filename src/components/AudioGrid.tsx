@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { PlayButton, AddToQueueButton } from '@components/AudioControls';
 import type { Track, Release } from '@lib/audioStore';
 
-export const DEFAULT_COLS_DESKTOP = 3;
+export const DEFAULT_COLS_DESKTOP = 5;
 export const DEFAULT_COLS_MOBILE = 2;
 export const MOBILE_BREAKPOINT_PX = 640; // sm
 export const AUDIO_GRID_COLS_EVENT = 'audio-grid-cols-changed';
@@ -16,7 +16,7 @@ function getDefaultCols(isMobile: boolean): number {
 }
 
 export function AudioGrid({ releases }: AudioGridProps) {
-  const [cols, setCols] = useState(DEFAULT_COLS_DESKTOP);
+  const [cols, setCols] = useState(() => DEFAULT_COLS_DESKTOP);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -65,7 +65,7 @@ export function AudioGrid({ releases }: AudioGridProps) {
         return (
           <div
             key={release.id}
-            className="relative aspect-square overflow-hidden bg-gray-100 group"
+            className="relative aspect-square overflow-hidden bg-white group flex items-center justify-center"
           >
             {release.coverArt ? (
               <img

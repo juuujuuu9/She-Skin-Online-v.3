@@ -42,12 +42,12 @@ const videoCount = recentMedia.filter(m => m.mediaType === 'video').length;
     {/* Header */}
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-xl font-semibold text-white tracking-wide">UPLOADS</h1>
-        <p class="text-sm text-gray-500 mt-0.5">UPLOAD FILES TO THE MEDIA LIBRARY</p>
+        <h1 class="text-xl font-semibold text-[var(--admin-text-primary)] tracking-wide">UPLOADS</h1>
+        <p class="text-sm text-[var(--admin-text-muted)] mt-0.5">UPLOAD FILES TO THE MEDIA LIBRARY</p>
       </div>
-      <a 
-        href="/admin/media" 
-        class="text-sm text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
+      <a
+        href="/admin/media"
+        class="text-sm text-[var(--admin-accent-primary)] hover:text-[var(--admin-accent-primary-hover)] transition-colors flex items-center gap-1"
       >
         VIEW FULL MEDIA LIBRARY
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -61,9 +61,9 @@ const videoCount = recentMedia.filter(m => m.mediaType === 'video').length;
       {/* Left column - Upload */}
       <div class="w-80 flex flex-col gap-4">
         {/* Upload box */}
-        <div class="bg-[#1a1a1a] rounded-lg border border-[#333] p-5">
-          <h2 class="text-sm font-medium text-white mb-4">UPLOAD FILES</h2>
-          
+        <div class="bg-[var(--admin-bg-tertiary)] rounded-lg border border-[var(--admin-border-primary)] p-5">
+          <h2 class="text-sm font-medium text-[var(--admin-text-primary)] mb-4">UPLOAD FILES</h2>
+
           <FilePondUploader
             client:load
             allowMultiple={true}
@@ -72,44 +72,44 @@ const videoCount = recentMedia.filter(m => m.mediaType === 'video').length;
             variant="dropzone"
             labelIdle='Drag & drop files or <span class="filepond--label-action">Browse</span>'
           />
-          
-          <p class="text-[#555] text-xs mt-3 text-center">IMAGES, AUDIO, VIDEO • MAX 500MB EACH</p>
+
+          <p class="text-[var(--admin-text-muted)] text-xs mt-3 text-center">IMAGES, AUDIO, VIDEO • MAX 500MB EACH</p>
         </div>
 
         {/* Stats */}
-        <div class="bg-[#1a1a1a] rounded-lg border border-[#333] p-4 flex items-center justify-around">
+        <div class="bg-[var(--admin-bg-tertiary)] rounded-lg border border-[var(--admin-border-primary)] p-4 flex items-center justify-around">
           <div class="text-center">
-            <div class="text-2xl font-semibold text-white">{imageCount}</div>
-            <div class="text-xs text-gray-500 mt-0.5">IMAGE</div>
+            <div class="text-2xl font-semibold text-[var(--admin-text-primary)]">{imageCount}</div>
+            <div class="text-xs text-[var(--admin-text-muted)] mt-0.5">IMAGE</div>
           </div>
           <div class="text-center">
-            <div class="text-2xl font-semibold text-white">{audioCount}</div>
-            <div class="text-xs text-gray-500 mt-0.5">AUDIO</div>
+            <div class="text-2xl font-semibold text-[var(--admin-text-primary)]">{audioCount}</div>
+            <div class="text-xs text-[var(--admin-text-muted)] mt-0.5">AUDIO</div>
           </div>
           <div class="text-center">
-            <div class="text-2xl font-semibold text-white">{videoCount}</div>
-            <div class="text-xs text-gray-500 mt-0.5">VIDEO</div>
+            <div class="text-2xl font-semibold text-[var(--admin-text-primary)]">{videoCount}</div>
+            <div class="text-xs text-[var(--admin-text-muted)] mt-0.5">VIDEO</div>
           </div>
         </div>
       </div>
 
       {/* Right column - Recent uploads */}
-      <div class="flex-1 bg-[#1a1a1a] rounded-lg border border-[#333] p-5 flex flex-col min-h-0">
+      <div class="flex-1 bg-[var(--admin-bg-tertiary)] rounded-lg border border-[var(--admin-border-primary)] p-5 flex flex-col min-h-0">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-sm font-medium text-white">RECENT UPLOADS</h2>
+          <h2 class="text-sm font-medium text-[var(--admin-text-primary)]">RECENT UPLOADS</h2>
           <div class="flex items-center gap-3">
             {/* Bulk delete button - hidden by default */}
             <button
               id="bulk-delete-btn"
-              class="hidden items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded transition-colors"
+              class="hidden items-center gap-1.5 px-3 py-1.5 bg-[var(--admin-accent-danger)] hover:opacity-90 text-white text-xs font-medium rounded transition-colors"
             >
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
               DELETE <span id="selected-count">0</span>
             </button>
-            <label class="flex items-center gap-2 text-sm text-gray-400 cursor-pointer hover:text-white transition-colors">
-              <input type="checkbox" id="select-all" class="w-4 h-4 rounded border-[#444] bg-[#222] text-blue-500 focus:ring-blue-500 focus:ring-offset-[#1a1a1a]" />
+            <label class="flex items-center gap-2 text-sm text-[var(--admin-text-tertiary)] cursor-pointer hover:text-[var(--admin-text-primary)] transition-colors">
+              <input type="checkbox" id="select-all" class="w-4 h-4 rounded border-[var(--admin-border-secondary)] bg-[var(--admin-bg-card)] text-[var(--admin-accent-primary)] focus:ring-[var(--admin-accent-primary)] focus:ring-offset-[var(--admin-bg-tertiary)]" />
               SELECT ALL
             </label>
           </div>
@@ -119,20 +119,20 @@ const videoCount = recentMedia.filter(m => m.mediaType === 'video').length;
           {recentMedia.length > 0 ? (
             <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
               {recentMedia.map((item) => (
-                <div 
-                  class="group relative bg-[#222] rounded-lg overflow-hidden border border-[#333] hover:border-[#555] transition-all"
+                <div
+                  class="group relative bg-[var(--admin-bg-card)] rounded-lg overflow-hidden border border-[var(--admin-border-primary)] hover:border-[var(--admin-border-hover)] transition-all"
                   data-media-id={item.id}
                 >
                   <label class="absolute top-2 left-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <input 
-                      type="checkbox" 
-                      class="media-select w-4 h-4 rounded border-[#444] bg-[#222] text-blue-500 focus:ring-blue-500 focus:ring-offset-[#222]"
+                    <input
+                      type="checkbox"
+                      class="media-select w-4 h-4 rounded border-[var(--admin-border-secondary)] bg-[var(--admin-bg-card)] text-[var(--admin-accent-primary)] focus:ring-[var(--admin-accent-primary)] focus:ring-offset-[var(--admin-bg-card)]"
                       value={item.id}
                     />
                   </label>
-                  
+
                   <button
-                    class="delete-btn absolute top-2 right-2 z-10 p-1.5 bg-red-500/80 hover:bg-red-600 text-white rounded opacity-0 group-hover:opacity-100 transition-all"
+                    class="delete-btn absolute top-2 right-2 z-10 p-1.5 bg-[var(--admin-accent-danger)]/80 hover:bg-[var(--admin-accent-danger)] text-white rounded opacity-0 group-hover:opacity-100 transition-all"
                     data-id={item.id}
                     title="Delete"
                   >
@@ -142,7 +142,7 @@ const videoCount = recentMedia.filter(m => m.mediaType === 'video').length;
                   </button>
 
                   {item.mediaType === 'image' && item.variants?.sm?.url && (
-                    <div class="aspect-square bg-[#111] flex items-center justify-center overflow-hidden">
+                    <div class="aspect-square bg-[var(--admin-bg-primary)] flex items-center justify-center overflow-hidden">
                       <img
                         src={toFullUrl(item.variants.sm.url)}
                         alt={item.filename}
@@ -151,34 +151,34 @@ const videoCount = recentMedia.filter(m => m.mediaType === 'video').length;
                       />
                     </div>
                   )}
-                  
+
                   {item.mediaType === 'audio' && (
                     <div class="aspect-square bg-gradient-to-br from-blue-900/20 to-indigo-900/20 flex flex-col items-center justify-center">
-                      <svg class="w-10 h-10 text-blue-500/50 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg class="w-10 h-10 text-[var(--admin-accent-primary)]/50 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                       </svg>
-                      <span class="text-[10px] text-blue-400/70 uppercase tracking-wider">Audio</span>
-                    </div>
-                  )}
-                  
-                  {item.mediaType === 'video' && (
-                    <div class="aspect-square bg-[#111] flex flex-col items-center justify-center">
-                      <svg class="w-10 h-10 text-red-500/50 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                      </svg>
-                      <span class="text-[10px] text-red-400/70 uppercase tracking-wider">Video</span>
+                      <span class="text-[10px] text-[var(--admin-accent-primary)]/70 uppercase tracking-wider">Audio</span>
                     </div>
                   )}
 
-                  <div class="p-2.5 bg-[#1a1a1a]">
-                    <p class="text-xs text-gray-400 truncate" title={item.filename}>{item.filename}</p>
-                    <p class="text-[10px] text-gray-500 mt-0.5">{formatBytes(item.fileSize)}</p>
+                  {item.mediaType === 'video' && (
+                    <div class="aspect-square bg-[var(--admin-bg-primary)] flex flex-col items-center justify-center">
+                      <svg class="w-10 h-10 text-[var(--admin-accent-danger)]/50 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      <span class="text-[10px] text-[var(--admin-accent-danger)]/70 uppercase tracking-wider">Video</span>
+                    </div>
+                  )}
+
+                  <div class="p-2.5 bg-[var(--admin-bg-tertiary)]">
+                    <p class="text-xs text-[var(--admin-text-secondary)] truncate" title={item.filename}>{item.filename}</p>
+                    <p class="text-[10px] text-[var(--admin-text-muted)] mt-0.5">{formatBytes(item.fileSize)}</p>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div class="h-full flex flex-col items-center justify-center text-gray-500">
+            <div class="h-full flex flex-col items-center justify-center text-[var(--admin-text-muted)]">
               <svg class="w-12 h-12 mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>

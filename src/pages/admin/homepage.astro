@@ -20,16 +20,16 @@ const formatBytes = (bytes: number) => {
 ---
 
 <AdminLayout title="Homepage - she_skin Admin">
-  <main class="flex-1 min-w-0 bg-[#111] overflow-y-auto">
+  <main class="flex-1 min-w-0 bg-[var(--admin-bg-primary)] overflow-y-auto">
     <div class="p-6 max-w-7xl mx-auto">
       <header class="mb-6">
-        <h1 class="text-2xl font-semibold text-white">Homepage</h1>
-        <p class="text-gray-400 mt-1">Select a background video for the homepage</p>
+        <h1 class="text-2xl font-semibold text-[var(--admin-text-primary)]">Homepage</h1>
+        <p class="text-[var(--admin-text-tertiary)] mt-1">Select a background video for the homepage</p>
       </header>
 
       {/* Current Video */}
-      <div class="bg-[#1a1a1a] rounded-xl border border-[#333] p-6 mb-6">
-        <h2 class="text-lg font-medium text-white mb-4">Current Homepage Video</h2>
+      <div class="bg-[var(--admin-bg-tertiary)] rounded-xl border border-[var(--admin-border-primary)] p-6 mb-6">
+        <h2 class="text-lg font-medium text-[var(--admin-text-primary)] mb-4">Current Homepage Video</h2>
         {currentVideo ? (
           <div class="space-y-4">
             <div class="aspect-video bg-black rounded-lg overflow-hidden max-w-2xl">
@@ -42,72 +42,72 @@ const formatBytes = (bytes: number) => {
             </div>
             <div class="flex items-center justify-between max-w-2xl">
               <div>
-                <p class="text-white font-medium">{currentVideo.originalName}</p>
-                <p class="text-sm text-gray-500">ID: {currentVideo.mediaId}</p>
+                <p class="text-[var(--admin-text-primary)] font-medium">{currentVideo.originalName}</p>
+                <p class="text-sm text-[var(--admin-text-muted)]">ID: {currentVideo.mediaId}</p>
               </div>
               <button
                 id="clear-video-btn"
-                class="px-4 py-2 text-sm text-red-400 border border-red-500/50 rounded-lg hover:bg-red-500/10 transition-colors"
+                class="px-4 py-2 text-sm text-[var(--admin-accent-danger)] border border-[var(--admin-accent-danger)]/50 rounded-lg hover:bg-[var(--admin-accent-danger)]/10 transition-colors"
               >
                 Remove Video
               </button>
             </div>
           </div>
         ) : (
-          <div class="text-center py-12 border border-dashed border-[#444] rounded-lg max-w-2xl">
-            <svg class="w-12 h-12 text-[#555] mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="text-center py-12 border border-dashed border-[var(--admin-border-secondary)] rounded-lg max-w-2xl">
+            <svg class="w-12 h-12 text-[var(--admin-border-primary)] mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
             </svg>
-            <p class="text-gray-400">No video selected</p>
-            <p class="text-sm text-gray-500 mt-1">Choose a video from the library below</p>
+            <p class="text-[var(--admin-text-tertiary)]">No video selected</p>
+            <p class="text-sm text-[var(--admin-text-muted)] mt-1">Choose a video from the library below</p>
           </div>
         )}
       </div>
 
       {/* Video Library */}
-      <div class="bg-[#1a1a1a] rounded-xl border border-[#333] p-6">
+      <div class="bg-[var(--admin-bg-tertiary)] rounded-xl border border-[var(--admin-border-primary)] p-6">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="text-lg font-medium text-white">Select from Media Library</h2>
-          <span class="text-sm text-gray-500">{videos.length} video(s)</span>
+          <h2 class="text-lg font-medium text-[var(--admin-text-primary)]">Select from Media Library</h2>
+          <span class="text-sm text-[var(--admin-text-muted)]">{videos.length} video(s)</span>
         </div>
 
         {videos.length === 0 ? (
           <div class="text-center py-12">
-            <svg class="w-16 h-16 text-[#333] mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-16 h-16 text-[var(--admin-border-primary)] mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
             </svg>
-            <p class="text-gray-400">No videos in the media library</p>
-            <p class="text-sm text-gray-500 mt-2">
-              <a href="/admin" class="text-blue-400 hover:text-blue-300">Upload a video first</a>
+            <p class="text-[var(--admin-text-tertiary)]">No videos in the media library</p>
+            <p class="text-sm text-[var(--admin-text-muted)] mt-2">
+              <a href="/admin" class="text-[var(--admin-accent-primary)] hover:opacity-80">Upload a video first</a>
             </p>
           </div>
         ) : (
           <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {videos.map((video) => (
               <button
-                class={`video-select-btn group relative bg-[#222] rounded-lg overflow-hidden border transition-all ${
+                class={`video-select-btn group relative bg-[var(--admin-bg-card)] rounded-lg overflow-hidden border transition-all ${
                   currentVideo?.mediaId === video.id
-                    ? 'border-blue-500 ring-2 ring-blue-500/50'
-                    : 'border-[#333] hover:border-[#555]'
+                    ? 'border-[var(--admin-accent-primary)] ring-2 ring-[var(--admin-accent-primary)]/50'
+                    : 'border-[var(--admin-border-primary)] hover:border-[var(--admin-border-hover)]'
                 }`}
                 data-id={video.id}
               >
-                <div class="aspect-square relative bg-[#1a1a1a] flex items-center justify-center">
-                  <div class="flex flex-col items-center justify-center text-[#666]">
+                <div class="aspect-square relative bg-[var(--admin-bg-tertiary)] flex items-center justify-center">
+                  <div class="flex flex-col items-center justify-center text-[var(--admin-text-muted)]">
                     <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                     </svg>
                     <span class="text-xs mt-2">Video</span>
                   </div>
                   {currentVideo?.mediaId === video.id && (
-                    <div class="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                    <div class="absolute top-2 right-2 bg-[var(--admin-accent-primary)] text-white text-xs px-2 py-1 rounded">
                       Active
                     </div>
                   )}
                 </div>
                 <div class="p-3 text-left">
-                  <p class="text-sm text-white truncate" title={video.originalName}>{video.originalName}</p>
-                  <p class="text-xs text-gray-500 mt-1">{formatBytes(video.fileSize)}</p>
+                  <p class="text-sm text-[var(--admin-text-primary)] truncate" title={video.originalName}>{video.originalName}</p>
+                  <p class="text-xs text-[var(--admin-text-muted)] mt-1">{formatBytes(video.fileSize)}</p>
                 </div>
               </button>
             ))}

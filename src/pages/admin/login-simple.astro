@@ -1,0 +1,57 @@
+---
+/**
+ * Admin Login — Simple Clerk authentication
+ * Fallback if client:load doesn't work
+ */
+
+export const prerender = false;
+
+import Layout from '@layouts/Layout.astro';
+
+// Check if user is already signed in server-side
+const clerkAuth = Astro.locals.auth();
+const isSignedIn = !!clerkAuth.userId;
+---
+
+<Layout title="Admin Login - she_skin">
+  <div class="min-h-screen bg-[#0a0a0a] flex items-center justify-center py-12 px-4">
+    <div class="max-w-md w-full">
+      <div class="text-center mb-8">
+        <h2 class="text-3xl font-bold text-white">she_skin Admin</h2>
+        <p class="mt-2 text-gray-400">Media Management Dashboard</p>
+      </div>
+
+      {isSignedIn ? (
+        <div class="bg-[#1a1a1a] border border-[#333] rounded-xl p-6 text-center">
+          <p class="text-gray-300 mb-4">You are already signed in.</p>
+          <a href="/admin" class="block w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+            Go to Admin Dashboard
+          </a>
+        </div>
+      ) : (
+        <div class="bg-[#1a1a1a] border border-[#333] rounded-xl p-6">
+          <!-- Clerk loads this div automatically with @clerk/astro integration -->
+          <div id="clerk-signin" data-clerk-component="SignIn"></div>
+          
+          <!-- Fallback message if Clerk fails -->
+          <div id="clerk-fallback" class="hidden text-center py-8">
+            <p class="text-gray-400 mb-4">Login form failed to load.</p>
+            <button onclick="window.location.reload()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+              Retry
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+
+  <script>
+    // Show fallback if Clerk doesn't load in 5 seconds
+    setTimeout(() => {
+      const clerkDiv = document.getElementById('clerk-signin');
+      if (clerkDiv && clerkDiv.children.length === 0) {
+        document.getElementById('clerk-fallback')?.classList.remove('hidden');
+      }
+    }, 5000);
+  </script>
+</Layout>

@@ -3,68 +3,93 @@ export const prerender = false;
 
 import AdminLayout from '@layouts/AdminLayout.astro';
 import MediaSelector from '@components/admin/MediaSelector';
+import { db } from '@lib/db';
+import { audioPosts, type AudioPost } from '@lib/db/schema';
+import { desc, isNull } from 'drizzle-orm';
+
+// Fetch posts server-side (authenticated via middleware)
+// Order: newest first from DB, then reverse to show oldest first (Vanilla Mechanics at bottom)
+const postsFromDb = await db.select().from(audioPosts)
+  .where(isNull(audioPosts.deletedAt))
+  .orderBy(desc(audioPosts.createdAt));
+
+// Reverse to show oldest first (Vanilla Mechanics and other recent posts at bottom)
+const posts = [...postsFromDb].reverse();
 ---
 
 <AdminLayout title="ICT★SNU SOUND - she_skin Admin">
-  <main class="flex-1 min-w-0 bg-[#111] overflow-y-auto">
+  <main class="flex-1 min-w-0 bg-[var(--admin-bg-primary)] overflow-y-auto">
     <div class="p-6 max-w-7xl mx-auto">
       <header class="mb-6">
-        <h1 class="text-2xl font-semibold text-white">ICT★SNU SOUND</h1>
-        <p class="text-gray-400 mt-1">Manage audio posts with artwork, YouTube, and SoundCloud links</p>
+        <h1 class="text-2xl font-semibold text-[var(--admin-text-primary)]">ICT★SNU SOUND</h1>
+        <p class="text-[var(--admin-text-tertiary)] mt-1">Manage audio posts with artwork, YouTube, and SoundCloud links</p>
       </header>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Form */}
-        <div class="bg-[#1a1a1a] rounded-xl border border-[#333] p-6">
-          <h2 id="form-title" class="text-lg font-medium text-white mb-4">New Audio Post</h2>
-          
+        <div class="bg-[var(--admin-bg-tertiary)] rounded-xl border border-[var(--admin-border-primary)] p-6">
+          <h2 id="form-title" class="text-lg font-medium text-[var(--admin-text-primary)] mb-4">New Audio Post</h2>
+
           <form id="audio-post-form" class="space-y-4">
             <input type="hidden" id="post-id" name="postId" value="" />
 
             {/* Title */}
             <div>
-              <label for="title" class="block text-sm font-medium text-gray-300 mb-1">Title</label>
+              <label for="title" class="block text-sm font-medium text-[var(--admin-text-secondary)] mb-1">Title</label>
               <input
                 type="text"
                 id="title"
                 name="title"
                 required
-                class="w-full px-3 py-2 bg-[#222] border border-[#444] rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                class="w-full px-3 py-2 bg-[var(--admin-bg-card)] border border-[var(--admin-border-secondary)] rounded-md text-[var(--admin-text-primary)] placeholder-[var(--admin-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--admin-accent-primary)] focus:border-transparent"
                 placeholder="Track title"
+              />
+            </div>
+
+            {/* Artist */}
+            <div>
+              <label for="artist" class="block text-sm font-medium text-[var(--admin-text-secondary)] mb-1">Artist</label>
+              <input
+                type="text"
+                id="artist"
+                name="artist"
+                class="w-full px-3 py-2 bg-[var(--admin-bg-card)] border border-[var(--admin-border-secondary)] rounded-md text-[var(--admin-text-primary)] placeholder-[var(--admin-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--admin-accent-primary)] focus:border-transparent"
+                placeholder="she_skin"
+                value="she_skin"
               />
             </div>
 
             {/* Audio File */}
             <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1">Audio File</label>
+              <label class="block text-sm font-medium text-[var(--admin-text-secondary)] mb-1">Audio File</label>
               <input type="hidden" id="audio-file" name="audioFile" value="" />
               <button
                 type="button"
                 id="choose-audio-btn"
-                class="w-full flex items-center justify-center gap-2 px-3 py-2 bg-[#222] border border-[#444] rounded-md text-sm font-medium text-gray-300 hover:bg-[#333] hover:text-white transition-colors"
+                class="w-full flex items-center justify-center gap-2 px-3 py-2 bg-[var(--admin-bg-card)] border border-[var(--admin-border-secondary)] rounded-md text-sm font-medium text-[var(--admin-text-secondary)] hover:bg-[var(--admin-bg-hover)] hover:text-[var(--admin-text-primary)] transition-colors"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                 </svg>
                 Select Audio File
               </button>
-              <div id="audio-preview" class="hidden mt-2 flex items-center gap-2 p-2 bg-[#222] rounded-md">
-                <svg class="w-5 h-5 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
+              <div id="audio-preview" class="hidden mt-2 flex items-center gap-2 p-2 bg-[var(--admin-bg-card)] rounded-md">
+                <svg class="w-5 h-5 text-[var(--admin-accent-primary)]" fill="currentColor" viewBox="0 0 24 24">
                   <path fill-rule="evenodd" clip-rule="evenodd" d="M21.6464 2.23699C21.8707 2.42699 22 2.70606 22 3.00001V16C22 18.2091 20.2091 20 18 20C15.7909 20 14 18.2091 14 16C14 13.7909 15.7909 12 18 12C18.7286 12 19.4117 12.1948 20 12.5351V4.18047L10 5.84713V18L9.99999 18.0032C9.99824 20.2109 8.20806 22 6 22C3.79086 22 2 20.2091 2 18C2 15.7909 3.79086 14 6 14C6.72857 14 7.41165 14.1948 8 14.5351V5.00001C8 4.51117 8.35341 4.09398 8.8356 4.01361L20.8356 2.01361C21.1256 1.96529 21.4221 2.04698 21.6464 2.23699ZM20 16C20 14.8954 19.1046 14 18 14C16.8954 14 16 14.8954 16 16C16 17.1046 16.8954 18 18 18C19.1046 18 20 17.1046 20 16ZM6 16C7.10457 16 8 16.8954 8 18C8 19.1046 7.10457 20 6 20C4.89543 20 4 19.1046 4 18C4 16.8954 4.89543 16 6 16Z" />
                 </svg>
-                <span id="audio-file-name" class="text-sm text-gray-300 flex-1 truncate"></span>
-                <button type="button" id="remove-audio" class="text-xs text-red-400 hover:text-red-300">Remove</button>
+                <span id="audio-file-name" class="text-sm text-[var(--admin-text-secondary)] flex-1 truncate"></span>
+                <button type="button" id="remove-audio" class="text-xs text-[var(--admin-accent-danger)] hover:opacity-80">Remove</button>
               </div>
             </div>
 
             {/* Artwork */}
             <div>
-              <label class="block text-sm font-medium text-gray-300 mb-1">Artwork</label>
+              <label class="block text-sm font-medium text-[var(--admin-text-secondary)] mb-1">Artwork</label>
               <input type="hidden" id="artwork" name="artwork" value="" />
               <button
                 type="button"
                 id="choose-artwork-btn"
-                class="w-full flex items-center justify-center gap-2 px-3 py-2 bg-[#222] border border-[#444] rounded-md text-sm font-medium text-gray-300 hover:bg-[#333] hover:text-white transition-colors"
+                class="w-full flex items-center justify-center gap-2 px-3 py-2 bg-[var(--admin-bg-card)] border border-[var(--admin-border-secondary)] rounded-md text-sm font-medium text-[var(--admin-text-secondary)] hover:bg-[var(--admin-bg-hover)] hover:text-[var(--admin-text-primary)] transition-colors"
               >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -72,31 +97,31 @@ import MediaSelector from '@components/admin/MediaSelector';
                 Select Artwork
               </button>
               <div id="artwork-preview" class="hidden mt-2">
-                <img id="artwork-preview-img" src="" alt="Artwork preview" class="w-full h-32 object-cover rounded-md border border-[#444]" />
-                <button type="button" id="remove-artwork" class="mt-1 text-xs text-red-400 hover:text-red-300">Remove artwork</button>
+                <img id="artwork-preview-img" src="" alt="Artwork preview" class="w-full h-32 object-cover rounded-md border border-[var(--admin-border-secondary)]" />
+                <button type="button" id="remove-artwork" class="mt-1 text-xs text-[var(--admin-accent-danger)] hover:opacity-80">Remove artwork</button>
               </div>
             </div>
 
             {/* YouTube */}
             <div>
-              <label for="youtube-link" class="block text-sm font-medium text-gray-300 mb-1">YouTube Link</label>
+              <label for="youtube-link" class="block text-sm font-medium text-[var(--admin-text-secondary)] mb-1">YouTube Link</label>
               <input
                 type="url"
                 id="youtube-link"
                 name="youtubeLink"
-                class="w-full px-3 py-2 bg-[#222] border border-[#444] rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                class="w-full px-3 py-2 bg-[var(--admin-bg-card)] border border-[var(--admin-border-secondary)] rounded-md text-[var(--admin-text-primary)] placeholder-[var(--admin-text-muted)] focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
                 placeholder="https://youtube.com/watch?v=..."
               />
             </div>
 
             {/* SoundCloud */}
             <div>
-              <label for="soundcloud-link" class="block text-sm font-medium text-gray-300 mb-1">SoundCloud Link</label>
+              <label for="soundcloud-link" class="block text-sm font-medium text-[var(--admin-text-secondary)] mb-1">SoundCloud Link</label>
               <input
                 type="url"
                 id="soundcloud-link"
                 name="soundcloudLink"
-                class="w-full px-3 py-2 bg-[#222] border border-[#444] rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                class="w-full px-3 py-2 bg-[var(--admin-bg-card)] border border-[var(--admin-border-secondary)] rounded-md text-[var(--admin-text-primary)] placeholder-[var(--admin-text-muted)] focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 placeholder="https://soundcloud.com/..."
               />
             </div>
@@ -106,14 +131,14 @@ import MediaSelector from '@components/admin/MediaSelector';
               <button
                 type="submit"
                 id="save-btn"
-                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                class="flex-1 bg-[var(--admin-accent-primary)] hover:opacity-90 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
               >
                 Save Post
               </button>
               <button
                 type="button"
                 id="cancel-btn"
-                class="hidden px-4 py-2 bg-[#333] hover:bg-[#444] border border-[#444] rounded-md text-sm font-medium text-gray-300 transition-colors"
+                class="hidden px-4 py-2 bg-[var(--admin-bg-hover)] hover:opacity-80 border border-[var(--admin-border-secondary)] rounded-md text-sm font-medium text-[var(--admin-text-secondary)] transition-colors"
               >
                 Cancel
               </button>
@@ -124,21 +149,88 @@ import MediaSelector from '@components/admin/MediaSelector';
         </div>
 
         {/* Posts List */}
-        <div class="bg-[#1a1a1a] rounded-xl border border-[#333] p-6">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-medium text-white">Audio Posts</h2>
-            <span id="audio-count" class="text-sm text-gray-500">0 posts</span>
+        <div class="bg-[var(--admin-bg-tertiary)] rounded-xl border border-[var(--admin-border-primary)] p-6 flex flex-col h-[calc(100vh-12rem)]">
+          <div class="flex items-center justify-between mb-4 shrink-0">
+            <h2 class="text-lg font-medium text-[var(--admin-text-primary)]">Audio Posts</h2>
+            <span id="audio-count" class="text-sm text-[var(--admin-text-muted)]">{posts.length} post{posts.length !== 1 ? 's' : ''}</span>
           </div>
 
-          <div id="empty-state" class="text-center py-12">
-            <svg class="w-16 h-16 text-[#333] mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-            </svg>
-            <p class="text-gray-400">No audio posts yet</p>
-            <p class="text-sm text-gray-500 mt-1">Create your first post</p>
+          {/* Search Bar */}
+          <div class="mb-4 shrink-0">
+            <div class="relative">
+              <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--admin-text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <input
+                type="text"
+                id="search-posts"
+                placeholder="Search posts..."
+                class="w-full pl-10 pr-4 py-2 bg-[var(--admin-bg-card)] border border-[var(--admin-border-secondary)] rounded-md text-sm text-[var(--admin-text-primary)] placeholder-[var(--admin-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--admin-accent-primary)] focus:border-transparent"
+              />
+            </div>
           </div>
 
-          <div id="audio-posts-list" class="hidden space-y-3"></div>
+          {posts.length === 0 ? (
+            <>
+              <div id="empty-state" class="text-center py-12">
+                <svg class="w-16 h-16 text-[var(--admin-border-primary)] mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                </svg>
+                <p class="text-[var(--admin-text-tertiary)]">No audio posts yet</p>
+                <p class="text-sm text-[var(--admin-text-muted)] mt-1">Create your first post</p>
+              </div>
+              <div id="audio-posts-list" class="hidden space-y-3" />
+            </>
+          ) : (
+            <>
+              <div id="empty-state" class="hidden text-center py-12 flex-1">
+                <svg class="w-16 h-16 text-[var(--admin-border-primary)] mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                </svg>
+                <p class="text-[var(--admin-text-tertiary)]">No audio posts yet</p>
+                <p class="text-sm text-[var(--admin-text-muted)] mt-1">Create your first post</p>
+              </div>
+              <div id="audio-posts-list" class="space-y-3 overflow-y-auto flex-1 pr-2">
+                {posts.map((post) => {
+                  // BunnyCDN images - insert -sm size before extension for thumbnail
+                  const thumbUrl = post.artwork?.replace(/\.(webp|jpg|jpeg|png)$/i, '-sm.$1');
+                  return (
+                  <div class="flex items-center gap-4 p-4 bg-[var(--admin-bg-card)] rounded-lg border border-[var(--admin-border-primary)] hover:border-[var(--admin-border-hover)] transition-all group" data-id={post.id}>
+                    {post.artwork ? (
+                      <img src={thumbUrl || post.artwork} alt="" class="w-16 h-16 object-cover rounded-md shrink-0 bg-[var(--admin-bg-hover)]" loading="lazy" onerror="this.src='${post.artwork}'" />
+                    ) : (
+                      <div class="w-16 h-16 bg-[var(--admin-bg-hover)] rounded-md flex items-center justify-center shrink-0">
+                        <svg class="w-8 h-8 text-[var(--admin-text-muted)]" fill="currentColor" viewBox="0 0 24 24">
+                          <path fill-rule="evenodd" clip-rule="evenodd" d="M21.6464 2.23699C21.8707 2.42699 22 2.70606 22 3.00001V16C22 18.2091 20.2091 20 18 20C15.7909 20 14 18.2091 14 16C14 13.7909 15.7909 12 18 12C18.7286 12 19.4117 12.1948 20 12.5351V4.18047L10 5.84713V18L9.99999 18.0032C9.99824 20.2109 8.20806 22 6 22C3.79086 22 2 20.2091 2 18C2 15.7909 3.79086 14 6 14C6.72857 14 7.41165 14.1948 8 14.5351V5.00001C8 4.51117 8.35341 4.09398 8.8356 4.01361L20.8356 2.01361C21.1256 1.96529 21.4221 2.04698 21.6464 2.23699ZM20 16C20 14.8954 19.1046 14 18 14C16.8954 14 16 14.8954 16 16C16 17.1046 16.8954 18 18 18C19.1046 18 20 17.1046 20 16ZM6 16C7.10457 16 8 16.8954 8 18C8 19.1046 7.10457 20 6 20C4.89543 20 4 19.1046 4 18C4 16.8954 4.89543 16 6 16Z" />
+                        </svg>
+                      </div>
+                    )}
+                    <div class="flex-1 min-w-0">
+                      <h3 class="text-sm font-medium text-[var(--admin-text-primary)] truncate">{post.title}</h3>
+                      <div class="flex items-center gap-2 mt-1 text-xs text-[var(--admin-text-muted)]">
+                        {post.audioFile && <span class="text-[var(--admin-accent-primary)]">● Audio</span>}
+                        {post.youtubeLink && <span class="text-red-400">● YouTube</span>}
+                        {post.soundcloudLink && <span class="text-orange-400">● SoundCloud</span>}
+                      </div>
+                    </div>
+                    <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button type="button" class="edit-btn p-2 text-[var(--admin-text-tertiary)] hover:text-[var(--admin-text-primary)]" data-id={post.id}>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                      <button type="button" class="delete-btn p-2 text-[var(--admin-text-tertiary)] hover:text-[var(--admin-accent-danger)]" data-id={post.id}>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -147,18 +239,18 @@ import MediaSelector from '@components/admin/MediaSelector';
   {/* Artwork Selection Modal */}
   <div id="artwork-modal" class="fixed inset-0 z-50 hidden">
     <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" id="artwork-modal-backdrop"></div>
-    <div class="absolute inset-4 md:inset-8 lg:inset-16 bg-[#1a1a1a] rounded-xl shadow-2xl flex flex-col overflow-hidden border border-[#333]">
-      <div class="flex items-center justify-between p-4 border-b border-[#333]">
-        <h3 class="text-lg font-medium text-white">Select Artwork</h3>
-        <button type="button" id="close-artwork-modal" class="text-gray-400 hover:text-white">
+    <div class="absolute inset-4 md:inset-8 lg:inset-16 bg-[var(--admin-bg-tertiary)] rounded-xl shadow-2xl flex flex-col overflow-hidden border border-[var(--admin-border-primary)]">
+      <div class="flex items-center justify-between p-4 border-b border-[var(--admin-border-primary)]">
+        <h3 class="text-lg font-medium text-[var(--admin-text-primary)]">Select Artwork</h3>
+        <button type="button" id="close-artwork-modal" class="text-[var(--admin-text-tertiary)] hover:text-[var(--admin-text-primary)]">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
       </div>
       <div class="flex-1 overflow-auto p-4">
-        <MediaSelector 
-          mediaType="image" 
+        <MediaSelector
+          mediaType="image"
           onSelect="handleArtworkSelect"
           client:load
         />
@@ -169,18 +261,18 @@ import MediaSelector from '@components/admin/MediaSelector';
   {/* Audio Selection Modal */}
   <div id="audio-modal" class="fixed inset-0 z-50 hidden">
     <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" id="audio-modal-backdrop"></div>
-    <div class="absolute inset-4 md:inset-8 lg:inset-16 bg-[#1a1a1a] rounded-xl shadow-2xl flex flex-col overflow-hidden border border-[#333]">
-      <div class="flex items-center justify-between p-4 border-b border-[#333]">
-        <h3 class="text-lg font-medium text-white">Select Audio File</h3>
-        <button type="button" id="close-audio-modal" class="text-gray-400 hover:text-white">
+    <div class="absolute inset-4 md:inset-8 lg:inset-16 bg-[var(--admin-bg-tertiary)] rounded-xl shadow-2xl flex flex-col overflow-hidden border border-[var(--admin-border-primary)]">
+      <div class="flex items-center justify-between p-4 border-b border-[var(--admin-border-primary)]">
+        <h3 class="text-lg font-medium text-[var(--admin-text-primary)]">Select Audio File</h3>
+        <button type="button" id="close-audio-modal" class="text-[var(--admin-text-tertiary)] hover:text-[var(--admin-text-primary)]">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
       </div>
       <div class="flex-1 overflow-auto p-4">
-        <MediaSelector 
-          mediaType="audio" 
+        <MediaSelector
+          mediaType="audio"
           onSelect="handleAudioSelect"
           client:load
         />
@@ -225,6 +317,11 @@ import MediaSelector from '@components/admin/MediaSelector';
     };
   </script>
 
+  {/* Inject server-side fetched posts for client-side use */}
+  <script is:inline define:vars={{ serverPosts: posts }}>
+    window.__INITIAL_AUDIO_POSTS__ = serverPosts;
+  </script>
+
   <script>
     import {
       renderPosts,
@@ -238,6 +335,7 @@ import MediaSelector from '@components/admin/MediaSelector';
       getEditingPostId,
       setEditingPostId,
     } from '@lib/admin-client/audio-admin';
+    import { escapeHtml } from '@lib/sanitize';
 
     // Audio admin page initialization
     function initAudioAdmin() {
@@ -277,29 +375,49 @@ import MediaSelector from '@components/admin/MediaSelector';
       });
 
       // Audio posts management
-      let audioPosts = [];
-      let editingPostId = null;
+      let audioPosts: any[] = [];
+      let filteredPosts: any[] = [];
+      let editingPostId: string | null = null;
 
       const formTitle = document.getElementById('form-title');
-      const postIdInput = document.getElementById('post-id');
-      const cancelBtn = document.getElementById('cancel-btn');
-      const saveBtn = document.getElementById('save-btn');
+      const postIdInput = document.getElementById('post-id') as HTMLInputElement | null;
+      const cancelBtn = document.getElementById('cancel-btn') as HTMLButtonElement | null;
+      const saveBtn = document.getElementById('save-btn') as HTMLButtonElement | null;
       const feedback = document.getElementById('form-feedback');
       const emptyState = document.getElementById('empty-state');
       const postsList = document.getElementById('audio-posts-list');
       const audioCount = document.getElementById('audio-count');
+      const searchInput = document.getElementById('search-posts') as HTMLInputElement | null;
 
-      function showFeedback(message, type) {
+      function showFeedback(message: string, type: 'success' | 'error') {
+        if (!feedback) return;
         feedback.textContent = message;
-        feedback.className = `mt-4 p-3 rounded-md text-sm ${type === 'success' ? 'bg-green-900/30 text-green-400 border border-green-800' : 'bg-red-900/30 text-red-400 border border-red-800'}`;
+        feedback.className = `mt-4 p-3 rounded-md text-sm ${type === 'success' ? 'bg-[var(--admin-accent-success)]/20 text-[var(--admin-accent-success)] border border-[var(--admin-accent-success)]' : 'bg-[var(--admin-accent-danger)]/20 text-[var(--admin-accent-danger)] border border-[var(--admin-accent-danger)]'}`;
         feedback.classList.remove('hidden');
         setTimeout(() => feedback.classList.add('hidden'), 3000);
       }
 
-      function renderPosts() {
-        audioCount.textContent = `${audioPosts.length} post${audioPosts.length !== 1 ? 's' : ''}`;
+      // Filter posts based on search query
+      function filterPosts(query: string): any[] {
+        if (!query.trim()) return audioPosts;
+        const lowerQuery = query.toLowerCase();
+        return audioPosts.filter((post: any) =>
+          post.title?.toLowerCase().includes(lowerQuery) ||
+          post.artist?.toLowerCase().includes(lowerQuery)
+        );
+      }
 
-        if (audioPosts.length === 0) {
+      // XSS-safe post rendering
+      // Uses closure variable audioPosts by default, or passed posts parameter
+      function renderPosts(postsToRender?: any[], _list?: any, _empty?: any, _count?: any) {
+        if (!postsList || !emptyState || !audioCount) return;
+
+        // Use passed posts or fall back to closure variable
+        const posts = postsToRender || filteredPosts || audioPosts;
+
+        audioCount.textContent = `${posts.length} post${posts.length !== 1 ? 's' : ''}`;
+
+        if (posts.length === 0) {
           emptyState.classList.remove('hidden');
           postsList.classList.add('hidden');
           return;
@@ -308,43 +426,76 @@ import MediaSelector from '@components/admin/MediaSelector';
         emptyState.classList.add('hidden');
         postsList.classList.remove('hidden');
 
-        postsList.innerHTML = audioPosts.map(post => `
-          <div class="flex items-center gap-4 p-4 bg-[#222] rounded-lg border border-[#333] hover:border-[#444] transition-all group" data-id="${post.id}">
-            ${post.artwork ? `
-              <img src="${post.artwork}" alt="" class="w-16 h-16 object-cover rounded-md shrink-0" />
-            ` : `
-              <div class="w-16 h-16 bg-[#333] rounded-md flex items-center justify-center shrink-0">
-                <svg class="w-8 h-8 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+        // Build posts using DOM methods instead of innerHTML to prevent XSS
+        postsList.innerHTML = '';
+
+        // Posts are in oldest-first order (Vanilla Mechanics and recent posts at bottom)
+        posts.forEach((post: any) => {
+          const postEl = document.createElement('div');
+          postEl.className = 'flex items-center gap-4 p-4 bg-[var(--admin-bg-card)] rounded-lg border border-[var(--admin-border-primary)] hover:border-[var(--admin-border-hover)] transition-all group';
+          postEl.setAttribute('data-id', post.id);
+
+          // Artwork thumbnail or placeholder
+          let mediaHtml = '';
+          if (post.artwork) {
+            const safeArtworkUrl = escapeHtml(post.artwork);
+            // BunnyCDN: insert -sm before extension for thumbnail
+            const thumbUrl = safeArtworkUrl.replace(/\.(webp|jpg|jpeg|png)$/i, '-sm.$1');
+            mediaHtml = `<img src="${thumbUrl}" alt="" class="w-16 h-16 object-cover rounded-md shrink-0 bg-[var(--admin-bg-hover)]" loading="lazy" onerror="this.src='${safeArtworkUrl}'" />`;
+          } else {
+            mediaHtml = `
+              <div class="w-16 h-16 bg-[var(--admin-bg-hover)] rounded-md flex items-center justify-center shrink-0">
+                <svg class="w-8 h-8 text-[var(--admin-text-muted)]" fill="currentColor" viewBox="0 0 24 24">
                   <path fill-rule="evenodd" clip-rule="evenodd" d="M21.6464 2.23699C21.8707 2.42699 22 2.70606 22 3.00001V16C22 18.2091 20.2091 20 18 20C15.7909 20 14 18.2091 14 16C14 13.7909 15.7909 12 18 12C18.7286 12 19.4117 12.1948 20 12.5351V4.18047L10 5.84713V18L9.99999 18.0032C9.99824 20.2109 8.20806 22 6 22C3.79086 22 2 20.2091 2 18C2 15.7909 3.79086 14 6 14C6.72857 14 7.41165 14.1948 8 14.5351V5.00001C8 4.51117 8.35341 4.09398 8.8356 4.01361L20.8356 2.01361C21.1256 1.96529 21.4221 2.04698 21.6464 2.23699ZM20 16C20 14.8954 19.1046 14 18 14C16.8954 14 16 14.8954 16 16C16 17.1046 16.8954 18 18 18C19.1046 18 20 17.1046 20 16ZM6 16C7.10457 16 8 16.8954 8 18C8 19.1046 7.10457 20 6 20C4.89543 20 4 19.1046 4 18C4 16.8954 4.89543 16 6 16Z" />
                 </svg>
               </div>
-            `}
+            `;
+          }
+
+          // Source indicators (safe static HTML)
+          const indicators = [];
+          if (post.audioFile) {
+            indicators.push('<span style="color: var(--admin-accent-primary)">● Audio</span>');
+          }
+          if (post.youtubeLink) {
+            indicators.push('<span class="text-red-400">● YouTube</span>');
+          }
+          if (post.soundcloudLink) {
+            indicators.push('<span class="text-orange-400">● SoundCloud</span>');
+          }
+
+          // Escape user-provided content
+          const safeTitle = escapeHtml(post.title);
+          const safeId = escapeHtml(post.id);
+
+          postEl.innerHTML = `
+            ${mediaHtml}
             <div class="flex-1 min-w-0">
-              <h3 class="text-sm font-medium text-white truncate">${post.title}</h3>
-              <div class="flex items-center gap-2 mt-1 text-xs text-gray-500">
-                ${post.audioFile ? '<span class="text-blue-400">● Audio</span>' : ''}
-                ${post.youtubeLink ? '<span class="text-red-400">● YouTube</span>' : ''}
-                ${post.soundcloudLink ? '<span class="text-orange-400">● SoundCloud</span>' : ''}
+              <h3 class="text-sm font-medium text-[var(--admin-text-primary)] truncate">${safeTitle}</h3>
+              <div class="flex items-center gap-2 mt-1 text-xs text-[var(--admin-text-muted)]">
+                ${indicators.join('')}
               </div>
             </div>
             <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button type="button" class="edit-btn p-2 text-gray-400 hover:text-white" data-id="${post.id}">
+              <button type="button" class="edit-btn p-2 text-[var(--admin-text-tertiary)] hover:text-[var(--admin-text-primary)]" data-id="${safeId}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
               </button>
-              <button type="button" class="delete-btn p-2 text-gray-400 hover:text-red-400" data-id="${post.id}">
+              <button type="button" class="delete-btn p-2 text-[var(--admin-text-tertiary)] hover:text-[var(--admin-accent-danger)]" data-id="${safeId}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
               </button>
             </div>
-          </div>
-        `).join('');
+          `;
+
+          postsList.appendChild(postEl);
+        });
       }
 
       // Edit/Delete handlers using event delegation
-      postsList?.addEventListener('click', (e) => {
+      postsList?.addEventListener('click', async (e) => {
         const target = e.target as HTMLElement;
         const editBtn = target.closest('.edit-btn') as HTMLElement;
         const deleteBtn = target.closest('.delete-btn') as HTMLElement;
@@ -352,12 +503,12 @@ import MediaSelector from '@components/admin/MediaSelector';
         if (editBtn) {
           const id = editBtn.dataset.id;
           if (id) {
-            editPost(id, getAudioPosts(), {
-              form,
-              formTitle,
-              postIdInput,
-              saveBtn,
-              cancelBtn,
+            await editPost(id, getAudioPosts(), {
+              form: form as HTMLFormElement,
+              formTitle: formTitle as HTMLElement,
+              postIdInput: postIdInput as HTMLInputElement,
+              saveBtn: saveBtn as HTMLButtonElement,
+              cancelBtn: cancelBtn as HTMLButtonElement,
             });
             setEditingPostId(id);
           }
@@ -365,20 +516,26 @@ import MediaSelector from '@components/admin/MediaSelector';
           const id = deleteBtn.dataset.id;
           if (id) {
             deletePost(id, feedback, () => {
-              setAudioPosts(getAudioPosts().filter((p) => p.id !== id));
-              renderPosts(getAudioPosts(), postsList, emptyState, audioCount);
+              audioPosts = audioPosts.filter((p) => p.id !== id);
+              setAudioPosts(audioPosts);
+              // Re-apply search filter if active
+              const query = searchInput?.value || '';
+              filteredPosts = filterPosts(query);
+              renderPosts(filteredPosts, postsList, emptyState, audioCount);
             });
           }
         }
       });
 
       cancelBtn?.addEventListener('click', () => {
-        cancelEdit({ form, formTitle, postIdInput, saveBtn, cancelBtn });
+        if (!form || !formTitle || !postIdInput || !saveBtn || !cancelBtn) return;
+        cancelEdit({ form: form as HTMLFormElement, formTitle, postIdInput, saveBtn, cancelBtn });
         setEditingPostId(null);
       });
 
       form?.addEventListener('submit', async (e) => {
         e.preventDefault();
+        if (!saveBtn || !formTitle || !cancelBtn) return;
         const editingId = getEditingPostId();
         await savePost(
           !!editingId,
@@ -387,23 +544,50 @@ import MediaSelector from '@components/admin/MediaSelector';
           saveBtn,
           { formTitle, cancelBtn },
           (savedPost) => {
-            const posts = getAudioPosts();
             if (editingId) {
-              const index = posts.findIndex((p) => p.id === editingId);
-              if (index !== -1) posts[index] = savedPost;
+              const index = audioPosts.findIndex((p) => p.id === editingId);
+              if (index !== -1) audioPosts[index] = savedPost;
             } else {
-              posts.unshift(savedPost);
+              audioPosts.unshift(savedPost);
             }
-            setAudioPosts(posts);
-            renderPosts(posts, postsList, emptyState, audioCount);
+            setAudioPosts(audioPosts);
+            // Re-apply search filter if active
+            const query = searchInput?.value || '';
+            filteredPosts = filterPosts(query);
+            renderPosts(filteredPosts, postsList, emptyState, audioCount);
           }
         );
       });
 
-      // Load posts on init
-      loadPosts(feedback).then((posts) => {
-        setAudioPosts(posts);
-        renderPosts(posts, postsList, emptyState, audioCount);
+      // Load posts - use server-side data if available, otherwise fetch via API
+      const serverPosts = (window as any).__INITIAL_AUDIO_POSTS__;
+      if (serverPosts && Array.isArray(serverPosts) && serverPosts.length > 0) {
+        console.log('[audio-admin] Using server-side posts:', serverPosts.length);
+        // Server posts are already reversed (oldest first), use as-is
+        audioPosts = serverPosts;
+        filteredPosts = serverPosts;
+        setAudioPosts(serverPosts);
+        renderPosts(serverPosts, postsList, emptyState, audioCount);
+      } else {
+        // Fallback: fetch via API
+        loadPosts(feedback).then((posts) => {
+          console.log('[audio-admin] Loaded posts via API:', posts.length);
+          // Reverse to show oldest first (Vanilla Mechanics at bottom)
+          const reversedPosts = [...posts].reverse();
+          audioPosts = reversedPosts;
+          filteredPosts = reversedPosts;
+          setAudioPosts(reversedPosts);
+          renderPosts(reversedPosts, postsList, emptyState, audioCount);
+        }).catch((err) => {
+          console.error('[audio-admin] Failed to load posts:', err);
+        });
+      }
+
+      // Search functionality
+      searchInput?.addEventListener('input', (e) => {
+        const query = (e.target as HTMLInputElement).value;
+        filteredPosts = filterPosts(query);
+        renderPosts(filteredPosts, postsList, emptyState, audioCount);
       });
     }
 

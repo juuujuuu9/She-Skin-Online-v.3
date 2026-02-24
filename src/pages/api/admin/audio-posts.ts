@@ -34,8 +34,11 @@ export const GET: APIRoute = async ({ locals }) => {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('Error fetching audio posts:', error);
-    return new Response(JSON.stringify({ error: 'Failed to fetch audio posts' }), {
+    console.error('[audio-posts API] Error fetching audio posts:', error);
+    return new Response(JSON.stringify({ 
+      error: 'Failed to fetch audio posts',
+      details: error instanceof Error ? error.message : String(error)
+    }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });
@@ -56,7 +59,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
   try {
     const body = await request.json();
     console.log('[audio-posts] POST body:', body);
-    const { title, audioFile, artwork, youtubeLink, soundcloudLink } = body;
+    const { title, artist, audioFile, artwork, youtubeLink, soundcloudLink } = body;
 
     if (!title) {
       return new Response(JSON.stringify({ error: 'Title is required' }), {
@@ -88,6 +91,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const newPost = {
       id,
       title,
+      artist: artist || 'she_skin',
       slug,
       audioFile: audioFile || null,
       artwork: artwork || null,
@@ -129,7 +133,7 @@ export const PUT: APIRoute = async ({ request, locals }) => {
 
   try {
     const body = await request.json();
-    const { id, title, audioFile, artwork, youtubeLink, soundcloudLink } = body;
+    const { id, title, artist, audioFile, artwork, youtubeLink, soundcloudLink } = body;
 
     if (!id) {
       return new Response(JSON.stringify({ error: 'ID is required' }), {
@@ -168,6 +172,7 @@ export const PUT: APIRoute = async ({ request, locals }) => {
         .replace(/^-|-$/g, '');
       updateData.slug = newSlug;
     }
+    if (artist !== undefined) updateData.artist = artist || 'she_skin';
     if (audioFile !== undefined) updateData.audioFile = audioFile || null;
     if (artwork !== undefined) updateData.artwork = artwork || null;
     if (youtubeLink !== undefined) updateData.youtubeLink = youtubeLink || null;

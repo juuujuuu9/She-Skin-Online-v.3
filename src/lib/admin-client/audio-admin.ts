@@ -7,10 +7,26 @@
 interface AudioPost {
   id: string;
   title: string;
+  artist: string;
   audioFile?: string;
+  audioMediaId?: string; // Reference to media library
   artwork?: string;
+  artworkMediaId?: string; // Reference to media library
   youtubeLink?: string;
   soundcloudLink?: string;
+}
+
+interface MediaItem {
+  id: string;
+  filename: string;
+  originalName: string;
+  mediaType: string;
+  url: string;
+  variants?: {
+    sm?: { url: string };
+    md?: { url: string };
+    lg?: { url: string };
+  };
 }
 
 let audioPosts: AudioPost[] = [];
@@ -37,6 +53,9 @@ function showFeedback(
   setTimeout(() => feedback.classList.add('hidden'), 3000);
 }
 
+/**
+ * Render posts list with proper thumbnails
+ */
 export function renderPosts(
   posts: AudioPost[],
   postsList: HTMLElement,
@@ -64,12 +83,19 @@ export function renderPosts(
       'flex items-center gap-4 p-4 bg-[#222] rounded-lg border border-[#333] hover:border-[#444] transition-all group';
     postDiv.setAttribute('data-id', post.id);
 
-    // Artwork or placeholder
+    // Artwork or placeholder - use thumbnail if available
     if (post.artwork) {
       const img = document.createElement('img');
-      img.src = post.artwork;
+      // For artwork, try to use a smaller variant by replacing the size in URL
+      // Common pattern: image-lg.webp -> image-sm.webp
+      const thumbnailUrl = post.artwork.replace(/-(xl|lg|md)\.(webp|jpg|png)/i, '-sm.$2');
+      img.src = thumbnailUrl;
       img.alt = '';
       img.className = 'w-16 h-16 object-cover rounded-md shrink-0';
+      img.onerror = () => {
+        // Fallback to full URL if thumbnail fails
+        img.src = post.artwork || '';
+      };
       postDiv.appendChild(img);
     } else {
       const placeholder = document.createElement('div');
@@ -132,16 +158,59 @@ export async function loadPosts(
 ): Promise<AudioPost[]> {
   try {
     const res = await fetch('/api/admin/audio-posts', { credentials: 'include' });
-    if (!res.ok) throw new Error('Failed to load');
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
+      throw new Error(errorData.error || `HTTP ${res.status}`);
+    }
     audioPosts = await res.json();
     return audioPosts;
-  } catch {
-    showFeedback(feedback, 'Failed to load posts', 'error');
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Failed to load';
+    showFeedback(feedback, `Failed to load posts: ${message}`, 'error');
+    console.error('[audio-admin] loadPosts error:', err);
     return [];
   }
 }
 
-export function editPost(
+/**
+ * Fetch media item by URL from the media library
+ */
+async function fetchMediaByUrl(url: string): Promise<MediaItem | null> {
+  try {
+    const response = await fetch(`/api/admin/media?search=${encodeURIComponent(url)}`, {
+      credentials: 'include',
+    });
+    if (!response.ok) return null;
+    const data = await response.json();
+    // Find media that matches the URL (either main URL or in variants)
+    const media = data.media?.find((m: MediaItem) => {
+      if (m.url === url) return true;
+      if (m.variants) {
+        return Object.values(m.variants).some((v: { url?: string }) => v?.url === url);
+      }
+      return false;
+    });
+    return media || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Get the best thumbnail URL for a media item
+ */
+function getMediaThumbnail(media: MediaItem): string {
+  if (media.mediaType === 'image') {
+    return media.variants?.sm?.url || media.variants?.md?.url || media.url;
+  }
+  // Return placeholder for audio/video
+  if (media.mediaType === 'audio') {
+    return "data:image/svg+xml,%3Csvg viewBox='0 -0.5 17 17' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6.021,2.188 L6.021,11.362 C5.46,11.327 4.843,11.414 4.229,11.663 C2.624,12.312 1.696,13.729 2.155,14.825 C2.62,15.924 4.294,16.284 5.898,15.634 C7.131,15.134 7.856,14.184 7.965,13.272 L7.958,4.387 L15.02,3.028 L15.02,9.406 C14.422,9.343 13.746,9.432 13.076,9.703 C11.471,10.353 10.544,11.77 11.004,12.866 C11.467,13.964 13.141,14.325 14.746,13.675 C15.979,13.174 16.836,12.224 16.947,11.313 L16.958,0.00199999998 L6.021,2.188 L6.021,2.188 Z' fill='%23434343'/%3E%3C/svg%3E";
+  }
+  return '';
+}
+
+export async function editPost(
   id: string,
   posts: AudioPost[],
   elements: {
@@ -151,13 +220,14 @@ export function editPost(
     saveBtn: HTMLButtonElement;
     cancelBtn: HTMLElement;
   }
-): void {
+): Promise<void> {
   const post = posts.find((p) => p.id === id);
   if (!post) return;
 
   editingPostId = id;
   elements.postIdInput.value = id;
   (document.getElementById('title') as HTMLInputElement).value = post.title;
+  (document.getElementById('artist') as HTMLInputElement).value = post.artist || 'she_skin';
   (document.getElementById('audio-file') as HTMLInputElement).value =
     post.audioFile || '';
   (document.getElementById('artwork') as HTMLInputElement).value =
@@ -167,16 +237,32 @@ export function editPost(
   (document.getElementById('soundcloud-link') as HTMLInputElement).value =
     post.soundcloudLink || '';
 
-  // Show previews
+  // Show artwork preview
   if (post.artwork) {
     const img = document.getElementById('artwork-preview-img') as HTMLImageElement;
-    img.src = post.artwork;
-    document.getElementById('artwork-preview')?.classList.remove('hidden');
+    const preview = document.getElementById('artwork-preview');
+    
+    // Try to find the media item to get a proper thumbnail
+    const artworkMedia = await fetchMediaByUrl(post.artwork);
+    if (artworkMedia) {
+      img.src = getMediaThumbnail(artworkMedia);
+    } else {
+      img.src = post.artwork;
+    }
+    preview?.classList.remove('hidden');
   }
+
+  // Show audio file preview with proper filename
   if (post.audioFile) {
     const nameEl = document.getElementById('audio-file-name');
-    if (nameEl) nameEl.textContent = 'Audio file';
-    document.getElementById('audio-preview')?.classList.remove('hidden');
+    const preview = document.getElementById('audio-preview');
+    
+    // Try to find the media item to get the original filename
+    const audioMedia = await fetchMediaByUrl(post.audioFile);
+    if (nameEl) {
+      nameEl.textContent = audioMedia?.originalName || audioMedia?.filename || 'Audio file';
+    }
+    preview?.classList.remove('hidden');
   }
 
   elements.formTitle.textContent = 'Edit Audio Post';
@@ -247,6 +333,7 @@ export async function savePost(
   const data: Partial<AudioPost> = {
     id: postId || undefined,
     title: (document.getElementById('title') as HTMLInputElement).value,
+    artist: (document.getElementById('artist') as HTMLInputElement).value || 'she_skin',
     audioFile:
       (document.getElementById('audio-file') as HTMLInputElement).value ||
       undefined,

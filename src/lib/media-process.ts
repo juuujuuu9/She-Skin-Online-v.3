@@ -245,6 +245,203 @@ export async function getAudioMetadata(buffer: Buffer, filename: string): Promis
   });
 }
 
+// Video configuration for web-optimized compression
+export const VIDEO_CONFIG = {
+  // High quality CRF values (lower = higher quality, larger file)
+  // CRF 20-23 is considered "high quality" for web
+  crf: 23,
+  // Preset affects compression speed vs efficiency
+  preset: 'medium', // Options: ultrafast, superfast, veryfast, faster, fast, medium, slow, slower, veryslow
+  // Audio codec and bitrate
+  audioCodec: 'aac',
+  audioBitrate: '128k',
+  // Output format
+  videoCodec: 'libx264',
+  outputFormat: 'mp4',
+  // Resolution variants (height-based, width calculated to maintain aspect ratio)
+  sizes: {
+    '1080p': { height: 1080, maxWidth: 1920 },
+    '720p': { height: 720, maxWidth: 1280 },
+    '480p': { height: 480, maxWidth: 854 },
+  } as Record<string, { height: number; maxWidth: number }>,
+};
+
+// Video variant type
+export interface VideoVariant {
+  url: string;
+  width: number;
+  height: number;
+  size: number;
+  bitrate?: number;
+}
+
+// Processed video result
+export interface ProcessedVideo {
+  id: string;
+  originalName: string;
+  hash: string;
+  variants: Record<string, VideoVariant>;
+  metadata: {
+    width: number;
+    height: number;
+    duration: number;
+    format: string;
+  };
+}
+
+/**
+ * Process video with ffmpeg - generate web-optimized H.264 variants
+ * Uses CRF encoding for consistent quality without massive files
+ */
+export async function processVideoBuffer(
+  buffer: Buffer,
+  filename: string
+): Promise<{ result: ProcessedVideo }> {
+  const id = basename(filename, extname(filename));
+  const ext = extname(filename).toLowerCase().slice(1) || 'mp4';
+
+  // Write buffer to temp file for processing
+  const tempInputPath = join(process.cwd(), 'temp', `video-input-${Date.now()}.${ext}`);
+  await mkdir(dirname(tempInputPath), { recursive: true });
+  await writeFile(tempInputPath, buffer);
+
+  // Get source metadata
+  const metadata = await new Promise<{
+    width: number;
+    height: number;
+    duration: number;
+  }>((resolve, reject) => {
+    ffmpeg.ffprobe(tempInputPath, (err, meta) => {
+      if (err) {
+        unlink(tempInputPath).catch(() => {});
+        reject(err);
+        return;
+      }
+      const videoStream = meta.streams.find(s => s.codec_type === 'video');
+      resolve({
+        width: videoStream?.width || 0,
+        height: videoStream?.height || 0,
+        duration: meta.format.duration || 0,
+      });
+    });
+  });
+
+  const sourceHeight = metadata.height;
+  const sourceWidth = metadata.width;
+  const aspectRatio = sourceWidth / sourceHeight;
+
+  // Generate variants at different resolutions
+  const variants: Record<string, VideoVariant> = {};
+
+  for (const [sizeName, { height: targetHeight, maxWidth }] of Object.entries(VIDEO_CONFIG.sizes)) {
+    // Skip if source is smaller than this variant
+    if (sourceHeight < targetHeight * 0.8) continue;
+
+    // Calculate width maintaining aspect ratio
+    const targetWidth = Math.min(Math.round(targetHeight * aspectRatio), maxWidth);
+
+    const variantFilename = `videos/${id}-${sizeName}.mp4`;
+    const tempOutputPath = join(process.cwd(), 'temp', variantFilename);
+    await mkdir(dirname(tempOutputPath), { recursive: true });
+
+    // Transcode with ffmpeg
+    await new Promise<void>((resolve, reject) => {
+      ffmpeg(tempInputPath)
+        .videoCodec(VIDEO_CONFIG.videoCodec)
+        .audioCodec(VIDEO_CONFIG.audioCodec)
+        .audioBitrate(VIDEO_CONFIG.audioBitrate)
+        .size(`${targetWidth}x${targetHeight}`)
+        .addOption('-crf', String(VIDEO_CONFIG.crf))
+        .addOption('-preset', VIDEO_CONFIG.preset)
+        .addOption('-movflags', '+faststart') // Web optimization
+        .addOption('-pix_fmt', 'yuv420p') // Compatibility
+        .addOption('-profile:v', 'high') // H.264 profile
+        .addOption('-level', '4.2') // H.264 level
+        .on('error', (err) => {
+          unlink(tempOutputPath).catch(() => {});
+          reject(err);
+        })
+        .on('end', () => resolve())
+        .save(tempOutputPath);
+    });
+
+    // Read the processed file and store it
+    const processedBuffer = await readFile(tempOutputPath);
+    const url = await storeFile(processedBuffer, variantFilename);
+
+    // Get file size
+    const stats = await import('fs/promises').then(fs => fs.stat(tempOutputPath));
+
+    variants[sizeName] = {
+      url,
+      width: targetWidth,
+      height: targetHeight,
+      size: stats.size,
+    };
+
+    // Clean up temp output file
+    await unlink(tempOutputPath).catch(() => {});
+  }
+
+  // If no variants were created (source was very small), create at least one optimized version
+  if (Object.keys(variants).length === 0) {
+    const variantFilename = `videos/${id}-original.mp4`;
+    const tempOutputPath = join(process.cwd(), 'temp', variantFilename);
+    await mkdir(dirname(tempOutputPath), { recursive: true });
+
+    await new Promise<void>((resolve, reject) => {
+      ffmpeg(tempInputPath)
+        .videoCodec(VIDEO_CONFIG.videoCodec)
+        .audioCodec(VIDEO_CONFIG.audioCodec)
+        .audioBitrate(VIDEO_CONFIG.audioBitrate)
+        .addOption('-crf', String(VIDEO_CONFIG.crf))
+        .addOption('-preset', VIDEO_CONFIG.preset)
+        .addOption('-movflags', '+faststart')
+        .addOption('-pix_fmt', 'yuv420p')
+        .on('error', (err) => {
+          unlink(tempOutputPath).catch(() => {});
+          reject(err);
+        })
+        .on('end', () => resolve())
+        .save(tempOutputPath);
+    });
+
+    const processedBuffer = await readFile(tempOutputPath);
+    const url = await storeFile(processedBuffer, variantFilename);
+    const stats = await import('fs/promises').then(fs => fs.stat(tempOutputPath));
+
+    variants.original = {
+      url,
+      width: sourceWidth,
+      height: sourceHeight,
+      size: stats.size,
+    };
+
+    await unlink(tempOutputPath).catch(() => {});
+  }
+
+  // Clean up input temp file
+  await unlink(tempInputPath).catch(() => {});
+
+  // Generate hash
+  const hash = await getFileHash(buffer);
+
+  const result: ProcessedVideo = {
+    id,
+    originalName: filename,
+    hash,
+    variants,
+    metadata: {
+      width: sourceWidth,
+      height: sourceHeight,
+      duration: metadata.duration,
+      format: 'mp4',
+    },
+  };
+
+  return { result };
+}
+
 /**
  * Get video metadata using ffmpeg
  */
@@ -255,7 +452,7 @@ export async function getVideoMetadata(buffer: Buffer, filename: string): Promis
   height: number;
 }> {
   const ext = extname(filename).toLowerCase().slice(1) || 'mp4';
-  
+
   const tempPath = join(process.cwd(), 'temp', `video-${Date.now()}.${ext}`);
   await mkdir(dirname(tempPath), { recursive: true });
   await writeFile(tempPath, buffer);
@@ -263,7 +460,7 @@ export async function getVideoMetadata(buffer: Buffer, filename: string): Promis
   return new Promise((resolve, reject) => {
     ffmpeg.ffprobe(tempPath, (err, metadata) => {
       unlink(tempPath).catch(() => {});
-      
+
       if (err) {
         reject(err);
         return;

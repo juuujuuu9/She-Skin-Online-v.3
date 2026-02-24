@@ -35,30 +35,30 @@ const title = isEditing ? 'Edit Post' : 'New Post';
 ---
 
 <AdminLayout title={`${title} - she_skin Admin`}>
-  <main class="flex-1 min-w-0 bg-[#111] overflow-y-auto">
+  <main class="flex-1 min-w-0 bg-[var(--admin-bg-primary)] overflow-y-auto">
     {/* Header */}
-    <div class="px-6 py-4 border-b border-[#333]">
+    <div class="px-6 py-4 border-b border-[var(--admin-border-primary)]">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-4">
-          <a href="/admin/posts" class="text-gray-400 hover:text-white transition-colors">
+          <a href="/admin/posts" class="text-[var(--admin-text-muted)] hover:text-[var(--admin-text-primary)] transition-colors">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
           </a>
-          <h1 class="text-2xl font-bold text-white">{title}</h1>
+          <h1 class="text-2xl font-bold text-[var(--admin-text-primary)]">{title}</h1>
         </div>
         <div class="flex items-center gap-3">
           <button
             type="button"
             id="save-draft-btn"
-            class="px-4 py-2 border border-[#444] text-sm font-medium rounded-md text-gray-300 bg-[#1a1a1a] hover:bg-[#222] transition-colors"
+            class="px-4 py-2 border border-[var(--admin-border-secondary)] text-sm font-medium rounded-md text-[var(--admin-text-secondary)] bg-[var(--admin-bg-tertiary)] hover:bg-[var(--admin-bg-card)] transition-colors"
           >
             Save Draft
           </button>
           <button
             type="button"
             id="publish-btn"
-            class="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-black bg-white hover:bg-gray-200 transition-colors"
+            class="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-[var(--admin-sidebar-active-text)] bg-[var(--admin-sidebar-active-bg)] hover:opacity-90 transition-colors"
           >
             {post?.status === 'published' ? 'Update' : 'Publish'}
           </button>
@@ -72,44 +72,44 @@ const title = isEditing ? 'Edit Post' : 'New Post';
         {/* Main Content */}
         <div class="lg:col-span-2 space-y-6">
           {/* Title */}
-          <div class="bg-[#1a1a1a] p-6 rounded-lg border border-[#333]">
-            <label for="title" class="block text-sm font-medium text-gray-300 mb-2">
+          <div class="bg-[var(--admin-bg-tertiary)] p-6 rounded-lg border border-[var(--admin-border-primary)]">
+            <label for="title" class="block text-sm font-medium text-[var(--admin-text-secondary)] mb-2">
               Title
             </label>
             <input
               type="text"
               id="title"
               value={post?.title || ''}
-              class="w-full px-3 py-2 bg-[#222] border border-[#444] rounded-md text-lg font-medium text-white placeholder-gray-500 focus:ring-2 focus:ring-white/20 focus:border-white/30"
+              class="w-full px-3 py-2 bg-[var(--admin-bg-card)] border border-[var(--admin-border-secondary)] rounded-md text-lg font-medium text-[var(--admin-text-primary)] placeholder-[var(--admin-text-muted)] focus:ring-2 focus:ring-[var(--admin-accent-primary)]/30 focus:border-[var(--admin-accent-primary)]"
               placeholder="Enter post title..."
             />
           </div>
 
           {/* Content */}
-          <div class="bg-[#1a1a1a] p-6 rounded-lg border border-[#333]">
-            <label for="content" class="block text-sm font-medium text-gray-300 mb-2">
+          <div class="bg-[var(--admin-bg-tertiary)] p-6 rounded-lg border border-[var(--admin-border-primary)]">
+            <label for="content" class="block text-sm font-medium text-[var(--admin-text-secondary)] mb-2">
               Content
             </label>
             <textarea
               id="content"
               rows={20}
-              class="w-full px-3 py-2 bg-[#222] border border-[#444] rounded-md font-mono text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-white/20 focus:border-white/30"
+              class="w-full px-3 py-2 bg-[var(--admin-bg-card)] border border-[var(--admin-border-secondary)] rounded-md font-mono text-sm text-[var(--admin-text-primary)] placeholder-[var(--admin-text-muted)] focus:ring-2 focus:ring-[var(--admin-accent-primary)]/30 focus:border-[var(--admin-accent-primary)]"
               placeholder="Write your content here... (Markdown supported)"
             >{post?.content || ''}</textarea>
-            <p class="mt-2 text-xs text-gray-500">
+            <p class="mt-2 text-xs text-[var(--admin-text-muted)]">
               Markdown is supported. Use **bold**, *italic*, [links](url), etc.
             </p>
           </div>
 
           {/* Excerpt */}
-          <div class="bg-[#1a1a1a] p-6 rounded-lg border border-[#333]">
-            <label for="excerpt" class="block text-sm font-medium text-gray-300 mb-2">
+          <div class="bg-[var(--admin-bg-tertiary)] p-6 rounded-lg border border-[var(--admin-border-primary)]">
+            <label for="excerpt" class="block text-sm font-medium text-[var(--admin-text-secondary)] mb-2">
               Excerpt
             </label>
             <textarea
               id="excerpt"
               rows={3}
-              class="w-full px-3 py-2 bg-[#222] border border-[#444] rounded-md text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-white/20 focus:border-white/30"
+              class="w-full px-3 py-2 bg-[var(--admin-bg-card)] border border-[var(--admin-border-secondary)] rounded-md text-sm text-[var(--admin-text-primary)] placeholder-[var(--admin-text-muted)] focus:ring-2 focus:ring-[var(--admin-accent-primary)]/30 focus:border-[var(--admin-accent-primary)]"
               placeholder="Brief description for listings..."
             >{post?.excerpt || ''}</textarea>
           </div>
@@ -118,11 +118,11 @@ const title = isEditing ? 'Edit Post' : 'New Post';
         {/* Sidebar */}
         <div class="space-y-6">
           {/* Status */}
-          <div class="bg-[#1a1a1a] p-6 rounded-lg border border-[#333]">
-            <h3 class="text-sm font-medium text-white mb-4">Status</h3>
+          <div class="bg-[var(--admin-bg-tertiary)] p-6 rounded-lg border border-[var(--admin-border-primary)]">
+            <h3 class="text-sm font-medium text-[var(--admin-text-primary)] mb-4">Status</h3>
             <select
               id="status"
-              class="w-full px-3 py-2 bg-[#222] border border-[#444] rounded-md text-sm text-white focus:ring-2 focus:ring-white/20 focus:border-white/30"
+              class="w-full px-3 py-2 bg-[var(--admin-bg-card)] border border-[var(--admin-border-secondary)] rounded-md text-sm text-[var(--admin-text-primary)] focus:ring-2 focus:ring-[var(--admin-accent-primary)]/30 focus:border-[var(--admin-accent-primary)]"
             >
               <option value="draft" selected={post?.status === 'draft'}>Draft</option>
               <option value="published" selected={post?.status === 'published'}>Published</option>
@@ -131,11 +131,11 @@ const title = isEditing ? 'Edit Post' : 'New Post';
           </div>
 
           {/* Post Type */}
-          <div class="bg-[#1a1a1a] p-6 rounded-lg border border-[#333]">
-            <h3 class="text-sm font-medium text-white mb-4">Post Type</h3>
+          <div class="bg-[var(--admin-bg-tertiary)] p-6 rounded-lg border border-[var(--admin-border-primary)]">
+            <h3 class="text-sm font-medium text-[var(--admin-text-primary)] mb-4">Post Type</h3>
             <select
               id="post-type"
-              class="w-full px-3 py-2 bg-[#222] border border-[#444] rounded-md text-sm text-white focus:ring-2 focus:ring-white/20 focus:border-white/30"
+              class="w-full px-3 py-2 bg-[var(--admin-bg-card)] border border-[var(--admin-border-secondary)] rounded-md text-sm text-[var(--admin-text-primary)] focus:ring-2 focus:ring-[var(--admin-accent-primary)]/30 focus:border-[var(--admin-accent-primary)]"
             >
               <option value="page" selected={post?.postType === 'page'}>Page</option>
               <option value="work" selected={post?.postType === 'work'}>Work</option>
@@ -145,48 +145,48 @@ const title = isEditing ? 'Edit Post' : 'New Post';
           </div>
 
           {/* Slug */}
-          <div class="bg-[#1a1a1a] p-6 rounded-lg border border-[#333]">
-            <label for="slug" class="block text-sm font-medium text-gray-300 mb-2">
+          <div class="bg-[var(--admin-bg-tertiary)] p-6 rounded-lg border border-[var(--admin-border-primary)]">
+            <label for="slug" class="block text-sm font-medium text-[var(--admin-text-secondary)] mb-2">
               Slug
             </label>
             <input
               type="text"
               id="slug"
               value={post?.slug || ''}
-              class="w-full px-3 py-2 bg-[#222] border border-[#444] rounded-md text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-white/20 focus:border-white/30"
+              class="w-full px-3 py-2 bg-[var(--admin-bg-card)] border border-[var(--admin-border-secondary)] rounded-md text-sm text-[var(--admin-text-primary)] placeholder-[var(--admin-text-muted)] focus:ring-2 focus:ring-[var(--admin-accent-primary)]/30 focus:border-[var(--admin-accent-primary)]"
               placeholder="url-friendly-name"
             />
-            <p class="mt-1 text-xs text-gray-500">
+            <p class="mt-1 text-xs text-[var(--admin-text-muted)]">
               Used in the URL: /your-slug
             </p>
           </div>
 
           {/* SEO */}
-          <div class="bg-[#1a1a1a] p-6 rounded-lg border border-[#333]">
-            <h3 class="text-sm font-medium text-white mb-4">SEO</h3>
-            
+          <div class="bg-[var(--admin-bg-tertiary)] p-6 rounded-lg border border-[var(--admin-border-primary)]">
+            <h3 class="text-sm font-medium text-[var(--admin-text-primary)] mb-4">SEO</h3>
+
             <div class="space-y-4">
               <div>
-                <label for="meta-title" class="block text-xs font-medium text-gray-400 mb-1">
+                <label for="meta-title" class="block text-xs font-medium text-[var(--admin-text-muted)] mb-1">
                   Meta Title
                 </label>
                 <input
                   type="text"
                   id="meta-title"
                   value={post?.metaTitle || ''}
-                  class="w-full px-3 py-2 bg-[#222] border border-[#444] rounded-md text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-white/20 focus:border-white/30"
+                  class="w-full px-3 py-2 bg-[var(--admin-bg-card)] border border-[var(--admin-border-secondary)] rounded-md text-sm text-[var(--admin-text-primary)] placeholder-[var(--admin-text-muted)] focus:ring-2 focus:ring-[var(--admin-accent-primary)]/30 focus:border-[var(--admin-accent-primary)]"
                   placeholder="SEO title..."
                 />
               </div>
-              
+
               <div>
-                <label for="meta-description" class="block text-xs font-medium text-gray-400 mb-1">
+                <label for="meta-description" class="block text-xs font-medium text-[var(--admin-text-muted)] mb-1">
                   Meta Description
                 </label>
                 <textarea
                   id="meta-description"
                   rows={2}
-                  class="w-full px-3 py-2 bg-[#222] border border-[#444] rounded-md text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-white/20 focus:border-white/30"
+                  class="w-full px-3 py-2 bg-[var(--admin-bg-card)] border border-[var(--admin-border-secondary)] rounded-md text-sm text-[var(--admin-text-primary)] placeholder-[var(--admin-text-muted)] focus:ring-2 focus:ring-[var(--admin-accent-primary)]/30 focus:border-[var(--admin-accent-primary)]"
                   placeholder="SEO description..."
                 >{post?.metaDescription || ''}</textarea>
               </div>
@@ -194,20 +194,20 @@ const title = isEditing ? 'Edit Post' : 'New Post';
           </div>
 
           {/* Featured Media */}
-          <div class="bg-[#1a1a1a] p-6 rounded-lg border border-[#333]">
-            <h3 class="text-sm font-medium text-white mb-4">Featured Media</h3>
-            
+          <div class="bg-[var(--admin-bg-tertiary)] p-6 rounded-lg border border-[var(--admin-border-primary)]">
+            <h3 class="text-sm font-medium text-[var(--admin-text-primary)] mb-4">Featured Media</h3>
+
             <div id="featured-media-preview" class="mb-4">
               {post?.media?.filter(m => m.context === 'featured').map(m => (
-                <div class="relative aspect-video bg-[#222] rounded-md overflow-hidden">
-                  <img 
-                    src={m.media.url} 
+                <div class="relative aspect-video bg-[var(--admin-bg-card)] rounded-md overflow-hidden">
+                  <img
+                    src={m.media.url}
                     alt={m.media.altText || ''}
                     class="w-full h-full object-cover"
                   />
                   <button
                     type="button"
-                    class="absolute top-2 right-2 p-1 bg-red-600 text-white rounded-full hover:bg-red-700"
+                    class="absolute top-2 right-2 p-1 bg-[var(--admin-accent-danger)] text-white rounded-full hover:opacity-90"
                     onclick="removeFeaturedMedia()"
                   >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -216,12 +216,12 @@ const title = isEditing ? 'Edit Post' : 'New Post';
                   </button>
                 </div>
               ))}
-              
+
               {!post?.media?.some(m => m.context === 'featured') && (
                 <button
                   type="button"
                   id="select-media-btn"
-                  class="w-full py-8 border-2 border-dashed border-[#444] rounded-md text-gray-500 hover:border-gray-400 hover:text-gray-400 transition-colors"
+                  class="w-full py-8 border-2 border-dashed border-[var(--admin-border-secondary)] rounded-md text-[var(--admin-text-muted)] hover:border-[var(--admin-border-hover)] hover:text-[var(--admin-text-secondary)] transition-colors"
                 >
                   <svg class="mx-auto h-8 w-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />

@@ -386,6 +386,7 @@ export const audioTracksRelations = relations(audioTracks, ({ one }) => ({
 export const audioPosts = pgTable('audio_posts', {
   id: text('id').primaryKey(),
   title: text('title').notNull(),
+  artist: text('artist').notNull().default('she_skin'), // Artist name
   slug: text('slug').notNull().unique(),
   audioFile: text('audio_file'), // URL to audio file
   artwork: text('artwork'), // URL to artwork image

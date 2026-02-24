@@ -10,7 +10,7 @@ import { media } from './db/schema';
 import { eq, desc, and, isNull, sql } from 'drizzle-orm';
 import { uploadToBunny, deleteFromBunny } from './bunny';
 import { nanoid } from './nanoid';
-import { processImageBuffer, type ProcessedImage } from './media-process';
+import { processImageBuffer, processVideoBuffer, type ProcessedImage, type ProcessedVideo } from './media-process';
 import type { Media } from './db/schema';
 import { unlink } from 'fs/promises';
 import { join } from 'path';
@@ -162,6 +162,55 @@ async function processAndUploadImage(
 }
 
 /**
+ * Process video and generate H.264 variants
+ */
+async function processAndUploadVideo(
+  buffer: Buffer,
+  id: string,
+  datePath: string,
+  friendlyFilename: string
+): Promise<{ variants: ProcessedVideo['variants']; width: number; height: number; mainUrl: string }> {
+  // Use friendly filename (without extension) for processing path
+  const baseName = friendlyFilename.replace(/\.[^/.]+$/, '');
+  const filenameForProcessing = `${datePath}/${baseName}.mp4`;
+  const { result } = await processVideoBuffer(buffer, filenameForProcessing);
+
+  // Upload variants to Bunny
+  const variants: ProcessedVideo['variants'] = {};
+
+  for (const [sizeName, variantData] of Object.entries(result.variants)) {
+    // Get the file buffer from the processed result
+    const variantBuffer = await fetchVariantBuffer(variantData.url);
+    if (variantBuffer) {
+      const bunnyUrl = await uploadToBunny(
+        variantBuffer,
+        `${datePath}/${baseName}-${sizeName}.mp4`,
+        { contentType: 'video/mp4' }
+      );
+
+      variants[sizeName] = {
+        url: bunnyUrl,
+        width: variantData.width,
+        height: variantData.height,
+        size: variantBuffer.length,
+      };
+    }
+  }
+
+  const mainUrl = variants['1080p']?.url || variants['720p']?.url || variants['480p']?.url || variants.original?.url || '';
+
+  // Clean up temporary local files after successful upload
+  await cleanupTempFiles(result.variants);
+
+  return {
+    variants,
+    width: result.metadata.width,
+    height: result.metadata.height,
+    mainUrl,
+  };
+}
+
+/**
  * Fetch variant buffer from local file (helper for image processing)
  */
 async function fetchVariantBuffer(url: string): Promise<Buffer | null> {
@@ -250,10 +299,10 @@ export async function uploadMedia(
 
     // Generate friendly filename for images (converted to webp)
     // or use original name for non-image files
-    const friendlyFilename = mediaType === 'image' 
+    const friendlyFilename = mediaType === 'image'
       ? generateFriendlyFilename(originalName, 'webp')
       : generateFriendlyFilename(originalName);
-    
+
     if (mediaType === 'image' && options.processImage !== false) {
       // Process image with Sharp, upload variants
       const processed = await processAndUploadImage(buffer, id, datePath, friendlyFilename);
@@ -263,11 +312,21 @@ export async function uploadMedia(
       height = processed.height;
       blurhash = processed.blurhash;
       dominantColor = processed.dominantColor;
-      
+
+      // Calculate total size of all variants
+      fileSize = Object.values(variants || {}).reduce((sum, v) => sum + (v?.size || 0), 0);
+    } else if (mediaType === 'video') {
+      // Process video with ffmpeg, upload variants
+      const processed = await processAndUploadVideo(buffer, id, datePath, friendlyFilename);
+      mainUrl = processed.mainUrl;
+      variants = processed.variants;
+      width = processed.width;
+      height = processed.height;
+
       // Calculate total size of all variants
       fileSize = Object.values(variants || {}).reduce((sum, v) => sum + (v?.size || 0), 0);
     } else {
-      // Upload raw file for audio, video, documents
+      // Upload raw file for audio, documents
       const filename = `${datePath}/${friendlyFilename}`;
       mainUrl = await uploadToBunny(buffer, filename, { contentType: file.type });
     }
@@ -277,7 +336,7 @@ export async function uploadMedia(
       id,
       filename: friendlyFilename,
       originalName,
-      mimeType: mediaType === 'image' ? 'image/webp' : file.type,
+      mimeType: mediaType === 'image' ? 'image/webp' : mediaType === 'video' ? 'video/mp4' : file.type,
       fileSize,
       url: mainUrl,
       path: `${datePath}/${id}`,
@@ -523,7 +582,7 @@ export interface MediaManifest {
     originalName: string;
     createdAt: string;
     metadata: { format?: string; duration?: number; width?: number; height?: number };
-    variants: { original?: { url: string; size: number } };
+    variants: Record<string, { url: string; size: number; width: number; height: number }>;
   }>;
 }
 

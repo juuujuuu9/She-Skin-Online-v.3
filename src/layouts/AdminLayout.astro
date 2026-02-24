@@ -5,6 +5,7 @@
 
 import Layout from '@layouts/Layout.astro';
 import { generateCsrfToken, csrfCookieName } from '@lib/csrf';
+import ThemeToggle from '@components/admin/ThemeToggle.tsx';
 
 interface Props {
   title: string;
@@ -23,7 +24,6 @@ Astro.cookies.set(csrfCookieName(), token, {
 
 const currentPath = Astro.url.pathname;
 const adminNavItems = [
-  { href: '/admin', label: 'Uploads', icon: 'dashboard' },
   { href: '/admin/media', label: 'Media Library', icon: 'media' },
   { href: '/admin/audio', label: 'ICT★SNU SOUND', icon: 'audio' },
   { href: '/admin/works', label: 'Works', icon: 'works' },
@@ -47,18 +47,18 @@ const isActive = (href: string) => {
 ---
 
 <Layout title={title}>
-  <div class="h-dvh bg-[#111] flex flex-col overflow-hidden">
+  <div class="admin-theme-container h-dvh bg-[var(--admin-bg-primary)] flex flex-col overflow-hidden">
     <div class="flex flex-row flex-1 min-h-0 items-stretch">
       {/* Admin sidebar */}
-      <aside class="w-64 shrink-0 flex flex-col bg-[#0a0a0a] text-white self-stretch">
-        <div class="flex items-center justify-between p-4 border-b border-white/10">
-          <a href="/admin" class="text-lg font-bold tracking-tight text-white hover:text-white/90">
+      <aside class="admin-sidebar w-64 shrink-0 flex flex-col bg-[var(--admin-bg-secondary)] text-[var(--admin-text-primary)] self-stretch">
+        <div class="flex items-center justify-between p-4 border-b border-[var(--admin-border-divider)]">
+          <a href="/admin" class="text-lg font-bold tracking-tight text-[var(--admin-text-primary)] hover:opacity-90">
             she_skin
           </a>
           <button
             type="button"
             id="admin-logout-btn"
-            class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium text-white/70 hover:bg-red-500/20 hover:text-red-400 transition-colors uppercase tracking-wider"
+            class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium text-[var(--admin-text-tertiary)] hover:bg-[var(--admin-accent-danger)]/20 hover:text-[var(--admin-accent-danger)] transition-colors uppercase tracking-wider"
           >
             <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -76,7 +76,9 @@ const isActive = (href: string) => {
                   data-astro-reload
                   class={`
                     flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors
-                    ${isActive(item.href) ? 'bg-white text-black' : 'text-white/80 hover:bg-white/10 hover:text-white'}
+                    ${isActive(item.href)
+                      ? 'bg-[var(--admin-sidebar-active-bg)] text-[var(--admin-sidebar-active-text)]'
+                      : 'text-[var(--admin-text-secondary)] hover:bg-[var(--admin-sidebar-hover-bg)] hover:text-[var(--admin-text-primary)]'}
                   `}
                 >
                   <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" set:html={iconPaths[item.icon] ?? ''} />
@@ -86,14 +88,14 @@ const isActive = (href: string) => {
             ))}
           </ul>
         </nav>
-        <div class="mx-3 border-t border-white/10" />
+        <div class="mx-3 border-t border-[var(--admin-border-divider)]" />
         <nav class="p-3">
           <ul class="space-y-0.5">
             <li>
               <a
                 href="/"
                 data-astro-reload
-                class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm text-white/60 hover:bg-white/10 hover:text-white transition-colors"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm text-[var(--admin-text-tertiary)] hover:bg-[var(--admin-sidebar-hover-bg)] hover:text-[var(--admin-text-primary)] transition-colors"
               >
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -101,16 +103,34 @@ const isActive = (href: string) => {
                 <span>View Site</span>
               </a>
             </li>
+            <li>
+              <ThemeToggle client:load />
+            </li>
           </ul>
         </nav>
       </aside>
 
       {/* Main content area */}
-      <div class="flex-1 flex flex-col min-h-0 overflow-hidden">
+      <div class="admin-content flex-1 flex flex-col min-h-0 overflow-hidden">
         <slot />
       </div>
     </div>
   </div>
+
+  <script is:inline>
+    // Apply theme immediately to prevent flash
+    (function() {
+      const savedTheme = localStorage.getItem('admin-theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = savedTheme || (prefersDark ? 'dark' : 'light');
+
+      if (theme === 'light') {
+        document.documentElement.classList.add('light');
+        const adminContainer = document.querySelector('.admin-theme-container');
+        if (adminContainer) adminContainer.classList.add('light');
+      }
+    })();
+  </script>
 
   <script>
     // Logout button handler - Clerk sign out with redirect

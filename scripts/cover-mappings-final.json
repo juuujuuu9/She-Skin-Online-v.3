@@ -1,0 +1,776 @@
+{
+  "generatedAt": "2026-02-23T23:19:38.753Z",
+  "totalMappings": 85,
+  "downloaded": 39,
+  "skipped": 45,
+  "failed": 1,
+  "totalImagesInFolder": 117,
+  "mappings": [
+    {
+      "postId": 20184,
+      "thumbnailId": 20185,
+      "postTitle": "she_skin - beside a luv like mine (mt1 stream)",
+      "postSlug": "she-skin-beside-a-luv-like-mine-mt1-stream",
+      "imageUrl": "https://www.sheskin.org/audio/she_skin-beside-a-luv-like-mine-mt1-stream/ballm-cover/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/she-skin-beside-a-luv-like-mine-mt1-stream.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 20104,
+      "thumbnailId": 20105,
+      "postTitle": "LIBC - Driving On The Sun",
+      "postSlug": "libc-driving-on-the-sun",
+      "imageUrl": "https://www.sheskin.org/audio/libc-driving-on-the-sun/screenshot-2025-12-17-at-12-47-33-am/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/libc-driving-on-the-sun.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 20095,
+      "thumbnailId": 20096,
+      "postTitle": "dnshe_v.5",
+      "postSlug": "dnshe-v-5",
+      "imageUrl": "https://www.sheskin.org/audio/dnshe_v-5/screenshot-2025-11-30-at-3-21-11-pm-min/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/dnshe-v-5.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 20090,
+      "thumbnailId": 20091,
+      "postTitle": "she_skin - like super man (never 2FAR_ALONG 19) mt1 stream",
+      "postSlug": "she-skin-like-super-man-never-2far-along-19-mt1-stream",
+      "imageUrl": "https://www.sheskin.org/audio/she_skin-like-super-man-never-2far_along-19-mt1-stream/screenshot-2025-11-15-at-12-04-29-pm/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/she-skin-like-super-man-never-2far-along-19-mt1-stream.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 20035,
+      "thumbnailId": 20036,
+      "postTitle": "she_skin - THA DASH (never 2FAR_ALONG 18) mt1 stream",
+      "postSlug": "she-skin-tha-dash-never-2far-along-18-mt1-stream",
+      "imageUrl": "https://www.sheskin.org/audio/she_skin-tha-dash-never-2far_along-18-mt1-stream/cover-sept-copy/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/she-skin-tha-dash-never-2far-along-18-mt1-stream.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 20033,
+      "thumbnailId": 20034,
+      "postTitle": "LIBC- LIBC IS SOUND",
+      "postSlug": "libc-libc-is-sound",
+      "imageUrl": "https://www.sheskin.org/audio/libc-libc-is-sound/screenshot-2025-09-07-at-5-33-49-pm/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/libc-libc-is-sound.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 19972,
+      "thumbnailId": 19973,
+      "postTitle": "she_skin - A Spexial Pt. Of Me (mt1 stream)",
+      "postSlug": "she-skin-a-spexial-pt-of-me-mt1-stream",
+      "imageUrl": "https://www.sheskin.org/audio/she_skin-a-spexial-pt-of-me-mt1-stream/cove-copy/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/she-skin-a-spexial-pt-of-me-mt1-stream.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 19923,
+      "thumbnailId": 19924,
+      "postTitle": "LIBC - So High / When I Land",
+      "postSlug": "libc-so-high-when-i-land",
+      "imageUrl": "https://www.sheskin.org/audio/libc-so-high-when-i-land/screen-shot-2025-06-08-at-11-36-36-pm/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/libc-so-high-when-i-land.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 19895,
+      "thumbnailId": 19896,
+      "postTitle": "C U GRiN (016. never 2FAR_ALONG) mt1 stream",
+      "postSlug": "c-u-grin-016-never-2far-along-mt1-stream",
+      "imageUrl": "https://www.sheskin.org/audio/c-u-grin-016-never-2far_along-mt1-stream/w1/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/c-u-grin-016-never-2far-along-mt1-stream.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 19836,
+      "thumbnailId": 19837,
+      "postTitle": "she_skin- i'dedik8 (015. never 2FAR_ALONG) mt1 stream",
+      "postSlug": "she-skin-i-dedik8-015-never-2far-along-mt1-stream",
+      "imageUrl": "https://www.sheskin.org/audio/she_skin-idedik8-015-never-2far_along-mt1-stream/n1/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/she-skin-i-dedik8-015-never-2far-along-mt1-stream.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 19817,
+      "thumbnailId": 19818,
+      "postTitle": "Liberty & Allowance (014. never_2FAR ALONG) mt1 stream",
+      "postSlug": "liberty-allowance-014-never-2far-along-mt1-stream",
+      "imageUrl": "https://www.sheskin.org/audio/19817/l-a-a-cover/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/liberty-allowance-014-never-2far-along-mt1-stream.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 19813,
+      "thumbnailId": 19814,
+      "postTitle": "HERNBEAN5150 - PUT IT DOWN",
+      "postSlug": "hernbean5150-put-it-down",
+      "imageUrl": "https://www.sheskin.org/audio/hernbean5150-put-it-down/screen-shot-2025-03-10-at-8-25-01-pm-min/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/hernbean5150-put-it-down.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 19792,
+      "thumbnailId": 19793,
+      "postTitle": "LIBC - Rambling",
+      "postSlug": "libc-rambling",
+      "imageUrl": "https://www.sheskin.org/audio/libc-rambling/screen-shot-2025-02-16-at-9-41-28-pm/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/libc-rambling.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 19790,
+      "thumbnailId": 19791,
+      "postTitle": "she_skin - town (mt1 stream)",
+      "postSlug": "she-skin-town-mt1-stream",
+      "imageUrl": "https://www.sheskin.org/audio/she_skin-town-mt1-stream/cova/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/she-skin-town-mt1-stream.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 19783,
+      "thumbnailId": 19784,
+      "postTitle": "she_skin - emergency xoxo (013. never 2FAR_ALONG) mt1 stream",
+      "postSlug": "she-skin-emergency-xoxo-013-never-2far-along-mt1-stream",
+      "imageUrl": "https://www.sheskin.org/audio/emergency-xoxo-013-never-2far_along-mt1-stream/exoxo-copy/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/she-skin-emergency-xoxo-013-never-2far-along-mt1-stream.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 19742,
+      "thumbnailId": 19743,
+      "postTitle": "D. THORNHILL - FREEK4D (2020-2025) MIXTAPE",
+      "postSlug": "d-thornhill-freek4d-2020-2025-mixtape",
+      "imageUrl": "https://www.sheskin.org/audio/d-thornhill-freek4d-2020-2025-mixtape/d-final/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/d-thornhill-freek4d-2020-2025-mixtape.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 19710,
+      "thumbnailId": 19711,
+      "postTitle": "Stay Anesthesia, Stay. Pt 2 (mt1 stream)",
+      "postSlug": "stay-anesthesia-stay-pt-2-mt1-stream",
+      "imageUrl": "https://www.sheskin.org/audio/stay-anesthesia-stay-pt-2-mt1-stream/sas1/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/stay-anesthesia-stay-pt-2-mt1-stream.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 19646,
+      "thumbnailId": 19647,
+      "postTitle": "LIBC- WORLDLY PLEASURES",
+      "postSlug": "libc-worldly-pleasures",
+      "imageUrl": "https://www.sheskin.org/audio/libc-worldly-pleasures/screenshot-4/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/libc-worldly-pleasures.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 19639,
+      "thumbnailId": 19640,
+      "postTitle": "she_skin- Jus'a Harmony (011. never 2FAR_ALONG) mt1 stream",
+      "postSlug": "she-skin-jus-a-harmony-011-never-2far-along-mt1-stream",
+      "imageUrl": "https://www.sheskin.org/audio/she_skin-jusa-harmony-011-never-2far_along-mt1-stream/untitled-2-min-2/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/she-skin-jus-a-harmony-011-never-2far-along-mt1-stream.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 19605,
+      "thumbnailId": 19606,
+      "postTitle": "Hernbean5150 + LIBC - While On Call 2 Album",
+      "postSlug": "hernbean5150-libc-while-on-call-2-album",
+      "imageUrl": "https://www.sheskin.org/audio/hernbean5150-libc-while-on-call-2-album/hblibc-square-cover-min/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/hernbean5150-libc-while-on-call-2-album.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 19549,
+      "thumbnailId": 19551,
+      "postTitle": "she_skin- Privacy N Hunger (010. never 2FAR_ALONG) mt1 stream",
+      "postSlug": "she-skin-privacy-n-hunger-010-never-2far-along-mt1-stream",
+      "imageUrl": "https://www.sheskin.org/audio/she_skin-privacy-n-hunger-010-never-2far_along-mt1-stream/c1-3/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/she-skin-privacy-n-hunger-010-never-2far-along-mt1-stream.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 19537,
+      "thumbnailId": 19538,
+      "postTitle": "8SHAPED - BETTER 4 WORST (MUSIC VIDEO)",
+      "postSlug": "8shaped-better-4-worst-music-video",
+      "imageUrl": "https://www.sheskin.org/audio/8shaped-better-4-worst-music-video/screen-shot-2024-09-03-at-1-00-31-pm/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/8shaped-better-4-worst-music-video.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 19479,
+      "thumbnailId": 19480,
+      "postTitle": "Hernbean5150 - Joyous (Prod. LIBC) Shot by Bailey Goldsborough",
+      "postSlug": "hernbean5150-joyous-prod-libc-shot-by-bailey-goldsborough",
+      "imageUrl": "https://www.sheskin.org/audio/hernbean5150-joyous-prod-libc-shot-by-bailey-goldsborough/screenshot-3/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/hernbean5150-joyous-prod-libc-shot-by-bailey-goldsborough.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 19461,
+      "thumbnailId": 19462,
+      "postTitle": "she_skin- SMILED (009. never 2FAR_ALONG)",
+      "postSlug": "she-skin-smiled-009-never-2far-along",
+      "imageUrl": "https://www.sheskin.org/audio/she_skin-smiled-009-never-2far_along/newe-copy-min/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/she-skin-smiled-009-never-2far-along.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 19404,
+      "thumbnailId": 19405,
+      "postTitle": "Hernbean5150 - Exotic (Prod. LIBC)",
+      "postSlug": "hernbean5150-exotic-prod-libc",
+      "imageUrl": "https://www.sheskin.org/audio/hernbean5150-exotic-prod-libc/screenshot-2/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/hernbean5150-exotic-prod-libc.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 19340,
+      "thumbnailId": 19339,
+      "postTitle": "Hernbean5150- Trust Issues (Prod. LIBC)",
+      "postSlug": "hernbean5150-trust-issues-prod-libc",
+      "imageUrl": "https://www.sheskin.org/screenshot/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/hernbean5150-trust-issues-prod-libc.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 19335,
+      "thumbnailId": 19336,
+      "postTitle": "LIBC- MYSTICS",
+      "postSlug": "libc-mystics",
+      "imageUrl": "https://www.sheskin.org/audio/libc-mystics/screen-shot-2024-06-04-at-9-27-47-pm/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/libc-mystics.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 19300,
+      "thumbnailId": 19302,
+      "postTitle": "007. never 2FAR_ALONG (mt1 stream 5.24)",
+      "postSlug": "007-never-2far-along-mt1-stream-5-24",
+      "imageUrl": "https://www.sheskin.org/audio/007-never-2far_along-mt1-stream-5-24/cova-copy/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/007-never-2far-along-mt1-stream-5-24.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 19277,
+      "thumbnailId": 19278,
+      "postTitle": "she_skin - the hand we hol' (mt1 stream 3.24)",
+      "postSlug": "she-skin-the-hand-we-hol-mt1-stream-3-24",
+      "imageUrl": "https://www.sheskin.org/audio/she_skin-the-hand-we-hol-mt1-stream-3-24/untitled-2-5/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/she-skin-the-hand-we-hol-mt1-stream-3-24.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 19265,
+      "thumbnailId": 19266,
+      "postTitle": "LIBC- WANT FI MORE",
+      "postSlug": "libc-want-fi-more",
+      "imageUrl": "https://www.sheskin.org/audio/libc-want-fi-more/screen-shot-2024-03-13-at-8-09-01-pm/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/libc-want-fi-more.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 19221,
+      "thumbnailId": 19222,
+      "postTitle": "Hernbean5150- Hawks (Prod. LIBC)",
+      "postSlug": "hernbean5150-hawks-prod-libc",
+      "imageUrl": "https://www.sheskin.org/audio/hernbean5150-hawks-prod-libc-2/screen-shot-2024-02-23-at-2-54-23-pm/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/hernbean5150-hawks-prod-libc.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 19216,
+      "thumbnailId": 19217,
+      "postTitle": "she_skin- sumtimes al'la time (mt1 stream 2.21.24)",
+      "postSlug": "she-skin-sumtimes-al-la-time-mt1-stream-2-21-24",
+      "imageUrl": "https://www.sheskin.org/audio/she_skin-sumtimes-alla-time-mt1-stream-2-21-24/s-coverr-copy/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/she-skin-sumtimes-al-la-time-mt1-stream-2-21-24.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 19218,
+      "thumbnailId": 19219,
+      "postTitle": "Hernbean5150- Dayum (Prod. sexafterchurch) Music Video",
+      "postSlug": "hernbean5150-dayum-prod-sexafterchurch-music-video",
+      "imageUrl": "https://www.sheskin.org/audio/hernbean5150-dayum-prod-sexafterchurch-music-video/screen-shot-2024-02-15-at-11-17-22-pm/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/hernbean5150-dayum-prod-sexafterchurch-music-video.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 19164,
+      "thumbnailId": 19165,
+      "postTitle": "006. never 2FAR_ALONG",
+      "postSlug": "006-never-2far-along",
+      "imageUrl": "https://www.sheskin.org/audio/006-never-2far_along/006-cover/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/006-never-2far-along.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 19134,
+      "thumbnailId": 19135,
+      "postTitle": "d.thornhill & dj phariq_style/earfquake",
+      "postSlug": "d-thornhill-dj-phariq-style-earfquake",
+      "imageUrl": "https://www.sheskin.org/audio/d-thornhill-dj-phariq_style-earfquake/screen-shot-2024-01-01-at-8-10-22-pm/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/d-thornhill-dj-phariq-style-earfquake.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 19132,
+      "thumbnailId": 19133,
+      "postTitle": "LIBC - Rebuild / Sharing is Caring",
+      "postSlug": "libc-rebuild-sharing-is-caring",
+      "imageUrl": "https://www.sheskin.org/audio/libc-rebuild-sharing-is-caring/screen-shot-2024-01-01-at-8-08-07-pm/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/libc-rebuild-sharing-is-caring.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 19088,
+      "thumbnailId": 19089,
+      "postTitle": "dnshe_v.4",
+      "postSlug": "dnshe-v-4",
+      "imageUrl": "https://www.sheskin.org/audio/dnshe_v-4/screen-shot-2023-12-14-at-3-21-55-pm/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/dnshe-v-4.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 19086,
+      "thumbnailId": 19087,
+      "postTitle": "Bailey Goldsborough : mahoganyDVD'23",
+      "postSlug": "bailey-goldsborough-mahoganydvd-23",
+      "imageUrl": "https://www.sheskin.org/audio/bailey-goldsborough-mahoganydvd23/screen-shot-2023-12-06-at-7-23-25-pm/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/bailey-goldsborough-mahoganydvd-23.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 19052,
+      "thumbnailId": 19051,
+      "postTitle": "Hernbean5150- Hawks (Prod. LIBC)",
+      "postSlug": "hernbean5150-hawks-prod-libc",
+      "imageUrl": "https://www.sheskin.org/audio/hernbean5150-hawks-prod-libc/screen-shot-2023-11-14-at-4-58-43-pm/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/hernbean5150-hawks-prod-libc.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 19046,
+      "thumbnailId": 19047,
+      "postTitle": "Shenandoah Glitter (mt1 stream 11.23)",
+      "postSlug": "shenandoah-glitter-mt1-stream-11-23",
+      "imageUrl": "https://www.sheskin.org/audio/shenandoah-glitter-mt1-stream-11-23/mj/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/shenandoah-glitter-mt1-stream-11-23.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 19048,
+      "thumbnailId": 19049,
+      "postTitle": "Hernbean5150- I C T",
+      "postSlug": "hernbean5150-i-c-t",
+      "imageUrl": "https://www.sheskin.org/audio/hernbean5150-i-c-t/new-logo/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/hernbean5150-i-c-t.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 19050,
+      "thumbnailId": 19051,
+      "postTitle": "Hernbean5150- Hawks (Prod. LIBC)",
+      "postSlug": "hernbean5150-hawks-prod-libc",
+      "imageUrl": "https://www.sheskin.org/audio/hernbean5150-hawks-prod-libc/screen-shot-2023-11-14-at-4-58-43-pm/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/hernbean5150-hawks-prod-libc.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 19053,
+      "thumbnailId": 19054,
+      "postTitle": "D. Thornhill- roar",
+      "postSlug": "d-thornhill-roar",
+      "imageUrl": "https://www.sheskin.org/audio/d-thornhill-roar/screen-shot-2023-11-14-at-5-00-22-pm/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/d-thornhill-roar.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 18977,
+      "thumbnailId": 18976,
+      "postTitle": "005. never 2FAR_ALONG (mt1 stream)",
+      "postSlug": "005-never-2far-along-mt1-stream",
+      "imageUrl": "https://www.sheskin.org/never-2/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/005-never-2far-along-mt1-stream.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 18963,
+      "thumbnailId": 18964,
+      "postTitle": "LIBC- Truly",
+      "postSlug": "libc-truly",
+      "imageUrl": "https://www.sheskin.org/audio/libc-truly/9cae3838-683d-4657-aa18-19bdc12af2a4/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/libc-truly.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 18925,
+      "thumbnailId": 18926,
+      "postTitle": "she_skin- Scent Ah'Who (mt1 stream)",
+      "postSlug": "she-skin-scent-ah-who-mt1-stream",
+      "imageUrl": "https://www.sheskin.org/audio/she_skin-scent-ahwho-mt1-stream/scent-ah-who-cover/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/she-skin-scent-ah-who-mt1-stream.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 18782,
+      "thumbnailId": 18783,
+      "postTitle": "LIBC- FIND & SEEK",
+      "postSlug": "libc-find-seek",
+      "imageUrl": "https://www.sheskin.org/audio/libc-find-seek/screen-shot-2023-07-28-at-1-01-46-pm/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/libc-find-seek.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 18784,
+      "thumbnailId": 18785,
+      "postTitle": "Mahogany (Bailey Goldsborough & D.Thornhill) 7.20.23",
+      "postSlug": "mahogany-bailey-goldsborough-d-thornhill-7-20-23",
+      "imageUrl": "https://www.sheskin.org/audio/mahogany-bailey-goldsborough-d-thornhill-7-20-23/screen-shot-2023-07-28-at-1-03-24-pm/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/mahogany-bailey-goldsborough-d-thornhill-7-20-23.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 18768,
+      "thumbnailId": 18769,
+      "postTitle": "004. NEVER 2_FARALONG",
+      "postSlug": "004-never-2-faralong",
+      "imageUrl": "https://www.sheskin.org/audio/004-never-2_faralong/004-cover/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/004-never-2-faralong.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 18713,
+      "thumbnailId": 18714,
+      "postTitle": "KAN'TASE IT (mt1 stream)",
+      "postSlug": "kan-tase-it-mt1-stream",
+      "imageUrl": "https://www.sheskin.org/audio/kantase-it-mt1-stream/untitled-4-2/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/kan-tase-it-mt1-stream.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 18530,
+      "thumbnailId": 18531,
+      "postTitle": "Halcyon Veil: she_skin (HVMIX026)",
+      "postSlug": "halcyon-veil-she-skin-hvmix026",
+      "imageUrl": "https://www.sheskin.org/audio/halcyon-veil-she_skin-hvmix026/cover-3/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/halcyon-veil-she-skin-hvmix026.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 18525,
+      "thumbnailId": 18526,
+      "postTitle": "LIBC- THOUSAND MILLION",
+      "postSlug": "libc-thousand-million",
+      "imageUrl": "https://www.sheskin.org/audio/libc-thousand-million/screen-shot-2023-05-08-at-12-42-11-am/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/libc-thousand-million.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 18479,
+      "thumbnailId": 18480,
+      "postTitle": "003. Never 2FAR_ALONG (mt1 stream)",
+      "postSlug": "003-never-2far-along-mt1-stream",
+      "imageUrl": "https://www.sheskin.org/audio/003-never-2far_along-mt1-stream/c6-2/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/003-never-2far-along-mt1-stream.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 18431,
+      "thumbnailId": 18432,
+      "postTitle": "D. THORNHILL- MEDLEY4",
+      "postSlug": "d-thornhill-medley4",
+      "imageUrl": "https://www.sheskin.org/audio/d-thornhill-medley4/screen-shot-2023-04-09-at-10-20-40-pm/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/d-thornhill-medley4.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 18385,
+      "thumbnailId": 18386,
+      "postTitle": "002. Never 2FAR_ALONG",
+      "postSlug": "002-never-2far-along",
+      "imageUrl": "https://www.sheskin.org/audio/002-never-2far_along/cover-2/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/002-never-2far-along.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 18347,
+      "thumbnailId": 18348,
+      "postTitle": "LIBC- Even If/ That's All",
+      "postSlug": "libc-even-if-that-s-all",
+      "imageUrl": "https://www.sheskin.org/audio/libc-even-if-thats-all/screen-shot-2023-03-14-at-12-09-10-am/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/libc-even-if-that-s-all.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 18291,
+      "thumbnailId": 18292,
+      "postTitle": "AD1- AMERICAN DARLING (MT1 STREAM)",
+      "postSlug": "ad1-american-darling-mt1-stream",
+      "imageUrl": "https://www.sheskin.org/audio/ad1-american-darling-mt1-stream/cover/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/ad1-american-darling-mt1-stream.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 18293,
+      "thumbnailId": 18294,
+      "postTitle": "HERNBEAN5150- ANATOMY (ALBUM)",
+      "postSlug": "hernbean5150-anatomy-album",
+      "imageUrl": "https://www.sheskin.org/audio/hernbean5150-anatomy-album/anatomy/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/hernbean5150-anatomy-album.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 18295,
+      "thumbnailId": 18296,
+      "postTitle": "LIBC- SHUFFLE",
+      "postSlug": "libc-shuffle",
+      "imageUrl": "https://www.sheskin.org/audio/libc-shuffle/screen-shot-2023-02-13-at-8-34-50-pm/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/libc-shuffle.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 18216,
+      "thumbnailId": 18217,
+      "postTitle": "LISP (Love Iz So Precious)",
+      "postSlug": "lisp-love-iz-so-precious",
+      "imageUrl": "https://www.sheskin.org/audio/lisp-love-iz-so-precious/lisp-cover-copy/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/lisp-love-iz-so-precious.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 18297,
+      "thumbnailId": 18298,
+      "postTitle": "D. THORNHILL- ONE STEP",
+      "postSlug": "d-thornhill-one-step",
+      "imageUrl": "https://www.sheskin.org/audio/d-thornhill-one-step/screen-shot-2023-02-13-at-8-36-58-pm/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/d-thornhill-one-step.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 18142,
+      "thumbnailId": 18143,
+      "postTitle": "LIBC- 10 (IN THE BASEMENT)",
+      "postSlug": "libc-10-in-the-basement",
+      "imageUrl": "https://www.sheskin.org/audio/libc-10-in-the-basement/attachment/101/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/libc-10-in-the-basement.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 18063,
+      "thumbnailId": 18064,
+      "postTitle": "she_skin- AT LALA (mt1 stream)",
+      "postSlug": "she-skin-at-lala-mt1-stream",
+      "imageUrl": "https://www.sheskin.org/audio/she_skin-at-lala-mt1-stream/at-la-la-copy/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/she-skin-at-lala-mt1-stream.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 18058,
+      "thumbnailId": 18059,
+      "postTitle": "D. Thornhill- MEDLEY 3",
+      "postSlug": "d-thornhill-medley-3",
+      "imageUrl": "https://www.sheskin.org/audio/d-thornhill-medley-3/screen-shot-2022-12-05-at-7-50-42-pm/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/d-thornhill-medley-3.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 18049,
+      "thumbnailId": 18060,
+      "postTitle": "LIBC: WISHING & WANDERING",
+      "postSlug": "libc-wishing-wandering",
+      "imageUrl": "https://www.sheskin.org/audio/libc-wishing-wandering/lo/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/libc-wishing-wandering.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 18065,
+      "thumbnailId": 18066,
+      "postTitle": "Hernbean5150- WSB WINTER SO BLU (Unreleased Tracks)",
+      "postSlug": "hernbean5150-wsb-winter-so-blu-unreleased-tracks",
+      "imageUrl": "https://www.sheskin.org/audio/hernbean5150-wsb-unreleased/hh3/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/hernbean5150-wsb-winter-so-blu-unreleased-tracks.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 18013,
+      "thumbnailId": 18014,
+      "postTitle": "001 Never 2FAR_ALONG",
+      "postSlug": "001-never-2far-along",
+      "imageUrl": "https://www.sheskin.org/audio/001-never-2far_along/srr/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/001-never-2far-along.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 17957,
+      "thumbnailId": 17958,
+      "postTitle": "LIBC- UNWIND 2",
+      "postSlug": "libc-unwind-2",
+      "imageUrl": "https://www.sheskin.org/audio/libc-unwind-2/libc1/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/libc-unwind-2.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 17866,
+      "thumbnailId": 17867,
+      "postTitle": "dnshe_v.3",
+      "postSlug": "dnshe-v-3",
+      "imageUrl": "https://www.sheskin.org/audio/dnshe_v-3/dnshe-final/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/dnshe-v-3.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 17917,
+      "thumbnailId": 17918,
+      "postTitle": "LIBC- G.G. (GET GULLY)",
+      "postSlug": "libc-g-g-get-gully",
+      "imageUrl": "https://www.sheskin.org/audio/libc-g-g-get-gully/screen-shot-2022-10-19-at-9-57-45-pm/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/libc-g-g-get-gully.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 17681,
+      "thumbnailId": 17682,
+      "postTitle": "LIBC- EVERYBODY NEEDS SOMEBODY (SIDE A)",
+      "postSlug": "libc-everybody-needs-somebody-side-a",
+      "imageUrl": "https://www.sheskin.org/audio/libc-everybody-needs-somebody-side-a/screen-shot-2022-09-25-at-9-09-53-pm/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/libc-everybody-needs-somebody-side-a.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 17667,
+      "thumbnailId": 17668,
+      "postTitle": "El- Oh- V'Ee Mursik (mt1 stream)",
+      "postSlug": "el-oh-v-ee-mursik-mt1-stream",
+      "imageUrl": "https://www.sheskin.org/audio/el-oh-vee-mursik/e1/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/el-oh-v-ee-mursik-mt1-stream.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 17634,
+      "thumbnailId": 17633,
+      "postTitle": "D. Thornhill- Get Wide/ Pop_Flip_Shake",
+      "postSlug": "d-thornhill-get-wide-pop-flip-shake",
+      "imageUrl": "https://www.sheskin.org/screen-shot-2022-09-13-at-12-08-32-pm/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/d-thornhill-get-wide-pop-flip-shake.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 17609,
+      "thumbnailId": 17610,
+      "postTitle": "Hernbean5150 & LIBC: Soon I'll See (Album)",
+      "postSlug": "hernbean5150-libc-soon-i-ll-see-album",
+      "imageUrl": "https://www.sheskin.org/audio/hernbean5150-libc-soon-ill-see-album/heernon-copy-recovered-copy/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/hernbean5150-libc-soon-i-ll-see-album.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 17595,
+      "thumbnailId": 17596,
+      "postTitle": "First Kiss (mt1 stream)",
+      "postSlug": "first-kiss-mt1-stream",
+      "imageUrl": "https://www.sheskin.org/audio/first-kiss-mt1-stream/fk/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/first-kiss-mt1-stream.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 17519,
+      "thumbnailId": 17520,
+      "postTitle": "LIBC- N2ME",
+      "postSlug": "libc-n2me",
+      "imageUrl": "https://www.sheskin.org/audio/libc-n2me/screen-shot-2022-08-28-at-1-42-26-am/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/libc-n2me.jpg",
+      "status": "skipped"
+    },
+    {
+      "postId": 17516,
+      "thumbnailId": 17517,
+      "postTitle": "Diesel D- Total Control Freestyle (dnshe_.s1)",
+      "postSlug": "diesel-d-total-control-freestyle-dnshe-s1",
+      "imageUrl": "https://www.sheskin.org/audio/diesel-d-total-control-freestyle/diesel-d/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/diesel-d-total-control-freestyle-dnshe-s1.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 17513,
+      "thumbnailId": 17455,
+      "postTitle": "Bruddas Unite 02 : Diesel D + HB5150",
+      "postSlug": "bruddas-unite-02-diesel-d-hb5150",
+      "imageUrl": "https://www.sheskin.org/collabs/diesel-d-hb5150-bruddas-unite-02/screen-shot-2022-08-16-at-2-04-51-am/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/bruddas-unite-02-diesel-d-hb5150.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 15716,
+      "thumbnailId": 15717,
+      "postTitle": "YOUR LOVE. ON MIND. ALL NIGHT.",
+      "postSlug": "your-love-on-mind-all-night",
+      "imageUrl": "https://www.sheskin.org/new-cover/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/your-love-on-mind-all-night.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 15337,
+      "thumbnailId": 15338,
+      "postTitle": "Hernbean5150- Me And My Baby (Official Audio)",
+      "postSlug": "hernbean5150-me-and-my-baby-official-audio",
+      "imageUrl": "https://www.sheskin.org/y/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/hernbean5150-me-and-my-baby-official-audio.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 15807,
+      "thumbnailId": 15134,
+      "postTitle": "Adik'ed 2 Yo'Potion",
+      "postSlug": "adik-ed-2-yo-potion",
+      "imageUrl": "unknown",
+      "localPath": "",
+      "status": "failed",
+      "error": "Image URL not found"
+    },
+    {
+      "postId": 13921,
+      "thumbnailId": 13922,
+      "postTitle": "Holding Nothing 3",
+      "postSlug": "holding-nothing-3",
+      "imageUrl": "https://www.sheskin.org/c1-4/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/holding-nothing-3.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 12641,
+      "thumbnailId": 12642,
+      "postTitle": "Main II- As To Strategy, No Escalator",
+      "postSlug": "main-ii-as-to-strategy-no-escalator",
+      "imageUrl": "https://www.sheskin.org/c1-2/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/main-ii-as-to-strategy-no-escalator.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 2249,
+      "thumbnailId": 2250,
+      "postTitle": "heH'kat mursik",
+      "postSlug": "heh-kat-mursik",
+      "imageUrl": "https://www.sheskin.org/h-2/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/heh-kat-mursik.jpg",
+      "status": "downloaded"
+    },
+    {
+      "postId": 785,
+      "thumbnailId": 786,
+      "postTitle": "Ernest: she_skin radio 9/18",
+      "postSlug": "ernest-she-skin-radio-9-18",
+      "imageUrl": "https://www.sheskin.org/s/",
+      "localPath": "/Users/user/Development/sheskin/repo/public/audio-covers/ernest-she-skin-radio-9-18.jpg",
+      "status": "downloaded"
+    }
+  ]
+}

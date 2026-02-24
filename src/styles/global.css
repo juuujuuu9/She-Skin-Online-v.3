@@ -14,6 +14,36 @@
   --color-gray-950: #030712;
   --color-vcr-blue: #0d06f0;
 
+  /* Admin Theme Colors - CSS Custom Properties for Light/Dark Mode */
+  /* Default (Dark) Theme */
+  --admin-bg-primary: #111;
+  --admin-bg-secondary: #0a0a0a;
+  --admin-bg-tertiary: #1a1a1a;
+  --admin-bg-card: #222;
+  --admin-bg-input: #2a2a2a;
+  --admin-bg-hover: #333;
+
+  --admin-border-primary: #333;
+  --admin-border-secondary: #444;
+  --admin-border-hover: #555;
+  --admin-border-divider: rgba(255, 255, 255, 0.1);
+
+  --admin-text-primary: #ffffff;
+  --admin-text-secondary: rgba(255, 255, 255, 0.8);
+  --admin-text-tertiary: rgba(255, 255, 255, 0.6);
+  --admin-text-muted: #6b7280;
+
+  --admin-accent-primary: #4a9eff;
+  --admin-accent-primary-hover: #3a8eef;
+  --admin-accent-danger: #ff4444;
+  --admin-accent-danger-hover: #ff2222;
+  --admin-accent-success: #22c55e;
+  --admin-accent-warning: #f59e0b;
+
+  --admin-sidebar-active-bg: #ffffff;
+  --admin-sidebar-active-text: #000000;
+  --admin-sidebar-hover-bg: rgba(255, 255, 255, 0.1);
+
   --spacing-0: 0;
   --spacing-1: 0.25rem;
   --spacing-2: 0.5rem;
@@ -37,6 +67,37 @@
   --radius-xl: 0.75rem;
   --radius-2xl: 1rem;
   --radius-full: 9999px;
+}
+
+/* Light Theme Overrides - applied when .light class is present on :root or html */
+:root.light, html.light {
+  --admin-bg-primary: #ffffff;
+  --admin-bg-secondary: #f8fafc;
+  --admin-bg-tertiary: #f1f5f9;
+  --admin-bg-card: #ffffff;
+  --admin-bg-input: #ffffff;
+  --admin-bg-hover: #e2e8f0;
+
+  --admin-border-primary: #e2e8f0;
+  --admin-border-secondary: #cbd5e1;
+  --admin-border-hover: #94a3b8;
+  --admin-border-divider: rgba(0, 0, 0, 0.1);
+
+  --admin-text-primary: #0f172a;
+  --admin-text-secondary: #334155;
+  --admin-text-tertiary: #64748b;
+  --admin-text-muted: #94a3b8;
+
+  --admin-accent-primary: #3b82f6;
+  --admin-accent-primary-hover: #2563eb;
+  --admin-accent-danger: #ef4444;
+  --admin-accent-danger-hover: #dc2626;
+  --admin-accent-success: #22c55e;
+  --admin-accent-warning: #f59e0b;
+
+  --admin-sidebar-active-bg: #0f172a;
+  --admin-sidebar-active-text: #ffffff;
+  --admin-sidebar-hover-bg: rgba(0, 0, 0, 0.05);
 }
 
 * {

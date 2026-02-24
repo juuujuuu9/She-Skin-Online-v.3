@@ -11,7 +11,7 @@ function getDefaultCols(isMobile: boolean): number {
 }
 
 export function AudioGridControls() {
-  const [cols, setCols] = useState(DEFAULT_COLS_DESKTOP);
+  const [cols, setCols] = useState(() => DEFAULT_COLS_DESKTOP);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
