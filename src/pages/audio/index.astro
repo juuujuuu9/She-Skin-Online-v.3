@@ -10,12 +10,15 @@ import type { Track, Release } from '@lib/audioStore';
 // Fetch audio posts from database
 const audioPosts = await getPublishedAudioPosts();
 
+// Reverse to show oldest WordPress posts first (they were imported last)
+const reversedPosts = [...audioPosts].reverse();
+
 // Debug: log what we got
-console.log('[Audio Page] Fetched posts:', audioPosts.length);
-console.log('[Audio Page] Posts:', audioPosts.map(p => ({ title: p.title, hasAudio: !!p.audioFile, audioUrl: p.audioFile?.slice(0, 50) })));
+console.log('[Audio Page] Fetched posts:', reversedPosts.length);
+console.log('[Audio Page] Posts:', reversedPosts.map(p => ({ title: p.title, hasAudio: !!p.audioFile, audioUrl: p.audioFile?.slice(0, 50) })));
 
 // Transform database posts to Release/Track format
-const releases: Release[] = audioPosts.map((post) => {
+const releases: Release[] = reversedPosts.map((post) => {
   const year = post.publishedAt?.getFullYear() || new Date().getFullYear();
   
   // Build track from audio file if available
@@ -25,7 +28,7 @@ const releases: Release[] = audioPosts.map((post) => {
     tracks.push({
       id: post.slug,
       title: post.title,
-      artist: 'she_skin',
+      artist: post.artist || 'she_skin',
       src: post.audioFile,
       coverArt: post.artwork || undefined,
       album: post.title,
