@@ -55,6 +55,8 @@ interface WorksGridProps {
   category?: string;
   /** Base path for work detail links (e.g. '/works/physical') */
   basePath?: string;
+  /** Whether to re-fetch data client-side to ensure fresh data after uploads */
+  refreshOnMount?: boolean;
 }
 
 function getDefaultCols(
@@ -67,13 +69,14 @@ function getDefaultCols(
 }
 
 export function WorksGrid({
-  works,
+  works: initialWorks,
   titleClassName,
   defaultColsDesktop,
   defaultColsMobile,
   alignRowsCenter,
   category,
   basePath,
+  refreshOnMount = true,
 }: WorksGridProps) {
   const overrides =
     defaultColsDesktop != null || defaultColsMobile != null
@@ -83,10 +86,45 @@ export function WorksGrid({
     defaultColsDesktop ?? DEFAULT_COLS_DESKTOP
   );
   const [isMobile, setIsMobile] = useState(false);
+  const [works, setWorks] = useState<WorkGridItem[]>(initialWorks);
+  const [isLoading, setIsLoading] = useState(false);
   const [youtubeModal, setYoutubeModal] = useState<{ isOpen: boolean; videoId: string | null; title?: string }>({
     isOpen: false,
     videoId: null,
   });
+
+  // Re-fetch data client-side to ensure fresh data after uploads
+  useEffect(() => {
+    if (!refreshOnMount || !category) return;
+
+    let cancelled = false;
+    setIsLoading(true);
+
+    fetch(`/api/works/${category}`, {
+      headers: { 'Accept': 'application/json' },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch works');
+        return res.json();
+      })
+      .then((data) => {
+        if (cancelled) return;
+        if (data.works && Array.isArray(data.works)) {
+          setWorks(data.works);
+        }
+      })
+      .catch((err) => {
+        console.error('WorksGrid refresh error:', err);
+        // Keep using initialWorks on error
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [category, refreshOnMount]);
 
   useEffect(() => {
     const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT_PX}px)`);
@@ -222,7 +260,7 @@ export function WorksGrid({
       {/* YouTube Modal */}
       {youtubeModal.isOpen && youtubeModal.videoId && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          className="fixed inset-0 z-100 flex items-center justify-center bg-black/80 backdrop-blur-sm"
           onClick={() => setYoutubeModal({ isOpen: false, videoId: null })}
         >
           <div

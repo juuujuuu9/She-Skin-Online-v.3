@@ -270,23 +270,6 @@ export default function MediaManager({ initialMedia = [] }: MediaManagerProps) {
 
   return (
     <div style={styles.container}>
-      {/* Header */}
-      <div style={styles.header}>
-        <h2 style={styles.title}>
-          Media Library
-          <span style={styles.count}>({total} items)</span>
-        </h2>
-
-        {/* FilePond Upload */}
-        <div style={styles.uploadSection}>
-          {isUploading ? (
-            <span style={styles.uploadingText}>Uploading...</span>
-          ) : (
-            <label style={styles.uploadLabel}>+ Upload Files</label>
-          )}
-        </div>
-      </div>
-
       {/* Toolbar */}
       <div style={styles.toolbar}>
         <div style={styles.selectAllSection}>
@@ -644,48 +627,13 @@ const styles: Record<string, React.CSSProperties> = {
   container: {
     padding: '20px',
     color: 'var(--admin-text-primary)',
-  },
-  header: {
     display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '20px',
-  },
-  title: {
-    margin: 0,
-    fontSize: '24px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-  },
-  count: {
-    fontSize: '14px',
-    color: 'var(--admin-text-muted)',
-    fontWeight: 'normal',
-  },
-  uploadSection: {
-    display: 'flex',
-    alignItems: 'center',
-  },
-  uploadLabel: {
-    display: 'inline-block',
-    padding: '10px 20px',
-    background: 'var(--admin-accent-primary)',
-    borderRadius: '6px',
-    color: '#fff',
-    fontSize: '14px',
-    fontWeight: 500,
-  },
-  uploadingText: {
-    display: 'inline-block',
-    padding: '10px 20px',
-    background: 'var(--admin-bg-hover)',
-    borderRadius: '6px',
-    color: 'var(--admin-text-muted)',
-    fontSize: '14px',
+    flexDirection: 'column',
+    height: '100%',
   },
   filepondContainer: {
     marginBottom: '20px',
+    flexShrink: 0,
   },
   toolbar: {
     display: 'flex',
@@ -693,6 +641,7 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: '20px',
     alignItems: 'center',
     flexWrap: 'wrap',
+    flexShrink: 0,
   },
   selectAllSection: {
     display: 'flex',
@@ -1109,6 +1058,6 @@ const styles: Record<string, React.CSSProperties> = {
     position: 'relative',
     minHeight: '200px',
     overflow: 'auto',
-    maxHeight: 'calc(100vh - 320px)',
+    flex: 1,
   },
 };

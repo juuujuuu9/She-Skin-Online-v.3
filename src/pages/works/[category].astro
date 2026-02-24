@@ -115,7 +115,7 @@ const featuredWorks: typeof gridItems = [];
             client:idle
             defaultColsDesktop={
               categoryProp === 'digital' ? 3
-              : categoryProp === 'physical' ? 5
+              : categoryProp === 'physical' ? 6
               : categoryProp === 'collaborations' ? 3
               : undefined
             }
@@ -174,10 +174,12 @@ const featuredWorks: typeof gridItems = [];
         <WorksGrid
           client:only="react"
           works={worksGridItems}
+          category={categoryProp}
+          refreshOnMount={true}
           titleClassName={categoryProp === 'collaborations' ? 'text-[13px] font-medium text-gray-900 group-hover:text-gray-700 line-clamp-2' : undefined}
           defaultColsDesktop={
             categoryProp === 'digital' ? 3
-            : categoryProp === 'physical' ? 5
+            : categoryProp === 'physical' ? 6
             : categoryProp === 'collaborations' ? 3
             : undefined
           }

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
 export const DEFAULT_COLS_MOBILE = 3;
-export const DEFAULT_COLS_DESKTOP = 4;
+export const DEFAULT_COLS_DESKTOP = 6;
 export const MOBILE_BREAKPOINT_PX = 640; // sm
 export const PHYSICAL_GRID_COLS_EVENT = 'physical-grid-cols-changed';
 
