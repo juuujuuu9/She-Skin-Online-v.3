@@ -800,7 +800,7 @@ export async function getPublishedAudioPosts() {
       eq(audioPosts.status, 'published'),
       isNull(audioPosts.deletedAt)
     ),
-    orderBy: [desc(audioPosts.publishedAt)],
+    orderBy: [desc(audioPosts.createdAt)], // Newest posts first (by import order)
   });
 }
 
